@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT Classic</title>
+    <title>DuksNFT Fixed</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -12,10 +12,10 @@
     <style>
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7; --accent: #007aff;
-            --common: rgba(0, 122, 255, 0.5); --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
+            --common: rgba(0, 122, 255, 0.4); --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
         }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --header-bg: #1c1c1e; --accent: #0a84ff; }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); user-select: none; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); user-select: none; -webkit-tap-highlight-color: transparent; }
 
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .google-btn { display: flex; align-items: center; gap: 10px; background: white; color: #3c4043; border: 1px solid #ddd; padding: 12px 24px; border-radius: 30px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -27,11 +27,14 @@
         .nav-btn.active { background: var(--accent); color: white; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
-        .item { background: var(--header-bg); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); }
+        .item { background: var(--header-bg); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); min-height: 120px; justify-content: center; }
         
-        .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; z-index: 0; opacity: 0.5; }
+        .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; z-index: 0; opacity: 0.5; pointer-events: none; }
         .glow-rainbow { animation: rainbow 3s linear infinite; opacity: 0.8; }
-        @keyframes rainbow { 0% { background: red; filter: blur(25px); } 25% { background: yellow; } 50% { background: green; } 75% { background: blue; } 100% { background: red; } }
+        @keyframes rainbow { 
+            0% { background: red; } 20% { background: orange; } 40% { background: yellow; } 
+            60% { background: green; } 80% { background: blue; } 100% { background: red; } 
+        }
         
         .sell-btn { z-index: 1; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; border-radius: 8px; padding: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
         .case-card { background: var(--header-bg); margin: 15px; padding: 25px; border-radius: 20px; text-align: center; border: 1px solid rgba(128,128,128,0.1); }
@@ -63,14 +66,15 @@
 
 <main id="ui-main" style="display:none;">
     <div id="cases" class="screen"></div>
-    <div id="inv" class="screen" style="display:none;"><div class="grid" id="inv-g"></div></div>
+    <div id="inv" class="screen" style="display:none;">
+        <div class="grid" id="inv-g"></div>
+    </div>
     <div id="set" class="screen" style="display:none; padding: 20px; text-align: center;">
-        <div id="admin-panel" style="display:none; border: 2px dashed orange; padding: 15px; border-radius: 15px;">
+        <div id="admin-panel" style="display:none; border: 2px dashed orange; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
              <h3 style="color:orange;">Admin Panel</h3>
              <button onclick="addM(1000000)" class="nav-btn" style="width:100%;">+1M Duks</button>
         </div>
-        <br>
-        <button onclick="signOut()" class="nav-btn" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
+        <button onclick="signOut()" class="nav-btn" style="background:#ff3b30; color:white; width:100%;">Выйти из аккаунта</button>
     </div>
 </main>
 
@@ -103,39 +107,63 @@
     let b = 1000;
     let inv = [];
     let clicks = 0;
+    let isDataLoaded = false;
 
-    auth.onAuthStateChanged(user => {
-        if (user) { loadData(user); }
-        else { document.getElementById('auth-screen').style.display = 'flex'; }
+    auth.onAuthStateChanged(async (user) => {
+        if (user) { 
+            await loadData(user); 
+        } else { 
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('ui-header').style.display = 'none';
+            document.getElementById('ui-main').style.display = 'none';
+        }
     });
 
     async function loadData(user) {
-        const doc = await db.collection("users").doc(user.uid).get();
-        if (doc.exists) {
-            b = doc.data().balance || 1000;
-            inv = doc.data().inventory || [];
+        try {
+            const doc = await db.collection("users").doc(user.uid).get();
+            if (doc.exists) {
+                const data = doc.data();
+                b = data.balance ?? 1000;
+                inv = data.inventory ?? [];
+            } else {
+                // Если новый пользователь
+                await db.collection("users").doc(user.uid).set({ balance: 1000, inventory: [] });
+                b = 1000;
+                inv = [];
+            }
+            isDataLoaded = true;
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('ui-header').style.display = 'block';
+            document.getElementById('ui-main').style.display = 'block';
+            sync(false); // Синхронизируем UI без лишней записи в БД
+            renderCases();
+        } catch (e) {
+            alert("Ошибка загрузки данных: " + e.message);
         }
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('ui-header').style.display = 'block';
-        document.getElementById('ui-main').style.display = 'block';
-        sync(); renderCases();
     }
 
-    async function sync() {
+    async function sync(writeToDb = true) {
         document.getElementById('b-val').innerText = b.toLocaleString();
         renderInv();
-        if (auth.currentUser) {
-            await db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv });
+        if (writeToDb && auth.currentUser && isDataLoaded) {
+            try {
+                await db.collection("users").doc(auth.currentUser.uid).update({ balance: b, inventory: inv });
+            } catch (e) { console.error("Ошибка сохранения:", e); }
         }
     }
 
     function renderInv() {
         const g = document.getElementById('inv-g');
+        if (inv.length === 0) {
+            g.innerHTML = '<p style="grid-column: 1/3; opacity: 0.5; text-align: center;">Инвентарь пуст</p>';
+            return;
+        }
         g.innerHTML = inv.map((it, idx) => `
             <div class="item">
                 <div class="glow ${it.c === 'rainbow' ? 'glow-rainbow' : ''}" style="background:${it.c === 'rainbow' ? '' : it.c}"></div>
                 <div style="font-size:32px; z-index:1;">${it.icon}</div>
-                <div style="font-size:10px; font-weight:bold; z-index:1; margin-top:5px;">${it.n}</div>
+                <div style="font-size:10px; font-weight:bold; z-index:1; margin-top:5px; text-align: center;">${it.n}</div>
                 <button class="sell-btn" onclick="sell(${idx})">ПРОДАТЬ: ${it.s}</button>
             </div>
         `).join('');
@@ -145,31 +173,58 @@
         document.getElementById('cases').innerHTML = CONFIG.map((c, i) => `
             <div class="case-card">
                 <div style="font-size:40px;">${c.i}</div>
-                <h3>${c.n} кейс</h3>
+                <h3 style="margin: 10px 0;">${c.n} кейс</h3>
                 <button class="open-btn" onclick="openC(${i})">${c.p} Duks</button>
             </div>
         `).join('');
     }
 
     function openC(i) {
-        if (b < CONFIG[i].p) return alert('Мало денег!');
+        if (b < CONFIG[i].p) return alert('Недостаточно Duks!');
         b -= CONFIG[i].p;
-        const drop = CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)];
-        inv.push(drop);
+        const pool = CONFIG[i].items;
+        const drop = pool[Math.floor(Math.random() * pool.length)];
+        inv.push({...drop}); // Копируем объект
         sync();
     }
 
-    function sell(idx) { b += inv[idx].s; inv.splice(idx, 1); sync(); }
+    function sell(idx) {
+        b += inv[idx].s;
+        inv.splice(idx, 1);
+        sync();
+    }
+
     function show(id, btnId) {
         document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
         document.getElementById(id).style.display = 'block';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         if(btnId) document.getElementById(btnId).classList.add('active');
+        if (id !== 'set') clicks = 0;
     }
-    function handleSettings() { clicks++; show('set', 'btn-set'); if (clicks >= 5) document.getElementById('admin-panel').style.display = 'block'; }
-    function signIn() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-    function signOut() { auth.signOut(); location.reload(); }
-    function addM(v) { b += v; sync(); }
+
+    function handleSettings() {
+        clicks++;
+        show('set', 'btn-set');
+        if (clicks >= 5) {
+            document.getElementById('admin-panel').style.display = 'block';
+            alert("Админ-панель открыта!");
+        }
+    }
+
+    function signIn() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        // Используем Redirect для надежности на смартфонах
+        auth.signInWithRedirect(provider);
+    }
+
+    function signOut() {
+        auth.signOut().then(() => location.reload());
+    }
+
+    function addM(v) {
+        b += v;
+        sync();
+    }
 </script>
 </body>
 </html>
