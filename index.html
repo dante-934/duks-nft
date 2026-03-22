@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT Fixed</title>
+    <title>DuksNFT Classic</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -12,13 +12,13 @@
     <style>
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7; --accent: #007aff;
-            --common: rgba(0, 122, 255, 0.4); --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
+            --common: rgba(0, 122, 255, 0.5); --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
         }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --header-bg: #1c1c1e; --accent: #0a84ff; }
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); user-select: none; -webkit-tap-highlight-color: transparent; }
 
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .google-btn { display: flex; align-items: center; gap: 10px; background: white; color: #3c4043; border: 1px solid #ddd; padding: 12px 24px; border-radius: 30px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .google-btn { display: flex; align-items: center; gap: 10px; background: white; color: #3c4043; border: 1px solid #ddd; padding: 12px 24px; border-radius: 30px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: none; }
         
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
@@ -31,10 +31,7 @@
         
         .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; z-index: 0; opacity: 0.5; pointer-events: none; }
         .glow-rainbow { animation: rainbow 3s linear infinite; opacity: 0.8; }
-        @keyframes rainbow { 
-            0% { background: red; } 20% { background: orange; } 40% { background: yellow; } 
-            60% { background: green; } 80% { background: blue; } 100% { background: red; } 
-        }
+        @keyframes rainbow { 0% { background: red; } 25% { background: yellow; } 50% { background: green; } 75% { background: blue; } 100% { background: red; } }
         
         .sell-btn { z-index: 1; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; border-radius: 8px; padding: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
         .case-card { background: var(--header-bg); margin: 15px; padding: 25px; border-radius: 20px; text-align: center; border: 1px solid rgba(128,128,128,0.1); }
@@ -45,8 +42,8 @@
 
 <div id="auth-screen">
     <h1 style="font-size: 40px; margin: 0;">🦆 DuksNFT</h1>
-    <p style="opacity: 0.6; margin-bottom: 20px;">Твой прогресс сохранится в облаке</p>
-    <button class="google-btn" onclick="signIn()">
+    <p style="opacity: 0.6; margin-bottom: 20px;">Загрузка данных...</p>
+    <button class="google-btn" id="login-button" onclick="signIn()">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="18">
         Войти через Google
     </button>
@@ -66,19 +63,18 @@
 
 <main id="ui-main" style="display:none;">
     <div id="cases" class="screen"></div>
-    <div id="inv" class="screen" style="display:none;">
-        <div class="grid" id="inv-g"></div>
-    </div>
+    <div id="inv" class="screen" style="display:none;"><div class="grid" id="inv-g"></div></div>
     <div id="set" class="screen" style="display:none; padding: 20px; text-align: center;">
         <div id="admin-panel" style="display:none; border: 2px dashed orange; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
              <h3 style="color:orange;">Admin Panel</h3>
              <button onclick="addM(1000000)" class="nav-btn" style="width:100%;">+1M Duks</button>
         </div>
-        <button onclick="signOut()" class="nav-btn" style="background:#ff3b30; color:white; width:100%;">Выйти из аккаунта</button>
+        <button onclick="signOut()" class="nav-btn" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
     </div>
 </main>
 
 <script>
+    // 1. ТВОЙ КОНФИГ (НЕ МЕНЯЙ ЕГО)
     const firebaseConfig = {
         apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8",
         authDomain: "duksnft.firebaseapp.com",
@@ -109,6 +105,7 @@
     let clicks = 0;
     let isDataLoaded = false;
 
+    // 2. ЛОГИКА АВТОРИЗАЦИИ
     auth.onAuthStateChanged(async (user) => {
         if (user) { 
             await loadData(user); 
@@ -127,104 +124,78 @@
                 b = data.balance ?? 1000;
                 inv = data.inventory ?? [];
             } else {
-                // Если новый пользователь
                 await db.collection("users").doc(user.uid).set({ balance: 1000, inventory: [] });
-                b = 1000;
-                inv = [];
+                b = 1000; inv = [];
             }
+        } catch (e) {
+            console.error(e);
+        } finally {
             isDataLoaded = true;
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('ui-header').style.display = 'block';
             document.getElementById('ui-main').style.display = 'block';
-            sync(false); // Синхронизируем UI без лишней записи в БД
-            renderCases();
-        } catch (e) {
-            alert("Ошибка загрузки данных: " + e.message);
+            sync(false); renderCases();
         }
     }
 
-    async function sync(writeToDb = true) {
+    async function sync(write = true) {
         document.getElementById('b-val').innerText = b.toLocaleString();
         renderInv();
-        if (writeToDb && auth.currentUser && isDataLoaded) {
-            try {
-                await db.collection("users").doc(auth.currentUser.uid).update({ balance: b, inventory: inv });
-            } catch (e) { console.error("Ошибка сохранения:", e); }
+        if (write && auth.currentUser && isDataLoaded) {
+            await db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
         }
     }
 
     function renderInv() {
         const g = document.getElementById('inv-g');
-        if (inv.length === 0) {
-            g.innerHTML = '<p style="grid-column: 1/3; opacity: 0.5; text-align: center;">Инвентарь пуст</p>';
-            return;
-        }
-        g.innerHTML = inv.map((it, idx) => `
+        g.innerHTML = inv.length ? inv.map((it, idx) => `
             <div class="item">
                 <div class="glow ${it.c === 'rainbow' ? 'glow-rainbow' : ''}" style="background:${it.c === 'rainbow' ? '' : it.c}"></div>
                 <div style="font-size:32px; z-index:1;">${it.icon}</div>
-                <div style="font-size:10px; font-weight:bold; z-index:1; margin-top:5px; text-align: center;">${it.n}</div>
-                <button class="sell-btn" onclick="sell(${idx})">ПРОДАТЬ: ${it.s}</button>
+                <div style="font-size:10px; font-weight:bold; z-index:1; margin-top:5px;">${it.n}</div>
+                <button class="sell-btn" onclick="sell(${idx})">${it.s} D</button>
             </div>
-        `).join('');
+        `).join('') : '<p style="grid-column: 1/3; opacity: 0.5; text-align: center;">Пусто</p>';
     }
 
     function renderCases() {
         document.getElementById('cases').innerHTML = CONFIG.map((c, i) => `
             <div class="case-card">
                 <div style="font-size:40px;">${c.i}</div>
-                <h3 style="margin: 10px 0;">${c.n} кейс</h3>
+                <h3>${c.n} кейс</h3>
                 <button class="open-btn" onclick="openC(${i})">${c.p} Duks</button>
             </div>
         `).join('');
     }
 
     function openC(i) {
-        if (b < CONFIG[i].p) return alert('Недостаточно Duks!');
+        if (b < CONFIG[i].p) return alert('Duks?!');
         b -= CONFIG[i].p;
-        const pool = CONFIG[i].items;
-        const drop = pool[Math.floor(Math.random() * pool.length)];
-        inv.push({...drop}); // Копируем объект
+        inv.push({...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]});
         sync();
     }
 
-    function sell(idx) {
-        b += inv[idx].s;
-        inv.splice(idx, 1);
-        sync();
-    }
-
+    function sell(idx) { b += inv[idx].s; inv.splice(idx, 1); sync(); }
+    
     function show(id, btnId) {
         document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
         document.getElementById(id).style.display = 'block';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         if(btnId) document.getElementById(btnId).classList.add('active');
-        if (id !== 'set') clicks = 0;
     }
 
     function handleSettings() {
-        clicks++;
-        show('set', 'btn-set');
-        if (clicks >= 5) {
-            document.getElementById('admin-panel').style.display = 'block';
-            alert("Админ-панель открыта!");
-        }
+        clicks++; show('set', 'btn-set');
+        if (clicks >= 5) document.getElementById('admin-panel').style.display = 'block';
     }
 
     function signIn() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        // Используем Redirect для надежности на смартфонах
         auth.signInWithRedirect(provider);
     }
 
-    function signOut() {
-        auth.signOut().then(() => location.reload());
-    }
-
-    function addM(v) {
-        b += v;
-        sync();
-    }
+    function signOut() { auth.signOut().then(() => location.reload()); }
+    function addM(v) { b += v; sync(); }
 </script>
 </body>
 </html>
