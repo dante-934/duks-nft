@@ -36,9 +36,8 @@
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
         
-        /* Стили профиля */
         .profile-card { background: var(--header-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
-        .google-login-btn { background: white; color: black; border: 1px solid #ddd; padding: 10px; border-radius: 12px; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+        .google-login-btn { background: white; color: black; border: 1px solid #ddd; padding: 10px; border-radius: 12px; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; cursor: pointer; }
         #admin-auth-box { margin-top: 20px; padding: 15px; border: 1px dashed var(--accent); border-radius: 15px; display: none; }
     </style>
 </head>
@@ -64,16 +63,16 @@
         <div class="profile-card">
             <h3 style="margin-top:0;">👤 Профиль</h3>
             <div id="auth-info">
-                <p style="font-size: 13px; color: #888;">Прогресс: <b>Локальный</b></p>
-                <button class="google-login-btn" onclick="loginWithGoogle()">
+                <p style="font-size: 13px; color: #888;">Прогресс: <b>Локальный</b> (не сохранен в облаке)</p>
+                <button class="google-login-btn" id="bind-btn" onclick="loginWithGoogle()">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="16">
-                    Привязать аккаунт
+                    Привязать Google
                 </button>
             </div>
             <div id="user-profile" style="display:none;">
                 <p style="margin: 5px 0; font-weight: bold;" id="user-email"></p>
                 <p style="font-size: 12px; color: #34c759;">✓ Облачное сохранение активно</p>
-                <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; margin-top:10px;">Выйти</button>
+                <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; margin-top:10px; width:100%;">Выйти</button>
             </div>
         </div>
 
@@ -83,7 +82,7 @@
             <input type="password" id="admin-input" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;" placeholder="Код Zxc...">
             <button class="nav-btn" onclick="checkAdminCode()" style="background:var(--accent); color:white; width:100%;">Войти</button>
         </div>
-        <div id="admin-menu" style="display:none; margin-top:15px; background:#fff3cd; padding:15px; border-radius:15px;">
+        <div id="admin-menu" style="display:none; margin-top:15px; background:#fff3cd; padding:15px; border-radius:15px; color:#856404;">
             <b>Admin Active</b><br>
             <button onclick="addM(1000000)" class="nav-btn" style="background:#28a745; color:white; width:100%; margin-top:10px;">+1M Duks</button>
         </div>
@@ -91,7 +90,6 @@
 </main>
 
 <script>
-    // КОНФИГУРАЦИЯ
     const firebaseConfig = {
         apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8",
         authDomain: "duksnft.firebaseapp.com",
@@ -120,17 +118,16 @@
         ]}
     ];
 
-    let b = 1000; let inv = []; let settingClicks = 0;
+    let b = 1000; let inv = []; let settingClicks = 0; let isLoaded = false;
 
-    // 1. ЗАГРУЗКА
     async function init() {
-        // Сначала грузим локально
+        // 1. Грузим локально
         const lb = localStorage.getItem('db');
         const li = localStorage.getItem('di');
         if(lb) b = parseInt(lb);
         if(li) inv = JSON.parse(li);
 
-        // Проверяем облако
+        // 2. Слушаем вход
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 document.getElementById('auth-info').style.display = 'none';
@@ -148,17 +145,18 @@
     }
 
     async function syncWithCloud(user) {
-        const ref = db.collection("users").doc(user.uid);
-        const doc = await ref.get();
-        if (doc.exists) {
-            // Если в облаке больше денег, берем из облака
-            const cloudData = doc.data();
-            if (cloudData.balance > b) b = cloudData.balance;
-            inv = cloudData.inventory || inv;
-        } else {
-            // Если в облаке нет, сохраняем туда текущий локальный прогресс
-            await ref.set({ balance: b, inventory: inv, email: user.email });
-        }
+        try {
+            const ref = db.collection("users").doc(user.uid);
+            const doc = await ref.get({ source: 'server' });
+            if (doc.exists) {
+                const cloud = doc.data();
+                // Синхронизация: выбираем большее значение баланса
+                if (cloud.balance > b) b = cloud.balance;
+                if (cloud.inventory && cloud.inventory.length > inv.length) inv = cloud.inventory;
+            }
+            // Сразу сохраняем текущее состояние в облако
+            await ref.set({ balance: b, inventory: inv, email: user.email }, { merge: true });
+        } catch(e) { console.error("Sync error:", e); }
     }
 
     function save() {
@@ -166,14 +164,15 @@
         localStorage.setItem('di', JSON.stringify(inv));
         updateUI();
         if (auth.currentUser) {
-            db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
+            db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true })
+              .catch(e => console.error("Cloud save error:", e));
         }
     }
 
     function updateUI() {
         document.getElementById('b-val').innerText = b.toLocaleString();
         const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:20px;">Пусто</p>';
+        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:20px;">Инвентарь пуст</p>';
         inv.forEach((it, idx) => {
             g.innerHTML += `<div class="item">
                 <div class="glow ${it.c === 'rainbow' ? 'glow-rainbow' : ''}" style="background:${it.c === 'rainbow' ? '' : it.c}"></div>
@@ -211,11 +210,32 @@
     function handleSettings() { settingClicks++; show('settings'); if(settingClicks >= 5) document.getElementById('admin-auth-box').style.display='block'; }
     function checkAdminCode() { if(document.getElementById('admin-input').value === "Zxc1234Zxc") document.getElementById('admin-menu').style.display='block'; }
     function addM(v) { b += v; save(); }
-    function loginWithGoogle() { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+
+    // УЛУЧШЕННЫЙ ВХОД (POPUP)
+    function loginWithGoogle() {
+        const btn = document.getElementById('bind-btn');
+        btn.innerText = "Загрузка...";
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        auth.signInWithPopup(provider)
+            .then((result) => {
+                console.log("Привязка успешна!");
+            })
+            .catch((error) => {
+                btn.innerText = "Привязать Google";
+                if(error.code === 'auth/popup-blocked') {
+                    alert("Браузер заблокировал окно. Разрешите всплывающие окна для этого сайта.");
+                } else {
+                    alert("Ошибка: " + error.message);
+                }
+            });
+    }
+
     function logout() { auth.signOut().then(() => location.reload()); }
-    function resetGame() { if(confirm("Сбросить?")) { localStorage.clear(); location.reload(); } }
+    function resetGame() { if(confirm("Сбросить весь прогресс?")) { localStorage.clear(); location.reload(); } }
 
     init();
 </script>
 </body>
-</html>
+    </html>
+    
