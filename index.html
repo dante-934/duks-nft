@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT Classic</title>
+    <title>DuksNFT - Classic Power</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -12,38 +12,48 @@
     <style>
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7; --accent: #007aff;
-            --common: rgba(0, 122, 255, 0.5); --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
+            --common: rgba(0, 122, 255, 0.5); --epic: #af52de; --rainbow-speed: 3s;
         }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --header-bg: #1c1c1e; --accent: #0a84ff; }
+        
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); user-select: none; -webkit-tap-highlight-color: transparent; }
 
+        /* Экран входа */
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .google-btn { display: flex; align-items: center; gap: 10px; background: white; color: #3c4043; border: 1px solid #ddd; padding: 12px 24px; border-radius: 30px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: none; }
-        
+
+        /* Шапка */
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .balance { background: var(--accent); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .balance { background: var(--accent); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; }
+        
         nav { display: flex; gap: 5px; margin-top: 10px; }
         .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; cursor: pointer; }
         .nav-btn.active { background: var(--accent); color: white; }
 
+        /* Сетка инвентаря */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
-        .item { background: var(--header-bg); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); min-height: 120px; justify-content: center; }
+        .item { background: var(--header-bg); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); min-height: 110px; justify-content: center; }
         
+        /* Свечение редкости */
         .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; z-index: 0; opacity: 0.5; pointer-events: none; }
-        .glow-rainbow { animation: rainbow 3s linear infinite; opacity: 0.8; }
-        @keyframes rainbow { 0% { background: red; } 25% { background: yellow; } 50% { background: green; } 75% { background: blue; } 100% { background: red; } }
-        
-        .sell-btn { z-index: 1; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; border-radius: 8px; padding: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
+        .glow-rainbow { animation: rainbow var(--rainbow-speed) linear infinite; opacity: 0.8; }
+        @keyframes rainbow { 
+            0% { background: #ff0000; } 25% { background: #ffcc00; } 
+            50% { background: #00ff00; } 75% { background: #007aff; } 100% { background: #ff0000; } 
+        }
+
+        /* Кейсы */
         .case-card { background: var(--header-bg); margin: 15px; padding: 25px; border-radius: 20px; text-align: center; border: 1px solid rgba(128,128,128,0.1); }
         .open-btn { width: 100%; padding: 14px; background: #34c759; color: white; border: none; border-radius: 12px; font-weight: 900; margin-top: 10px; cursor: pointer; }
+        .sell-btn { z-index: 1; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; border-radius: 8px; padding: 6px; font-weight: bold; cursor: pointer; font-size: 10px; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <h1 style="font-size: 40px; margin: 0;">🦆 DuksNFT</h1>
-    <p style="opacity: 0.6; margin-bottom: 20px;">Загрузка данных...</p>
-    <button class="google-btn" id="login-button" onclick="signIn()">
+    <p style="opacity: 0.6; margin-bottom: 20px;">Загрузка данных игрока...</p>
+    <button class="google-btn" onclick="signIn()">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="18">
         Войти через Google
     </button>
@@ -51,7 +61,7 @@
 
 <header id="ui-header" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="font-weight: 900; font-size: 20px; color: var(--accent);">DuksNFT</div>
+        <div style="font-weight: 900; font-size: 22px; color: var(--accent);">DuksNFT</div>
         <div class="balance"><span id="b-val">0</span> D</div>
     </div>
     <nav>
@@ -67,14 +77,13 @@
     <div id="set" class="screen" style="display:none; padding: 20px; text-align: center;">
         <div id="admin-panel" style="display:none; border: 2px dashed orange; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
              <h3 style="color:orange;">Admin Panel</h3>
-             <button onclick="addM(1000000)" class="nav-btn" style="width:100%;">+1M Duks</button>
+             <button onclick="addM(1000000)" class="nav-btn" style="width:100%;">+1,000,000 Duks</button>
         </div>
         <button onclick="signOut()" class="nav-btn" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
     </div>
 </main>
 
 <script>
-    // 1. ТВОЙ КОНФИГ (НЕ МЕНЯЙ ЕГО)
     const firebaseConfig = {
         apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8",
         authDomain: "duksnft.firebaseapp.com",
@@ -89,14 +98,18 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // НАСТРОЙКА КЕЙСОВ И ПРЕДМЕТОВ
     const CONFIG = [
-        { n: "Бедный", p: 200, i: "📦", items: [
-            { n: "Перо", s: 150, r: "COMMON", c: "var(--common)", icon: "🪶" },
-            { n: "Урна", s: 195, r: "EPIC", c: "var(--epic)", icon: "⚱️" }
+        { n: "Обычный", p: 250, i: "📦", items: [
+            { n: "Перо утки", s: 100, c: "var(--common)", icon: "🪶" },
+            { n: "Старая монета", s: 200, c: "var(--common)", icon: "🪙" },
+            { n: "Золотое перо", s: 600, c: "var(--epic)", icon: "✨" }
         ]},
-        { n: "Эксклюзив", p: 15000, i: "✨", items: [
-            { n: "Луна", s: 10000, r: "RAINBOW", c: "rainbow", icon: "🌙" },
-            { n: "Солнце", s: 10000, r: "RAINBOW", c: "rainbow", icon: "☀️" }
+        { n: "Мощный", p: 5000, i: "🔥", items: [
+            { n: "Корона Утки", s: 4000, c: "var(--epic)", icon: "👑" },
+            { n: "Меч Силы", s: 4500, c: "var(--epic)", icon: "⚔️" },
+            { n: "Радужная Утка", s: 15000, c: "rainbow", icon: "🌈" },
+            { n: "Кристалл Синтерры", s: 25000, c: "rainbow", icon: "💎" }
         ]}
     ];
 
@@ -105,31 +118,22 @@
     let clicks = 0;
     let isDataLoaded = false;
 
-    // 2. ЛОГИКА АВТОРИЗАЦИИ
     auth.onAuthStateChanged(async (user) => {
-        if (user) { 
-            await loadData(user); 
-        } else { 
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('ui-header').style.display = 'none';
-            document.getElementById('ui-main').style.display = 'none';
-        }
+        if (user) { await loadData(user); } 
+        else { document.getElementById('auth-screen').style.display = 'flex'; }
     });
 
     async function loadData(user) {
         try {
             const doc = await db.collection("users").doc(user.uid).get();
             if (doc.exists) {
-                const data = doc.data();
-                b = data.balance ?? 1000;
-                inv = data.inventory ?? [];
+                b = doc.data().balance ?? 1000;
+                inv = doc.data().inventory ?? [];
             } else {
                 await db.collection("users").doc(user.uid).set({ balance: 1000, inventory: [] });
-                b = 1000; inv = [];
             }
-        } catch (e) {
-            console.error(e);
-        } finally {
+        } catch (e) { console.error(e); }
+        finally {
             isDataLoaded = true;
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('ui-header').style.display = 'block';
@@ -151,27 +155,28 @@
         g.innerHTML = inv.length ? inv.map((it, idx) => `
             <div class="item">
                 <div class="glow ${it.c === 'rainbow' ? 'glow-rainbow' : ''}" style="background:${it.c === 'rainbow' ? '' : it.c}"></div>
-                <div style="font-size:32px; z-index:1;">${it.icon}</div>
+                <div style="font-size:35px; z-index:1;">${it.icon}</div>
                 <div style="font-size:10px; font-weight:bold; z-index:1; margin-top:5px;">${it.n}</div>
-                <button class="sell-btn" onclick="sell(${idx})">${it.s} D</button>
+                <button class="sell-btn" onclick="sell(${idx})">ПРОДАТЬ: ${it.s}</button>
             </div>
-        `).join('') : '<p style="grid-column: 1/3; opacity: 0.5; text-align: center;">Пусто</p>';
+        `).join('') : '<p style="grid-column: 1/3; opacity: 0.5; text-align: center; padding: 20px;">Инвентарь пуст</p>';
     }
 
     function renderCases() {
         document.getElementById('cases').innerHTML = CONFIG.map((c, i) => `
             <div class="case-card">
-                <div style="font-size:40px;">${c.i}</div>
-                <h3>${c.n} кейс</h3>
+                <div style="font-size:50px;">${c.i}</div>
+                <h2 style="margin: 10px 0;">${c.n}</h2>
                 <button class="open-btn" onclick="openC(${i})">${c.p} Duks</button>
             </div>
         `).join('');
     }
 
     function openC(i) {
-        if (b < CONFIG[i].p) return alert('Duks?!');
+        if (b < CONFIG[i].p) return alert('Недостаточно Duks!');
         b -= CONFIG[i].p;
-        inv.push({...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]});
+        const pool = CONFIG[i].items;
+        inv.push({...pool[Math.floor(Math.random() * pool.length)]});
         sync();
     }
 
@@ -189,11 +194,7 @@
         if (clicks >= 5) document.getElementById('admin-panel').style.display = 'block';
     }
 
-    function signIn() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider);
-    }
-
+    function signIn() { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
     function signOut() { auth.signOut().then(() => location.reload()); }
     function addM(v) { b += v; sync(); }
 </script>
