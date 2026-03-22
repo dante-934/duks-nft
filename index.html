@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Secure Admin</title>
+    <title>DuksNFT - Professional Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -23,7 +23,7 @@
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
         
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 14px 28px; border-radius: 28px; font-weight: 600; cursor: pointer; }
+        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 14px 28px; border-radius: 28px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
@@ -47,9 +47,8 @@
         
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; cursor: pointer; }
 
-        /* Стили для админ-панели */
         #admin-auth-box { margin-top: 20px; padding: 15px; border: 1px dashed var(--accent); border-radius: 15px; display: none; }
-        #admin-input { width: 80%; padding: 10px; border-radius: 10px; border: 1px solid var(--nav-bg); background: var(--bg); color: var(--text); text-align: center; margin-bottom: 10px; }
+        #admin-input { width: 80%; padding: 10px; border-radius: 10px; border: 1px solid var(--nav-bg); background: var(--bg); color: var(--text); text-align: center; margin-bottom: 10px; outline: none; }
         #admin-menu { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; }
     </style>
 </head>
@@ -58,8 +57,11 @@
 <div id="auth-screen">
     <div style="font-size: 60px; margin-bottom: 10px;">🦆</div>
     <h1>DuksNFT</h1>
-    <p id="auth-status">Инициализация...</p>
-    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">Войти через Google</button>
+    <p id="auth-status">Загрузка...</p>
+    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="18" alt="G">
+        Войти через Google
+    </button>
 </div>
 
 <header id="main-header" style="display:none;">
@@ -83,7 +85,7 @@
         <button class="nav-btn" onclick="signOut()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
 
         <div id="admin-auth-box">
-            <input type="password" id="admin-input" placeholder="Введите код доступа">
+            <input type="password" id="admin-input" placeholder="Введите код Zxc...">
             <button class="nav-btn" onclick="checkAdminCode()" style="background:var(--accent); color:white; width:100%;">Активировать</button>
         </div>
 
@@ -95,6 +97,7 @@
 </main>
 
 <script>
+    // 1. КОНФИГУРАЦИЯ FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8",
         authDomain: "duksnft.firebaseapp.com",
@@ -108,6 +111,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // 2. ДАННЫЕ ИГРЫ
     const CONFIG = [
         { name: "Бедный", price: 200, icon: "📦", items: [
             { n: "Перо", sell: 150, c: "var(--common)", i: "🪶" },
@@ -128,41 +132,72 @@
     let isLoaded = false;
     let settingClicks = 0;
 
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            await load(user);
-        } else {
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('login-btn').style.display = 'flex';
-            document.getElementById('auth-status').innerText = "Войдите для игры";
-        }
-    });
-
-    async function load(user) {
+    // 3. ЛОГИКА АВТОРИЗАЦИИ (ОБЪЕДИНЕННАЯ)
+    async function checkAuth() {
         try {
-            const doc = await db.collection("users").doc(user.uid).get();
+            // Проверка результата после редиректа Google
+            const result = await auth.getRedirectResult();
+            if (result.user) {
+                console.log("Вход через редирект выполнен");
+                await loadUserData(result.user);
+            }
+        } catch (error) {
+            console.error("Ошибка редиректа:", error.message);
+        }
+
+        // Слушатель состояния (уже залогинен или зашел заново)
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById('auth-status').innerText = "Синхронизация профиля...";
+                await loadUserData(user);
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('login-btn').style.display = 'flex';
+                document.getElementById('auth-status').innerText = "Требуется вход";
+            }
+        });
+    }
+
+    // 4. ЗАГРУЗКА ДАННЫХ ИЗ FIREBASE
+    async function loadUserData(user) {
+        if (isLoaded) return; // Чтобы не загружать дважды
+        try {
+            const userRef = db.collection("users").doc(user.uid);
+            const doc = await userRef.get();
+
             if (doc.exists) {
                 b = doc.data().balance ?? 1000;
                 inv = doc.data().inventory ?? [];
             } else {
-                await db.collection("users").doc(user.uid).set({ balance: 1000, inventory: [] });
+                await userRef.set({ balance: 1000, inventory: [], email: user.email });
+                b = 1000;
+                inv = [];
             }
+
             isLoaded = true;
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-header').style.display = 'block';
             document.getElementById('main-content').style.display = 'block';
             document.getElementById('user-info').innerText = user.email;
+            
             sync(false);
             renderCases();
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error("Ошибка Firestore:", e);
+            document.getElementById('auth-status').innerText = "Ошибка базы данных!";
+        }
     }
 
+    // 5. ИГРОВЫЕ ФУНКЦИИ
     async function sync(save = true) {
         if (!isLoaded) return;
         document.getElementById('b-val').innerText = b.toLocaleString();
         renderInv();
         if (save && auth.currentUser) {
-            await db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
+            await db.collection("users").doc(auth.currentUser.uid).set({ 
+                balance: b, 
+                inventory: inv 
+            }, { merge: true });
         }
     }
 
@@ -192,7 +227,8 @@
     function openC(i) {
         if (!isLoaded || b < CONFIG[i].price) return b < CONFIG[i].price ? alert('Мало денег!') : null;
         b -= CONFIG[i].price;
-        inv.push({...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]});
+        const pool = CONFIG[i].items;
+        inv.push({...pool[Math.floor(Math.random() * pool.length)]});
         sync();
     }
 
@@ -203,27 +239,25 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         if(btnId) document.getElementById(btnId).classList.add('active');
-        if (id !== 'settings') settingClicks = 0; // Сброс кликов если ушли из настроек
     }
 
-    // ЛОГИКА АДМИН ПАНЕЛИ
+    // 6. АДМИН ПАНЕЛЬ И НАСТРОЙКИ
     function handleSettings() {
         settingClicks++;
         show('settings');
-        // Показываем поле ввода после 5 кликов
         if (settingClicks >= 5) {
             document.getElementById('admin-auth-box').style.display = 'block';
         }
     }
 
     function checkAdminCode() {
-        const input = document.getElementById('admin-input').value;
-        if (input === "Zxc1234Zxc") {
+        const code = document.getElementById('admin-input').value;
+        if (code === "Zxc1234Zxc") {
             document.getElementById('admin-menu').style.display = 'block';
             document.getElementById('admin-auth-box').style.display = 'none';
-            alert("Админ-режим активирован!");
+            alert("Доступ разрешен");
         } else {
-            alert("Неверный код доступа!");
+            alert("Неверный код!");
         }
     }
 
@@ -234,6 +268,9 @@
 
     function signOut() { auth.signOut().then(() => location.reload()); }
     function addM(v) { b += v; sync(); }
+
+    // ЗАПУСК ИГРЫ
+    checkAuth();
 </script>
 </body>
 </html>
