@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Hybrid Edition</title>
+    <title>DuksNFT - Pro Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -12,14 +12,15 @@
     <style>
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7;
-            --nav-bg: #e5e5ea; --accent: #007aff;
+            --nav-bg: #e5e5ea; --accent: #007aff; --card: #ffffff;
             --common: rgba(0, 122, 255, 0.5); --epic: #af52de; 
             --legendary: #ffcc00; --mythic: #ff3b30;
         }
         [data-theme="dark"] {
-            --bg: #000000; --text: #ffffff; --header-bg: #1c1c1e; --nav-bg: #2c2c2e; --accent: #0a84ff;
+            --bg: #121212; --text: #ffffff; --header-bg: #1c1c1e; 
+            --nav-bg: #2c2c2e; --accent: #0a84ff; --card: #252525;
         }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; user-select: none; }
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
         nav { display: flex; gap: 8px; margin-top: 10px; }
@@ -27,18 +28,18 @@
         .nav-btn.active { background: var(--accent); color: white; }
         .screen { display: none; padding: 20px; text-align: center; }
         .screen.active { display: block; }
-        .case-box { background: var(--header-bg); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); }
+        .case-box { background: var(--card); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .open-button { width: 100%; padding: 16px; background: #34c759; color: white; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .item { background: var(--header-bg); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; }
+        .item { background: var(--card); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; border: 1px solid rgba(128,128,128,0.1); }
         .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.5; z-index: 0; }
         .glow-rainbow { animation: rainbow 3s linear infinite; }
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
-        
-        .profile-card { background: var(--header-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
-        .google-login-btn { background: white; color: black; border: 1px solid #ddd; padding: 10px; border-radius: 12px; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; cursor: pointer; }
-        #admin-auth-box { margin-top: 20px; padding: 15px; border: 1px dashed var(--accent); border-radius: 15px; display: none; }
+        .profile-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
+        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: left; border: 2px solid #ffeeba; }
+        .admin-panel input, .admin-panel select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
+        .theme-switch { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -60,32 +61,38 @@
     <div id="inventory" class="screen"><div class="grid" id="inv-g"></div></div>
     
     <div id="settings" class="screen">
+        <h3 id="settings-title" onclick="unlockAdmin()">Настройки</h3>
+        
+        <div class="theme-switch">
+            <span>Тёмная тема</span>
+            <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="width:20px; height:20px;">
+        </div>
+
         <div class="profile-card">
-            <h3 style="margin-top:0;">👤 Профиль</h3>
             <div id="auth-info">
-                <p style="font-size: 13px; color: #888;">Прогресс: <b>Локальный</b> (не сохранен в облаке)</p>
-                <button class="google-login-btn" id="bind-btn" onclick="loginWithGoogle()">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="16">
-                    Привязать Google
-                </button>
+                <button class="nav-btn" style="background:#fff; color:#000; border:1px solid #ddd; width:100%;" onclick="loginWithGoogle()">Привязать Google</button>
             </div>
             <div id="user-profile" style="display:none;">
-                <p style="margin: 5px 0; font-weight: bold;" id="user-email"></p>
-                <p style="font-size: 12px; color: #34c759;">✓ Облачное сохранение активно</p>
-                <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; margin-top:10px; width:100%;">Выйти</button>
+                <p id="user-email" style="font-weight:bold;"></p>
+                <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
             </div>
         </div>
 
-        <button class="nav-btn" onclick="resetGame()" style="width:100%; border: 1px solid #ff3b30; color:#ff3b30; background:transparent;">Сбросить прогресс</button>
+        <div id="admin-menu" class="admin-panel">
+            <b style="font-size:18px;">🛠 Меню разработчика</b><br><br>
+            
+            <label>Выдать Duks:</label>
+            <input type="number" id="adm-money-val" placeholder="Сумма...">
+            <button class="nav-btn" style="background:#28a745; color:white; width:100%;" onclick="addCustomMoney()">Добавить</button>
+            
+            <hr style="margin:15px 0; opacity:0.2;">
+            
+            <label>Выдать предмет:</label>
+            <select id="adm-item-select"></select>
+            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="addCustomItem()">Получить NFT</button>
+        </div>
 
-        <div id="admin-auth-box">
-            <input type="password" id="admin-input" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;" placeholder="Код Zxc...">
-            <button class="nav-btn" onclick="checkAdminCode()" style="background:var(--accent); color:white; width:100%;">Войти</button>
-        </div>
-        <div id="admin-menu" style="display:none; margin-top:15px; background:#fff3cd; padding:15px; border-radius:15px; color:#856404;">
-            <b>Admin Active</b><br>
-            <button onclick="addM(1000000)" class="nav-btn" style="background:#28a745; color:white; width:100%; margin-top:10px;">+1M Duks</button>
-        </div>
+        <button class="nav-btn" onclick="resetGame()" style="width:100%; border:1px solid #ff3b30; color:#ff3b30; background:transparent; margin-top:20px;">Сбросить прогресс</button>
     </div>
 </main>
 
@@ -103,43 +110,52 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const CONFIG = [
-        { name: "Бедный", price: 200, icon: "📦", items: [
-            { n: "Перо", sell: 150, c: "var(--common)", i: "🪶" },
-            { n: "Урна", sell: 195, c: "var(--epic)", i: "⚱️" }
-        ]},
-        { name: "Мощный", price: 2000, icon: "⚡", items: [
-            { n: "Эспандер", sell: 5000, c: "var(--mythic)", i: "💪" },
-            { n: "Золотой эспандер", sell: 6000, c: "var(--legendary)", i: "💪✨" }
-        ]},
-        { name: "Эксклюзив", price: 15000, icon: "✨", items: [
-            { n: "Луна", sell: 10000, c: "rainbow", i: "🌙" },
-            { n: "Солнце", sell: 10000, c: "rainbow", i: "☀️" }
-        ]}
+    // Список всех NFT (для админки и кейсов)
+    const ALL_ITEMS = [
+        { n: "Перо", sell: 150, c: "var(--common)", i: "🪶" },
+        { n: "Урна", sell: 195, c: "var(--epic)", i: "⚱️" },
+        { n: "Эспандер", sell: 5000, c: "var(--mythic)", i: "💪" },
+        { n: "Золотой эспандер", sell: 6000, c: "var(--legendary)", i: "💪✨" },
+        { n: "Луна", sell: 10000, c: "rainbow", i: "🌙" },
+        { n: "Солнце", sell: 10000, c: "rainbow", i: "☀️" }
     ];
 
-    let b = 1000; let inv = []; let settingClicks = 0; let isLoaded = false;
+    const CONFIG = [
+        { name: "Бедный", price: 200, icon: "📦", items: [ALL_ITEMS[0], ALL_ITEMS[1]] },
+        { name: "Мощный", price: 2000, icon: "⚡", items: [ALL_ITEMS[2], ALL_ITEMS[3]] }
+    ];
+
+    let b = 1000; let inv = []; let adminClicks = 0;
 
     async function init() {
-        // 1. Грузим локально
+        // Загрузка темы
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            document.getElementById('theme-toggle').checked = true;
+        }
+
+        // Загрузка данных
         const lb = localStorage.getItem('db');
         const li = localStorage.getItem('di');
         if(lb) b = parseInt(lb);
         if(li) inv = JSON.parse(li);
 
-        // 2. Слушаем вход
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 document.getElementById('auth-info').style.display = 'none';
                 document.getElementById('user-profile').style.display = 'block';
                 document.getElementById('user-email').innerText = user.email;
                 await syncWithCloud(user);
-            } else {
-                document.getElementById('auth-info').style.display = 'block';
-                document.getElementById('user-profile').style.display = 'none';
             }
             updateUI();
         });
+
+        // Заполнение списка в админке
+        const sel = document.getElementById('adm-item-select');
+        ALL_ITEMS.forEach((it, i) => {
+            sel.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`;
+        });
+
         renderCases();
         updateUI();
     }
@@ -147,16 +163,14 @@
     async function syncWithCloud(user) {
         try {
             const ref = db.collection("users").doc(user.uid);
-            const doc = await ref.get({ source: 'server' });
+            const doc = await ref.get();
             if (doc.exists) {
                 const cloud = doc.data();
-                // Синхронизация: выбираем большее значение баланса
                 if (cloud.balance > b) b = cloud.balance;
-                if (cloud.inventory && cloud.inventory.length > inv.length) inv = cloud.inventory;
+                if (cloud.inventory) inv = cloud.inventory;
             }
-            // Сразу сохраняем текущее состояние в облако
             await ref.set({ balance: b, inventory: inv, email: user.email }, { merge: true });
-        } catch(e) { console.error("Sync error:", e); }
+        } catch(e) {}
     }
 
     function save() {
@@ -164,8 +178,7 @@
         localStorage.setItem('di', JSON.stringify(inv));
         updateUI();
         if (auth.currentUser) {
-            db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true })
-              .catch(e => console.error("Cloud save error:", e));
+            db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
         }
     }
 
@@ -174,8 +187,9 @@
         const g = document.getElementById('inv-g');
         g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:20px;">Инвентарь пуст</p>';
         inv.forEach((it, idx) => {
+            const isR = it.c === 'rainbow';
             g.innerHTML += `<div class="item">
-                <div class="glow ${it.c === 'rainbow' ? 'glow-rainbow' : ''}" style="background:${it.c === 'rainbow' ? '' : it.c}"></div>
+                <div class="glow ${isR ? 'glow-rainbow' : ''}" style="background:${isR ? '' : it.c}"></div>
                 <div style="font-size:35px; z-index:1;">${it.i}</div>
                 <button class="sell-btn" onclick="sell(${idx})">${it.sell} D</button>
             </div>`;
@@ -205,37 +219,52 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         if(btnId) document.getElementById(btnId).classList.add('active');
+        if(id !== 'settings') adminClicks = 0;
     }
 
-    function handleSettings() { settingClicks++; show('settings'); if(settingClicks >= 5) document.getElementById('admin-auth-box').style.display='block'; }
-    function checkAdminCode() { if(document.getElementById('admin-input').value === "Zxc1234Zxc") document.getElementById('admin-menu').style.display='block'; }
-    function addM(v) { b += v; save(); }
-
-    // УЛУЧШЕННЫЙ ВХОД (POPUP)
-    function loginWithGoogle() {
-        const btn = document.getElementById('bind-btn');
-        btn.innerText = "Загрузка...";
-        const provider = new firebase.auth.GoogleAuthProvider();
-        
-        auth.signInWithPopup(provider)
-            .then((result) => {
-                console.log("Привязка успешна!");
-            })
-            .catch((error) => {
-                btn.innerText = "Привязать Google";
-                if(error.code === 'auth/popup-blocked') {
-                    alert("Браузер заблокировал окно. Разрешите всплывающие окна для этого сайта.");
-                } else {
-                    alert("Ошибка: " + error.message);
-                }
-            });
+    function toggleTheme() {
+        const isDark = document.getElementById('theme-toggle').checked;
+        if(isDark) {
+            document.body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        }
     }
 
+    function unlockAdmin() {
+        adminClicks++;
+        if(adminClicks === 5) {
+            const code = prompt("Введите код доступа:");
+            if(code === "Zxc1234Zxc") {
+                document.getElementById('admin-menu').style.display = 'block';
+                alert("Доступ разрешен");
+            } else {
+                alert("Неверно");
+                adminClicks = 0;
+            }
+        }
+    }
+
+    function addCustomMoney() {
+        const val = parseInt(document.getElementById('adm-money-val').value);
+        if(!isNaN(val)) { b += val; save(); alert("Добавлено!"); }
+    }
+
+    function addCustomItem() {
+        const idx = document.getElementById('adm-item-select').value;
+        inv.push({...ALL_ITEMS[idx]});
+        save();
+        alert("NFT добавлено в инвентарь!");
+    }
+
+    function handleSettings() { show('settings'); }
+    function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { auth.signOut().then(() => location.reload()); }
-    function resetGame() { if(confirm("Сбросить весь прогресс?")) { localStorage.clear(); location.reload(); } }
+    function resetGame() { if(confirm("Сбросить всё?")) { localStorage.clear(); location.reload(); } }
 
     init();
 </script>
 </body>
-    </html>
-    
+</html>
