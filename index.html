@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Pro Edition</title>
+    <title>DuksNFT - Final Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -36,10 +36,10 @@
         .glow-rainbow { animation: rainbow 3s linear infinite; }
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
-        .profile-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
+        .profile-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; border: 1px solid rgba(128,128,128,0.1); }
         .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: left; border: 2px solid #ffeeba; }
-        .admin-panel input, .admin-panel select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
-        .theme-switch { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
+        .admin-panel input, .admin-panel select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+        .theme-switch { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1); }
     </style>
 </head>
 <body>
@@ -61,38 +61,38 @@
     <div id="inventory" class="screen"><div class="grid" id="inv-g"></div></div>
     
     <div id="settings" class="screen">
-        <h3 id="settings-title" onclick="unlockAdmin()">Настройки</h3>
+        <h2 id="adm-trigger" onclick="unlockAdmin()" style="margin-bottom: 25px; padding: 10px;">Настройки</h2>
         
         <div class="theme-switch">
             <span>Тёмная тема</span>
-            <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="width:20px; height:20px;">
+            <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="width:22px; height:22px;">
         </div>
 
         <div class="profile-card">
+            <h3 style="margin-top:0; font-size:16px;">👤 Профиль</h3>
             <div id="auth-info">
                 <button class="nav-btn" style="background:#fff; color:#000; border:1px solid #ddd; width:100%;" onclick="loginWithGoogle()">Привязать Google</button>
             </div>
             <div id="user-profile" style="display:none;">
-                <p id="user-email" style="font-weight:bold;"></p>
+                <p id="user-email" style="font-weight:bold; font-size:14px; margin-bottom:10px;"></p>
                 <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
             </div>
         </div>
 
         <div id="admin-menu" class="admin-panel">
-            <b style="font-size:18px;">🛠 Меню разработчика</b><br><br>
+            <b style="font-size:18px;">🛠 Меню разработчика</b><br>
+            <p style="font-size:12px; margin: 5px 0;">Все изменения сохранятся в облаке</p>
             
-            <label>Выдать Duks:</label>
-            <input type="number" id="adm-money-val" placeholder="Сумма...">
-            <button class="nav-btn" style="background:#28a745; color:white; width:100%;" onclick="addCustomMoney()">Добавить</button>
+            <label style="font-size:12px;">Сумма Duks:</label>
+            <input type="number" id="adm-money-val" placeholder="Напр: 1000000">
+            <button class="nav-btn" style="background:#28a745; color:white; width:100%; margin-bottom:15px;" onclick="addCustomMoney()">Выдать деньги</button>
             
-            <hr style="margin:15px 0; opacity:0.2;">
-            
-            <label>Выдать предмет:</label>
+            <label style="font-size:12px;">Выбрать NFT:</label>
             <select id="adm-item-select"></select>
-            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="addCustomItem()">Получить NFT</button>
+            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="addCustomItem()">Добавить в инвентарь</button>
         </div>
 
-        <button class="nav-btn" onclick="resetGame()" style="width:100%; border:1px solid #ff3b30; color:#ff3b30; background:transparent; margin-top:20px;">Сбросить прогресс</button>
+        <button class="nav-btn" onclick="resetGame()" style="width:100%; border:1px solid #ff3b30; color:#ff3b30; background:transparent; margin-top:30px;">Сбросить прогресс</button>
     </div>
 </main>
 
@@ -110,7 +110,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Список всех NFT (для админки и кейсов)
     const ALL_ITEMS = [
         { n: "Перо", sell: 150, c: "var(--common)", i: "🪶" },
         { n: "Урна", sell: 195, c: "var(--epic)", i: "⚱️" },
@@ -128,13 +127,11 @@
     let b = 1000; let inv = []; let adminClicks = 0;
 
     async function init() {
-        // Загрузка темы
         if(localStorage.getItem('theme') === 'dark') {
             document.body.setAttribute('data-theme', 'dark');
             document.getElementById('theme-toggle').checked = true;
         }
 
-        // Загрузка данных
         const lb = localStorage.getItem('db');
         const li = localStorage.getItem('di');
         if(lb) b = parseInt(lb);
@@ -146,11 +143,13 @@
                 document.getElementById('user-profile').style.display = 'block';
                 document.getElementById('user-email').innerText = user.email;
                 await syncWithCloud(user);
+            } else {
+                document.getElementById('auth-info').style.display = 'block';
+                document.getElementById('user-profile').style.display = 'none';
             }
             updateUI();
         });
 
-        // Заполнение списка в админке
         const sel = document.getElementById('adm-item-select');
         ALL_ITEMS.forEach((it, i) => {
             sel.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`;
@@ -167,10 +166,10 @@
             if (doc.exists) {
                 const cloud = doc.data();
                 if (cloud.balance > b) b = cloud.balance;
-                if (cloud.inventory) inv = cloud.inventory;
+                if (cloud.inventory && cloud.inventory.length > 0) inv = cloud.inventory;
             }
             await ref.set({ balance: b, inventory: inv, email: user.email }, { merge: true });
-        } catch(e) {}
+        } catch(e) { console.log("Cloud error:", e); }
     }
 
     function save() {
@@ -185,7 +184,7 @@
     function updateUI() {
         document.getElementById('b-val').innerText = b.toLocaleString();
         const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:20px;">Инвентарь пуст</p>';
+        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:50px;">Инвентарь пуст</p>';
         inv.forEach((it, idx) => {
             const isR = it.c === 'rainbow';
             g.innerHTML += `<div class="item">
@@ -200,7 +199,7 @@
         document.getElementById('cases').innerHTML = CONFIG.map((c, i) => `
             <div class="case-box">
                 <div style="font-size:50px;">${c.icon}</div>
-                <h2>${c.name}</h2>
+                <h2 style="margin:10px 0;">${c.name}</h2>
                 <button class="open-button" onclick="openC(${i})">${c.price} Duks</button>
             </div>`).join('');
     }
@@ -233,15 +232,16 @@
         }
     }
 
+    // ЛОГИКА АДМИНКИ (5 КЛИКОВ)
     function unlockAdmin() {
         adminClicks++;
-        if(adminClicks === 5) {
-            const code = prompt("Введите код доступа:");
+        if(adminClicks >= 5) {
+            const code = prompt("Введите секретный код доступа:");
             if(code === "Zxc1234Zxc") {
                 document.getElementById('admin-menu').style.display = 'block';
-                alert("Доступ разрешен");
+                window.scrollTo(0, document.body.scrollHeight);
             } else {
-                alert("Неверно");
+                alert("Доступ запрещен!");
                 adminClicks = 0;
             }
         }
@@ -249,20 +249,20 @@
 
     function addCustomMoney() {
         const val = parseInt(document.getElementById('adm-money-val').value);
-        if(!isNaN(val)) { b += val; save(); alert("Добавлено!"); }
+        if(!isNaN(val)) { b += val; save(); alert("Деньги зачислены!"); }
     }
 
     function addCustomItem() {
         const idx = document.getElementById('adm-item-select').value;
         inv.push({...ALL_ITEMS[idx]});
         save();
-        alert("NFT добавлено в инвентарь!");
+        alert("NFT добавлено!");
     }
 
     function handleSettings() { show('settings'); }
     function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { auth.signOut().then(() => location.reload()); }
-    function resetGame() { if(confirm("Сбросить всё?")) { localStorage.clear(); location.reload(); } }
+    function resetGame() { if(confirm("Сбросить весь прогресс?")) { localStorage.clear(); location.reload(); } }
 
     init();
 </script>
