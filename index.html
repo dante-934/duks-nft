@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Diagnostic Edition</title>
+    <title>DuksNFT - Hybrid Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -20,8 +20,6 @@
             --bg: #000000; --text: #ffffff; --header-bg: #1c1c1e; --nav-bg: #2c2c2e; --accent: #0a84ff;
         }
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 14px 28px; border-radius: 28px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
         nav { display: flex; gap: 8px; margin-top: 10px; }
@@ -32,29 +30,21 @@
         .case-box { background: var(--header-bg); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); }
         .open-button { width: 100%; padding: 16px; background: #34c759; color: white; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .item { background: var(--header-bg); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; border: 1px solid rgba(128,128,128,0.1); }
-        .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.5; z-index: 0; pointer-events: none; }
+        .item { background: var(--header-bg); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; }
+        .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.5; z-index: 0; }
         .glow-rainbow { animation: rainbow 3s linear infinite; }
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
-        .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; cursor: pointer; }
+        .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
+        
+        /* Стили профиля */
+        .profile-card { background: var(--header-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
+        .google-login-btn { background: white; color: black; border: 1px solid #ddd; padding: 10px; border-radius: 12px; width: 100%; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
         #admin-auth-box { margin-top: 20px; padding: 15px; border: 1px dashed var(--accent); border-radius: 15px; display: none; }
-        #admin-input { width: 80%; padding: 10px; border-radius: 10px; border: 1px solid var(--nav-bg); background: var(--bg); color: var(--text); text-align: center; margin-bottom: 10px; outline: none; }
-        #admin-menu { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div id="auth-screen">
-    <div style="font-size: 60px; margin-bottom: 10px;">🦆</div>
-    <h1>DuksNFT</h1>
-    <p id="auth-status">Инициализация...</p>
-    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="18" alt="G">
-        Войти через Google
-    </button>
-</div>
-
-<header id="main-header" style="display:none;">
+<header>
     <div style="display:flex; justify-content:space-between; align-items:center;">
         <div style="font-weight:900; font-size:22px; color:var(--accent);">DuksNFT</div>
         <div class="balance"><span id="b-val">0</span> D</div>
@@ -66,24 +56,42 @@
     </nav>
 </header>
 
-<main id="main-content" style="display:none;">
+<main>
     <div id="cases" class="screen active"></div>
     <div id="inventory" class="screen"><div class="grid" id="inv-g"></div></div>
+    
     <div id="settings" class="screen">
-        <p id="user-info" style="font-size:12px; opacity:0.6;"></p>
-        <button class="nav-btn" onclick="signOut()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
-        <div id="admin-auth-box">
-            <input type="password" id="admin-input" placeholder="Код Zxc...">
-            <button class="nav-btn" onclick="checkAdminCode()" style="background:var(--accent); color:white; width:100%;">Активировать</button>
+        <div class="profile-card">
+            <h3 style="margin-top:0;">👤 Профиль</h3>
+            <div id="auth-info">
+                <p style="font-size: 13px; color: #888;">Прогресс: <b>Локальный</b></p>
+                <button class="google-login-btn" onclick="loginWithGoogle()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="16">
+                    Привязать аккаунт
+                </button>
+            </div>
+            <div id="user-profile" style="display:none;">
+                <p style="margin: 5px 0; font-weight: bold;" id="user-email"></p>
+                <p style="font-size: 12px; color: #34c759;">✓ Облачное сохранение активно</p>
+                <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; margin-top:10px;">Выйти</button>
+            </div>
         </div>
-        <div id="admin-menu">
-            <b>Admin Mode Active</b><br><br>
-            <button onclick="addM(1000000)" class="nav-btn" style="width:100%; background:#28a745; color:white;">+1M Duks</button>
+
+        <button class="nav-btn" onclick="resetGame()" style="width:100%; border: 1px solid #ff3b30; color:#ff3b30; background:transparent;">Сбросить прогресс</button>
+
+        <div id="admin-auth-box">
+            <input type="password" id="admin-input" style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:1px solid #ddd;" placeholder="Код Zxc...">
+            <button class="nav-btn" onclick="checkAdminCode()" style="background:var(--accent); color:white; width:100%;">Войти</button>
+        </div>
+        <div id="admin-menu" style="display:none; margin-top:15px; background:#fff3cd; padding:15px; border-radius:15px;">
+            <b>Admin Active</b><br>
+            <button onclick="addM(1000000)" class="nav-btn" style="background:#28a745; color:white; width:100%; margin-top:10px;">+1M Duks</button>
         </div>
     </div>
 </main>
 
 <script>
+    // КОНФИГУРАЦИЯ
     const firebaseConfig = {
         apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8",
         authDomain: "duksnft.firebaseapp.com",
@@ -112,76 +120,64 @@
         ]}
     ];
 
-    let b = 1000; let inv = []; let isLoaded = false; let settingClicks = 0;
+    let b = 1000; let inv = []; let settingClicks = 0;
 
-    async function initGame() {
-        try {
-            const result = await auth.getRedirectResult();
-            if (result.user) await loadUserData(result.user);
-        } catch (e) { 
-            console.error("Redirect error", e); 
-            document.getElementById('auth-status').innerHTML = `<b style="color:red">Ошибка редиректа:</b> ${e.code}`;
-        }
+    // 1. ЗАГРУЗКА
+    async function init() {
+        // Сначала грузим локально
+        const lb = localStorage.getItem('db');
+        const li = localStorage.getItem('di');
+        if(lb) b = parseInt(lb);
+        if(li) inv = JSON.parse(li);
 
+        // Проверяем облако
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                await loadUserData(user);
+                document.getElementById('auth-info').style.display = 'none';
+                document.getElementById('user-profile').style.display = 'block';
+                document.getElementById('user-email').innerText = user.email;
+                await syncWithCloud(user);
             } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('login-btn').style.display = 'flex';
-                document.getElementById('auth-status').innerText = "Войдите через Google";
+                document.getElementById('auth-info').style.display = 'block';
+                document.getElementById('user-profile').style.display = 'none';
             }
+            updateUI();
         });
+        renderCases();
+        updateUI();
     }
 
-    async function loadUserData(user) {
-        if (isLoaded) return;
-        document.getElementById('auth-status').innerText = "Загрузка профиля...";
-        try {
-            const userRef = db.collection("users").doc(user.uid);
-            const doc = await userRef.get({ source: 'server' });
-
-            if (doc.exists) {
-                b = doc.data().balance ?? 1000;
-                inv = doc.data().inventory ?? [];
-            } else {
-                await userRef.set({ balance: 1000, inventory: [], email: user.email });
-                b = 1000; inv = [];
-            }
-            isLoaded = true;
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('main-header').style.display = 'block';
-            document.getElementById('main-content').style.display = 'block';
-            document.getElementById('user-info').innerText = user.email;
-            sync(false); renderCases();
-        } catch (e) {
-            console.error(e);
-            // ПОДРОБНЫЙ ВЫВОД ОШИБКИ ПРЯМО НА ЭКРАН
-            document.getElementById('auth-status').innerHTML = 
-                `<b style="color:red">Ошибка базы!</b><br>
-                Код: ${e.code}<br>
-                <small style="font-size:10px">${e.message}</small><br>
-                <button onclick="location.reload()" style="margin-top:10px; padding:5px 10px; border-radius:10px; border:none; background:var(--accent); color:white;">Повторить</button>`;
+    async function syncWithCloud(user) {
+        const ref = db.collection("users").doc(user.uid);
+        const doc = await ref.get();
+        if (doc.exists) {
+            // Если в облаке больше денег, берем из облака
+            const cloudData = doc.data();
+            if (cloudData.balance > b) b = cloudData.balance;
+            inv = cloudData.inventory || inv;
+        } else {
+            // Если в облаке нет, сохраняем туда текущий локальный прогресс
+            await ref.set({ balance: b, inventory: inv, email: user.email });
         }
     }
 
-    async function sync(save = true) {
-        if (!isLoaded) return;
+    function save() {
+        localStorage.setItem('db', b);
+        localStorage.setItem('di', JSON.stringify(inv));
+        updateUI();
+        if (auth.currentUser) {
+            db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
+        }
+    }
+
+    function updateUI() {
         document.getElementById('b-val').innerText = b.toLocaleString();
-        renderInv();
-        if (save && auth.currentUser) {
-            await db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
-        }
-    }
-
-    function renderInv() {
         const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5;">Инвентарь пуст</p>';
+        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:20px;">Пусто</p>';
         inv.forEach((it, idx) => {
             g.innerHTML += `<div class="item">
                 <div class="glow ${it.c === 'rainbow' ? 'glow-rainbow' : ''}" style="background:${it.c === 'rainbow' ? '' : it.c}"></div>
                 <div style="font-size:35px; z-index:1;">${it.i}</div>
-                <div style="font-size:10px; font-weight:800; z-index:1; margin-top:5px;">${it.n}</div>
                 <button class="sell-btn" onclick="sell(${idx})">${it.sell} D</button>
             </div>`;
         });
@@ -197,41 +193,29 @@
     }
 
     function openC(i) {
-        if (!isLoaded || b < CONFIG[i].price) return b < CONFIG[i].price ? alert('Мало денег!') : null;
+        if (b < CONFIG[i].price) return alert('Мало денег');
         b -= CONFIG[i].price;
         inv.push({...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]});
-        sync();
+        save();
     }
 
-    function sell(idx) { b += inv[idx].sell; inv.splice(idx, 1); sync(); }
+    function sell(idx) { b += inv[idx].sell; inv.splice(idx, 1); save(); }
+    
     function show(id, btnId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         if(btnId) document.getElementById(btnId).classList.add('active');
     }
 
-    function handleSettings() {
-        settingClicks++; show('settings');
-        if (settingClicks >= 5) document.getElementById('admin-auth-box').style.display = 'block';
-    }
+    function handleSettings() { settingClicks++; show('settings'); if(settingClicks >= 5) document.getElementById('admin-auth-box').style.display='block'; }
+    function checkAdminCode() { if(document.getElementById('admin-input').value === "Zxc1234Zxc") document.getElementById('admin-menu').style.display='block'; }
+    function addM(v) { b += v; save(); }
+    function loginWithGoogle() { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+    function logout() { auth.signOut().then(() => location.reload()); }
+    function resetGame() { if(confirm("Сбросить?")) { localStorage.clear(); location.reload(); } }
 
-    function checkAdminCode() {
-        if (document.getElementById('admin-input').value === "Zxc1234Zxc") {
-            document.getElementById('admin-menu').style.display = 'block';
-            document.getElementById('admin-auth-box').style.display = 'none';
-        } else alert("Неверно");
-    }
-
-    function googleLogin() { 
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider); 
-    }
-    
-    function signOut() { auth.signOut().then(() => location.reload()); }
-    function addM(v) { b += v; sync(); }
-
-    initGame();
+    init();
 </script>
 </body>
 </html>
