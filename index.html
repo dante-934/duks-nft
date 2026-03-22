@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Final Fixed Edition</title>
+    <title>DuksNFT - Diagnostic Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -114,12 +114,14 @@
 
     let b = 1000; let inv = []; let isLoaded = false; let settingClicks = 0;
 
-    // ГЛАВНАЯ ИНИЦИАЛИЗАЦИЯ
     async function initGame() {
         try {
             const result = await auth.getRedirectResult();
             if (result.user) await loadUserData(result.user);
-        } catch (e) { console.error("Redirect error", e); }
+        } catch (e) { 
+            console.error("Redirect error", e); 
+            document.getElementById('auth-status').innerHTML = `<b style="color:red">Ошибка редиректа:</b> ${e.code}`;
+        }
 
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -137,7 +139,6 @@
         document.getElementById('auth-status').innerText = "Загрузка профиля...";
         try {
             const userRef = db.collection("users").doc(user.uid);
-            // ПРИНУДИТЕЛЬНО ЗАПРАШИВАЕМ С СЕРВЕРА
             const doc = await userRef.get({ source: 'server' });
 
             if (doc.exists) {
@@ -155,8 +156,12 @@
             sync(false); renderCases();
         } catch (e) {
             console.error(e);
+            // ПОДРОБНЫЙ ВЫВОД ОШИБКИ ПРЯМО НА ЭКРАН
             document.getElementById('auth-status').innerHTML = 
-                `<span style="color:red">Ошибка базы!</span><br><small>Проверь Rules в консоли</small>`;
+                `<b style="color:red">Ошибка базы!</b><br>
+                Код: ${e.code}<br>
+                <small style="font-size:10px">${e.message}</small><br>
+                <button onclick="location.reload()" style="margin-top:10px; padding:5px 10px; border-radius:10px; border:none; background:var(--accent); color:white;">Повторить</button>`;
         }
     }
 
@@ -218,7 +223,11 @@
         } else alert("Неверно");
     }
 
-    function googleLogin() { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); }
+    function googleLogin() { 
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithRedirect(provider); 
+    }
+    
     function signOut() { auth.signOut().then(() => location.reload()); }
     function addM(v) { b += v; sync(); }
 
