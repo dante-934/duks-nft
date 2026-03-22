@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Classic Items</title>
+    <title>DuksNFT - Fixed Auth</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -22,8 +22,8 @@
 
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
         
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 12px 24px; border-radius: 24px; font-weight: 600; cursor: pointer; }
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 14px 28px; border-radius: 28px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
@@ -41,7 +41,6 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .item { background: var(--header-bg); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; border: 1px solid rgba(128,128,128,0.1); }
         
-        /* Свечение по твоим правилам */
         .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.5; z-index: 0; pointer-events: none; }
         .glow-rainbow { animation: rainbow 3s linear infinite; }
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
@@ -54,8 +53,11 @@
 <div id="auth-screen">
     <div style="font-size: 60px; margin-bottom: 10px;">🦆</div>
     <h1>DuksNFT</h1>
-    <p id="auth-status">Загрузка данных...</p>
-    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">Войти через Google</button>
+    <p id="auth-status">Инициализация...</p>
+    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="18">
+        Войти через Google
+    </button>
 </div>
 
 <header id="main-header" style="display:none;">
@@ -96,7 +98,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // ВОЗВРАЩЕНЫ ТВОИ ПРЕДМЕТЫ ИЗ ФАЙЛА рп (1).html
     const CONFIG = [
         { name: "Бедный", price: 200, icon: "📦", items: [
             { n: "Перо", sell: 150, c: "var(--common)", i: "🪶" },
@@ -117,17 +118,31 @@
     let isLoaded = false;
     let clicks = 0;
 
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            await load(user);
-        } else {
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('login-btn').style.display = 'flex';
-            document.getElementById('auth-status').innerText = "Войдите для игры";
+    // ГЛАВНЫЙ ИСПРАВЛЕННЫЙ ЦИКЛ АВТОРИЗАЦИИ
+    async function initAuth() {
+        // Проверяем, вернулись ли мы от Google
+        try {
+            const result = await auth.getRedirectResult();
+            if (result.user) {
+                console.log("Вход выполнен через Redirect");
+            }
+        } catch (error) {
+            console.error("Ошибка Redirect:", error);
         }
-    });
 
-    async function load(user) {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById('auth-status').innerText = "Синхронизация...";
+                await loadData(user);
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('login-btn').style.display = 'flex';
+                document.getElementById('auth-status').innerText = "Войдите через Google";
+            }
+        });
+    }
+
+    async function loadData(user) {
         try {
             const doc = await db.collection("users").doc(user.uid).get();
             if (doc.exists) {
@@ -145,6 +160,7 @@
             renderCases();
         } catch (e) {
             console.error(e);
+            document.getElementById('auth-status').innerText = "Ошибка базы! Проверь Rules.";
         }
     }
 
@@ -161,7 +177,7 @@
 
     function renderInv() {
         const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5;">Пусто</p>';
+        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5;">Инвентарь пуст</p>';
         inv.forEach((it, idx) => {
             g.innerHTML += `
                 <div class="item">
@@ -176,7 +192,7 @@
     function renderCases() {
         document.getElementById('cases').innerHTML = CONFIG.map((c, i) => `
             <div class="case-box">
-                <div style="font-size:40px;">${c.icon}</div>
+                <div style="font-size:50px;">${c.icon}</div>
                 <h2>${c.name}</h2>
                 <button class="open-button" onclick="openC(${i})">${c.price} Duks</button>
             </div>`).join('');
@@ -184,10 +200,9 @@
 
     function openC(i) {
         if (!isLoaded) return;
-        if (b < CONFIG[i].price) return alert('Недостаточно Duks!');
+        if (b < CONFIG[i].price) return alert('Мало денег!');
         b -= CONFIG[i].price;
-        const pool = CONFIG[i].items;
-        const drop = {...pool[Math.floor(Math.random() * pool.length)]};
+        const drop = {...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]};
         inv.push(drop);
         sync();
     }
@@ -213,6 +228,10 @@
 
     function signOut() { auth.signOut().then(() => location.reload()); }
     function addM(v) { b += v; sync(); }
+
+    // Запуск
+    initAuth();
 </script>
 </body>
-</html>
+    </html>
+    
