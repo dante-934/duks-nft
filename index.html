@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Fixed Auth</title>
+    <title>DuksNFT - Secure Admin</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -23,7 +23,7 @@
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; user-select: none; }
         
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 14px 28px; border-radius: 28px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .google-btn { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #dadce0; padding: 14px 28px; border-radius: 28px; font-weight: 600; cursor: pointer; }
 
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
@@ -46,6 +46,11 @@
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
         
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; cursor: pointer; }
+
+        /* Стили для админ-панели */
+        #admin-auth-box { margin-top: 20px; padding: 15px; border: 1px dashed var(--accent); border-radius: 15px; display: none; }
+        #admin-input { width: 80%; padding: 10px; border-radius: 10px; border: 1px solid var(--nav-bg); background: var(--bg); color: var(--text); text-align: center; margin-bottom: 10px; }
+        #admin-menu { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -54,10 +59,7 @@
     <div style="font-size: 60px; margin-bottom: 10px;">🦆</div>
     <h1>DuksNFT</h1>
     <p id="auth-status">Инициализация...</p>
-    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_Hi_res_logo.png" width="18">
-        Войти через Google
-    </button>
+    <button class="google-btn" id="login-btn" style="display:none;" onclick="googleLogin()">Войти через Google</button>
 </div>
 
 <header id="main-header" style="display:none;">
@@ -75,11 +77,19 @@
 <main id="main-content" style="display:none;">
     <div id="cases" class="screen active"></div>
     <div id="inventory" class="screen"><div class="grid" id="inv-g"></div></div>
+    
     <div id="settings" class="screen">
         <p id="user-info" style="font-size:12px; opacity:0.6;"></p>
         <button class="nav-btn" onclick="signOut()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
-        <div id="admin-panel" style="display:none; margin-top:20px; border:2px dashed orange; padding:15px; border-radius:15px;">
-            <button onclick="addM(1000000)" class="nav-btn" style="width:100%;">+1M Duks</button>
+
+        <div id="admin-auth-box">
+            <input type="password" id="admin-input" placeholder="Введите код доступа">
+            <button class="nav-btn" onclick="checkAdminCode()" style="background:var(--accent); color:white; width:100%;">Активировать</button>
+        </div>
+
+        <div id="admin-menu">
+            <b>Admin Mode Active</b><br><br>
+            <button onclick="addM(1000000)" class="nav-btn" style="width:100%; background:#28a745; color:white;">+1M Duks</button>
         </div>
     </div>
 </main>
@@ -116,33 +126,19 @@
     let b = 1000;
     let inv = [];
     let isLoaded = false;
-    let clicks = 0;
+    let settingClicks = 0;
 
-    // ГЛАВНЫЙ ИСПРАВЛЕННЫЙ ЦИКЛ АВТОРИЗАЦИИ
-    async function initAuth() {
-        // Проверяем, вернулись ли мы от Google
-        try {
-            const result = await auth.getRedirectResult();
-            if (result.user) {
-                console.log("Вход выполнен через Redirect");
-            }
-        } catch (error) {
-            console.error("Ошибка Redirect:", error);
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            await load(user);
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('login-btn').style.display = 'flex';
+            document.getElementById('auth-status').innerText = "Войдите для игры";
         }
+    });
 
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                document.getElementById('auth-status').innerText = "Синхронизация...";
-                await loadData(user);
-            } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('login-btn').style.display = 'flex';
-                document.getElementById('auth-status').innerText = "Войдите через Google";
-            }
-        });
-    }
-
-    async function loadData(user) {
+    async function load(user) {
         try {
             const doc = await db.collection("users").doc(user.uid).get();
             if (doc.exists) {
@@ -158,10 +154,7 @@
             document.getElementById('user-info').innerText = user.email;
             sync(false);
             renderCases();
-        } catch (e) {
-            console.error(e);
-            document.getElementById('auth-status').innerText = "Ошибка базы! Проверь Rules.";
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function sync(save = true) {
@@ -169,9 +162,7 @@
         document.getElementById('b-val').innerText = b.toLocaleString();
         renderInv();
         if (save && auth.currentUser) {
-            await db.collection("users").doc(auth.currentUser.uid).set({
-                balance: b, inventory: inv
-            }, { merge: true });
+            await db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
         }
     }
 
@@ -199,11 +190,9 @@
     }
 
     function openC(i) {
-        if (!isLoaded) return;
-        if (b < CONFIG[i].price) return alert('Мало денег!');
+        if (!isLoaded || b < CONFIG[i].price) return b < CONFIG[i].price ? alert('Мало денег!') : null;
         b -= CONFIG[i].price;
-        const drop = {...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]};
-        inv.push(drop);
+        inv.push({...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]});
         sync();
     }
 
@@ -214,11 +203,28 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         if(btnId) document.getElementById(btnId).classList.add('active');
+        if (id !== 'settings') settingClicks = 0; // Сброс кликов если ушли из настроек
     }
 
+    // ЛОГИКА АДМИН ПАНЕЛИ
     function handleSettings() {
-        clicks++; show('settings');
-        if (clicks >= 5) document.getElementById('admin-panel').style.display = 'block';
+        settingClicks++;
+        show('settings');
+        // Показываем поле ввода после 5 кликов
+        if (settingClicks >= 5) {
+            document.getElementById('admin-auth-box').style.display = 'block';
+        }
+    }
+
+    function checkAdminCode() {
+        const input = document.getElementById('admin-input').value;
+        if (input === "Zxc1234Zxc") {
+            document.getElementById('admin-menu').style.display = 'block';
+            document.getElementById('admin-auth-box').style.display = 'none';
+            alert("Админ-режим активирован!");
+        } else {
+            alert("Неверный код доступа!");
+        }
     }
 
     function googleLogin() {
@@ -228,10 +234,6 @@
 
     function signOut() { auth.signOut().then(() => location.reload()); }
     function addM(v) { b += v; sync(); }
-
-    // Запуск
-    initAuth();
 </script>
 </body>
-    </html>
-    
+</html>
