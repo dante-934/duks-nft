@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Professional Build</title>
+    <title>DuksNFT - Anti-Lag Build</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -50,6 +50,8 @@
         
         .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: bold; }
         @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; }
     </style>
 </head>
 <body>
@@ -59,7 +61,7 @@
         <div style="display:flex; align-items:center; gap:12px;">
             <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src="https://via.placeholder.com/100"></div>
             <div>
-                <div style="font-weight:900; font-size:16px;"><span id="h-nick">...</span><span id="h-badge"></span></div>
+                <div style="font-weight:900; font-size:16px;"><span id="h-nick">Загрузка...</span><span id="h-badge"></span></div>
                 <div id="h-id" style="font-size:10px; color:var(--accent); font-weight:bold;">ID: ...</div>
             </div>
         </div>
@@ -178,32 +180,42 @@
     const db = firebase.firestore();
 
     function init() {
-        upUI();
+        upUI(); // Мгновенный показ
+        // Если через 1 сек ник всё еще "Загрузка", сбрасываем на "Гость"
+        setTimeout(() => { if(pData.nick === "Загрузка...") { pData.nick = "Гость"; upUI(); } }, 1000);
+
         auth.onAuthStateChanged(u => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
                 db.collection("users").doc(u.uid).get().then(doc => {
-                    if (doc.exists) pData = Object.assign(pData, doc.data());
-                    else {
+                    if (doc.exists) {
+                        pData = Object.assign(pData, doc.data());
+                    } else {
                         pData.numericId = Math.floor(100000 + Math.random() * 899999);
                         pData.nick = u.displayName || "Игрок";
                         db.collection("users").doc(u.uid).set(pData);
                     }
                     upUI();
-                });
+                }).catch(() => { pData.nick = "Гость"; upUI(); });
             }
         });
+        
         const s = document.getElementById('a-it');
-        s.innerHTML = `<option value="-1">Без выдачи NFT</option>`;
-        ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
+        if(s) {
+            s.innerHTML = `<option value="-1">Без выдачи NFT</option>`;
+            ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
+        }
     }
 
     function upUI() {
+        const hNick = document.getElementById('h-nick');
+        if(!hNick) return;
+        
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
         document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
-        document.getElementById('h-nick').innerText = pData.nick;
-        document.getElementById('h-nick').className = pData.eff || "";
+        hNick.innerText = pData.nick;
+        hNick.className = pData.eff || "";
         document.getElementById('p-nick').innerText = pData.nick;
         document.getElementById('p-nick').className = pData.eff || "";
         
@@ -215,24 +227,95 @@
 
         pData.showcase.forEach((it, i) => {
             const s = document.getElementById(`sl-${i}`);
-            if(it) { s.innerHTML = it.i; s.classList.add('filled'); }
-            else { s.innerHTML = "+"; s.classList.remove('filled'); }
+            if(s) {
+                if(it) { s.innerHTML = it.i; s.classList.add('filled'); }
+                else { s.innerHTML = "+"; s.classList.remove('filled'); }
+            }
         });
 
         const g = document.getElementById('inv-grid');
-        g.innerHTML = "";
-        (pData.inv || []).forEach((it, i) => {
-            g.innerHTML += `<div class="item-card">
-                <div style="font-size:35px; margin-bottom:5px;">${it.i}</div>
-                <div style="font-size:12px; font-weight:bold;">${it.n}</div>
-                <button class="nav-btn active" style="font-size:9px; margin-top:10px; padding:5px 10px;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>
-            </div>`;
-        });
+        if(g) {
+            g.innerHTML = "";
+            (pData.inv || []).forEach((it, i) => {
+                g.innerHTML += `<div class="item-card">
+                    <div style="font-size:35px; margin-bottom:5px;">${it.i}</div>
+                    <div style="font-size:12px; font-weight:bold;">${it.n}</div>
+                    <button class="nav-btn active" style="font-size:9px; margin-top:10px; padding:5px 10px;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>
+                </div>`;
+            });
+        }
     }
 
     function sl(i) {
         const item = pData.inv[i];
         pData.b += item.sell;
-        // Если проданный предмет был в витрине - убираем его
-        pData.showcase = pData.showcase.map(slot => (slot &&
-    
+        pData.showcase = pData.showcase.map(slot => (slot && slot.n === item.n) ? null : slot);
+        pData.inv.splice(i, 1);
+        sync();
+    }
+
+    function sync() { upUI(); if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); }
+
+    function shCaseInfo() {
+        const list = document.getElementById('case-items-list');
+        list.innerHTML = "";
+        ITEMS.forEach(it => {
+            list.innerHTML += `<div class="case-preview-item">
+                <span>${it.i} ${it.n}</span>
+                <b style="color:var(--accent)">${it.chance}</b>
+            </div>`;
+        });
+        document.getElementById('m-case').style.display = 'flex';
+    }
+
+    async function gv() {
+        const tid = document.getElementById('a-tid').value, d = parseInt(document.getElementById('a-d').value || 0), x = parseInt(document.getElementById('a-x').value || 0);
+        const e = document.getElementById('a-eff').value, b = document.getElementById('a-bad').value, itIdx = document.getElementById('a-it').value;
+        const update = { b: firebase.firestore.FieldValue.increment(d), xp: firebase.firestore.FieldValue.increment(x) };
+        if(e !== undefined) update.eff = e;
+        if(b !== undefined) update.badge = b;
+        
+        let targetUid = auth.currentUser?.uid;
+        if(tid) {
+            const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get();
+            if(!snap.empty) targetUid = snap.docs[0].id;
+        }
+        
+        if(itIdx != -1) {
+            const doc = await db.collection("users").doc(targetUid).get();
+            const inv = doc.data().inv || [];
+            inv.push({...ITEMS[itIdx]});
+            update.inv = inv;
+        }
+        await db.collection("users").doc(targetUid).update(update);
+        location.reload(); 
+    }
+
+    window.sw = (id, bid) => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); };
+    window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
+    window.ms = (t) => { const st = document.getElementById('toast'); if(st) { st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); } };
+    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+    window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    window.logout = () => auth.signOut().then(() => location.reload());
+    window.shNick = () => { document.getElementById('m-n').style.display='flex'; };
+    window.svN = () => { pData.nick = document.getElementById('n-in').value; sync(); clM(); };
+    window.opC = () => { if(pData.b < 2500) return ms("Недостаточно Dacks!"); pData.b -= 2500; const r = Math.random()*100; let win = (r < 15) ? {...ITEMS[0]} : (r < 20) ? {...ITEMS[1]} : (r < 50) ? {...ITEMS[2]} : {...ITEMS[3]}; pData.inv.push(win); sync(); ms(`Выпало: ${win.n}`); };
+    window.aCl = () => { sw('settings', 'b-s'); window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-c').style.display='flex'; window.ac=0; } };
+    window.chC = () => { if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") { document.getElementById('a-box').style.display='block'; clM(); } };
+    window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
+    window.opShowcase = (slot) => {
+        window.targetSlot = slot;
+        const list = document.getElementById('sh-list');
+        list.innerHTML = pData.inv.length ? "" : "Нет доступных NFT";
+        pData.inv.forEach((it, i) => {
+            list.innerHTML += `<div onclick="setS(${i})" style="padding:12px; border:1px solid var(--border); border-radius:12px; cursor:pointer; background:var(--bg); display:flex; gap:10px;">${it.i} <b>${it.n}</b></div>`;
+        });
+        document.getElementById('m-sh').style.display = 'flex';
+    };
+    window.setS = (i) => { pData.showcase[window.targetSlot] = pData.inv[i]; sync(); clM(); };
+
+    window.onload = init;
+</script>
+</body>
+        </html>
+        
