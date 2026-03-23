@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Ultimate Edition</title>
+    <title>DuksNFT - Economy Update</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,24 +13,21 @@
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7;
             --nav-bg: #e5e5ea; --accent: #007aff; --card: #ffffff;
-            --common: rgba(0, 122, 255, 0.5); --epic: #af52de; 
-            --legendary: #ffcc00; --mythic: #ff3b30;
+            --common: rgba(0, 122, 255, 0.4); --legendary: #ffcc00; 
+            --mythic: #ff3b30; --exclusive: #af52de; --divine: #5856d6;
         }
         [data-theme="dark"] {
             --bg: #121212; --text: #ffffff; --header-bg: #1c1c1e; 
             --nav-bg: #2c2c2e; --accent: #0a84ff; --card: #252525;
         }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; user-select: none; overflow-x: hidden; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; user-select: none; }
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
         nav { display: flex; gap: 8px; margin-top: 10px; }
-        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; background: var(--nav-bg); color: var(--text); font-weight: 700; font-size: 12px; cursor: pointer; transition: transform 0.1s; }
-        .nav-btn:active { transform: scale(0.95); }
+        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; background: var(--nav-bg); color: var(--text); font-weight: 700; font-size: 12px; cursor: pointer; }
         .nav-btn.active { background: var(--accent); color: white; }
-        .screen { display: none; padding: 20px; text-align: center; animation: fadeIn 0.3s; }
+        .screen { display: none; padding: 20px; text-align: center; }
         .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
         .case-box { background: var(--card); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .open-button { width: 100%; padding: 16px; background: #34c759; color: white; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -38,17 +35,10 @@
         .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.5; z-index: 0; }
         .glow-rainbow { animation: rainbow 3s linear infinite; }
         @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
-        
-        /* Админ-панель и Кастомный ввод */
-        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: left; border: 2px solid #ffeeba; }
-        .admin-panel input, .admin-panel select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box;}
-        
-        #secret-input-box { display: none; background: var(--nav-bg); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px dashed var(--accent); }
-        #secret-input-box input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box; }
-
-        .profile-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; border: 1px solid rgba(128,128,128,0.1); }
-        .theme-switch { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1); }
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
+        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: left; border: 2px solid #ffeeba; }
+        .admin-panel input, .admin-panel select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
+        #secret-input-box { display: none; background: var(--nav-bg); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -71,38 +61,32 @@
     
     <div id="settings" class="screen">
         <h2 style="margin-bottom: 25px;">Настройки</h2>
-
-        <div id="secret-input-box">
-            <p style="margin:0 0 10px 0; font-size:12px; font-weight:bold;">Введите ключ доступа:</p>
-            <input type="password" id="secret-code-field" placeholder="••••••••">
-            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="verifyAdminCode()">Войти в систему</button>
-        </div>
         
-        <div class="theme-switch">
+        <div id="secret-input-box">
+            <input type="password" id="secret-code-field" placeholder="Код админа">
+            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="verifyAdminCode()">Войти</button>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1);">
             <span>Тёмная тема</span>
             <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="width:22px; height:22px;">
         </div>
 
-        <div class="profile-card">
-            <h3 style="margin-top:0; font-size:16px;">👤 Профиль</h3>
-            <div id="auth-info">
-                <button class="nav-btn" style="background:#fff; color:#000; border:1px solid #ddd; width:100%;" onclick="loginWithGoogle()">Привязать Google</button>
-            </div>
-            <div id="user-profile" style="display:none;">
-                <p id="user-email" style="font-weight:bold; font-size:14px; margin-bottom:10px;"></p>
-                <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
-            </div>
+        <div id="auth-info" style="background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid rgba(128,128,128,0.1);">
+            <button class="nav-btn" style="background:#fff; color:#000; border:1px solid #ddd; width:100%;" onclick="loginWithGoogle()">Привязать Google</button>
+        </div>
+        <div id="user-profile" style="display:none; background: var(--card); padding: 20px; border-radius: 20px;">
+            <p id="user-email" style="font-weight:bold;"></p>
+            <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
         </div>
 
         <div id="admin-menu" class="admin-panel">
-            <b style="font-size:18px;">🛠 Меню разработчика</b><br>
+            <b>🛠 Админ-меню</b>
             <input type="number" id="adm-money-val" placeholder="Сумма Duks">
-            <button class="nav-btn" style="background:#28a745; color:white; width:100%; margin-bottom:15px;" onclick="addCustomMoney()">Выдать деньги</button>
+            <button class="nav-btn" onclick="addCustomMoney()">Выдать</button>
             <select id="adm-item-select"></select>
-            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="addCustomItem()">Добавить NFT</button>
+            <button class="nav-btn" onclick="addCustomItem()">Добавить предмет</button>
         </div>
-
-        <button class="nav-btn" onclick="resetGame()" style="width:100%; border:1px solid #ff3b30; color:#ff3b30; background:transparent; margin-top:30px;">Сбросить прогресс</button>
     </div>
 </main>
 
@@ -120,96 +104,93 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Список всех NFT в игре
     const ALL_ITEMS = [
-        { n: "Перо", sell: 150, c: "var(--common)", i: "🪶" },
-        { n: "Урна", sell: 195, c: "var(--epic)", i: "⚱️" },
-        { n: "Эспандер", sell: 5000, c: "var(--mythic)", i: "💪" },
-        { n: "Золотой эспандер", sell: 6000, c: "var(--legendary)", i: "💪✨" },
-        { n: "Луна", sell: 10000, c: "rainbow", i: "🌙" },
-        { n: "Солнце", sell: 10000, c: "rainbow", i: "☀️" }
+        // Бедный
+        { n: "Перо", sell: 150, c: "var(--common)", i: "🪶", chance: 33 },
+        { n: "Урна", sell: 150, c: "var(--common)", i: "⚱️", chance: 33 },
+        { n: "Старый ботинок", sell: 150, c: "var(--common)", i: "👞", chance: 33 },
+        { n: "Золотой слиток", sell: 1000, c: "var(--legendary)", i: "🧈", chance: 1 },
+        // Мощный
+        { n: "Эспандер", sell: 1500, c: "var(--mythic)", i: "💪", chance: 50 },
+        { n: "Золотой эспандер", sell: 2000, c: "var(--mythic)", i: "💪✨", chance: 20 },
+        { n: "Алмазный эспандер", sell: 1500, c: "var(--mythic)", i: "💪💎", chance: 10 },
+        { n: "Божественный эспандер", sell: 10000, c: "rainbow", i: "☄️", chance: 1 },
+        // @#₽#37₽
+        { n: "Золотой кубок", sell: 15000, c: "var(--legendary)", i: "🏆", chance: 5 },
+        { n: "Золотая монета", sell: 800, c: "var(--legendary)", i: "🪙", chance: 25 },
+        { n: "Мешок денег", sell: 5000, c: "var(--exclusive)", i: "💰", chance: 10 },
+        { n: "Телефон", sell: 3000, c: "var(--divine)", i: "📱", chance: 15 },
+        { n: "Сломанный телефон", sell: 200, c: "var(--common)", i: "🔌", chance: 25 },
+        { n: "Кухонный нож", sell: 1200, c: "var(--mythic)", i: "🔪", chance: 20 }
     ];
 
-    const CONFIG = [
-        { name: "Бедный", price: 200, icon: "📦", items: [ALL_ITEMS[0], ALL_ITEMS[1]] },
-        { name: "Мощный", price: 2000, icon: "⚡", items: [ALL_ITEMS[2], ALL_ITEMS[3]] }
+    const CASES_DATA = [
+        { name: "Бедный", price: 200, icon: "📦", items: [ALL_ITEMS[0], ALL_ITEMS[1], ALL_ITEMS[2], ALL_ITEMS[3]] },
+        { name: "Мощный", price: 2000, icon: "⚡", items: [ALL_ITEMS[4], ALL_ITEMS[5], ALL_ITEMS[6], ALL_ITEMS[7]] },
+        { name: "@#₽#37₽", price: 5000, icon: "🏷️", items: [ALL_ITEMS[8], ALL_ITEMS[9], ALL_ITEMS[10], ALL_ITEMS[11], ALL_ITEMS[12], ALL_ITEMS[13]] }
     ];
 
-    let b = 1000; let inv = []; let adminClicks = 0; let clickTimer;
+    let b = 1000; let inv = []; let adminClicks = 0;
 
     async function init() {
         if(localStorage.getItem('theme') === 'dark') {
             document.body.setAttribute('data-theme', 'dark');
             document.getElementById('theme-toggle').checked = true;
         }
-
         const lb = localStorage.getItem('db');
         const li = localStorage.getItem('di');
-        if(lb !== null) b = parseInt(lb);
-        if(li !== null) inv = JSON.parse(li);
+        if(lb) b = parseInt(lb);
+        if(li) inv = JSON.parse(li);
 
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 document.getElementById('auth-info').style.display = 'none';
                 document.getElementById('user-profile').style.display = 'block';
                 document.getElementById('user-email').innerText = user.email;
-                await loadFromCloud(user);
-            } else {
-                document.getElementById('auth-info').style.display = 'block';
-                document.getElementById('user-profile').style.display = 'none';
+                await loadCloud(user);
             }
             updateUI();
         });
 
         const sel = document.getElementById('adm-item-select');
-        ALL_ITEMS.forEach((it, i) => {
-            sel.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`;
-        });
-
+        ALL_ITEMS.forEach((it, i) => sel.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
         renderCases();
         updateUI();
     }
 
-    async function loadFromCloud(user) {
-        try {
-            const ref = db.collection("users").doc(user.uid);
-            const doc = await ref.get();
-            if (doc.exists) {
-                const cloud = doc.data();
-                b = cloud.balance || 0;
-                inv = cloud.inventory || [];
-                localStorage.setItem('db', b);
-                localStorage.setItem('di', JSON.stringify(inv));
-            } else {
-                await ref.set({ balance: b, inventory: inv, email: user.email });
-            }
-        } catch(e) { console.error(e); }
+    async function loadCloud(user) {
+        const doc = await db.collection("users").doc(user.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            b = data.balance || 0;
+            inv = data.inventory || [];
+        }
     }
 
     function save() {
         localStorage.setItem('db', b);
         localStorage.setItem('di', JSON.stringify(inv));
         updateUI();
-        if (auth.currentUser) {
-            db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
-        }
+        if (auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
     }
 
     function updateUI() {
         document.getElementById('b-val').innerText = b.toLocaleString();
         const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:50px;">Инвентарь пуст</p>';
-        inv.forEach((it, idx) => {
+        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:50px;">Пусто</p>';
+        inv.forEach((it, i) => {
             const isR = it.c === 'rainbow';
             g.innerHTML += `<div class="item">
                 <div class="glow ${isR ? 'glow-rainbow' : ''}" style="background:${isR ? '' : it.c}"></div>
                 <div style="font-size:35px; z-index:1;">${it.i}</div>
-                <button class="sell-btn" onclick="sell(${idx})">${it.sell} D</button>
+                <button class="sell-btn" onclick="sell(${i})">${it.sell} D</button>
             </div>`;
         });
     }
 
     function renderCases() {
-        document.getElementById('cases').innerHTML = CONFIG.map((c, i) => `
+        document.getElementById('cases').innerHTML = CASES_DATA.map((c, i) => `
             <div class="case-box">
                 <div style="font-size:50px;">${c.icon}</div>
                 <h2 style="margin:10px 0;">${c.name}</h2>
@@ -217,15 +198,22 @@
             </div>`).join('');
     }
 
-    function openC(i) {
-        if (b < CONFIG[i].price) return alert('Мало денег');
-        b -= CONFIG[i].price;
-        inv.push({...CONFIG[i].items[Math.floor(Math.random() * CONFIG[i].items.length)]});
+    function openC(caseIdx) {
+        const c = CASES_DATA[caseIdx];
+        if (b < c.price) return alert('Мало денег');
+        b -= c.price;
+
+        const pool = [];
+        c.items.forEach(item => {
+            for(let i=0; i < item.chance; i++) pool.push(item);
+        });
+        
+        const win = pool[Math.floor(Math.random() * pool.length)];
+        inv.push({...win});
         save();
     }
 
-    function sell(idx) { b += inv[idx].sell; inv.splice(idx, 1); save(); }
-    
+    function sell(i) { b += inv[i].sell; inv.splice(i, 1); save(); }
     function show(id, btnId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -234,19 +222,14 @@
     }
 
     function toggleTheme() {
-        const isDark = document.getElementById('theme-toggle').checked;
-        document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        const dark = document.getElementById('theme-toggle').checked;
+        document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
     }
 
-    // НОВАЯ ЛОГИКА АДМИНКИ (ЧЕРЕЗ КНОПКУ ⚙️)
     function handleSettingsClick() {
         show('settings', 'btn-settings');
         adminClicks++;
-        
-        clearTimeout(clickTimer);
-        clickTimer = setTimeout(() => { adminClicks = 0; }, 2000); // Сброс кликов через 2 сек бездействия
-
         if(adminClicks >= 5) {
             document.getElementById('secret-input-box').style.display = 'block';
             adminClicks = 0;
@@ -254,40 +237,16 @@
     }
 
     function verifyAdminCode() {
-        const code = document.getElementById('secret-code-field').value;
-        if(code === "Zxc1234Zxc") {
+        if(document.getElementById('secret-code-field').value === "Zxc1234Zxc") {
             document.getElementById('admin-menu').style.display = 'block';
             document.getElementById('secret-input-box').style.display = 'none';
-        } else {
-            alert("Неверный ключ!");
-            document.getElementById('secret-input-box').style.display = 'none';
-        }
-        document.getElementById('secret-code-field').value = "";
+        } else alert("Ошибка");
     }
 
-    function addCustomMoney() {
-        const val = parseInt(document.getElementById('adm-money-val').value);
-        if(!isNaN(val)) { b += val; save(); alert("Баланс обновлен!"); }
-    }
-
-    function addCustomItem() {
-        const idx = document.getElementById('adm-item-select').value;
-        inv.push({...ALL_ITEMS[idx]});
-        save();
-        alert("Предмет добавлен!");
-    }
-
+    function addCustomMoney() { b += parseInt(document.getElementById('adm-money-val').value || 0); save(); }
+    function addCustomItem() { inv.push({...ALL_ITEMS[document.getElementById('adm-item-select').value]}); save(); }
     function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-    
-    function logout() { 
-        auth.signOut().then(() => {
-            localStorage.removeItem('db');
-            localStorage.removeItem('di');
-            location.reload(); 
-        }); 
-    }
-
-    function resetGame() { if(confirm("Сбросить всё?")) { localStorage.clear(); location.reload(); } }
+    function logout() { auth.signOut().then(() => { localStorage.clear(); location.reload(); }); }
 
     init();
 </script>
