@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Economy Update</title>
+    <title>DuksNFT - Rarity Update</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,12 +13,17 @@
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7;
             --nav-bg: #e5e5ea; --accent: #007aff; --card: #ffffff;
-            --common: rgba(0, 122, 255, 0.4); --legendary: #ffcc00; 
-            --mythic: #ff3b30; --exclusive: #af52de; --divine: #5856d6;
+            /* ЦВЕТА РЕДКОСТЕЙ */
+            --common: #007aff; 
+            --epic: #af52de;
+            --legendary: #ffcc00;
+            --mythic: #ff3b30;
+            --divine: #ffffff;
         }
         [data-theme="dark"] {
             --bg: #121212; --text: #ffffff; --header-bg: #1c1c1e; 
             --nav-bg: #2c2c2e; --accent: #0a84ff; --card: #252525;
+            --divine: #eeeeee;
         }
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; user-select: none; }
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
@@ -32,9 +37,15 @@
         .open-button { width: 100%; padding: 16px; background: #34c759; color: white; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .item { background: var(--card); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; border: 1px solid rgba(128,128,128,0.1); }
-        .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.5; z-index: 0; }
-        .glow-rainbow { animation: rainbow 3s linear infinite; }
-        @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
+        
+        /* ГЛОУ ЭФФЕКТЫ */
+        .glow { position: absolute; width: 70px; height: 70px; filter: blur(25px); border-radius: 50%; opacity: 0.6; z-index: 0; }
+        .glow-exclusive { animation: rainbow 3s linear infinite; opacity: 0.8; }
+        @keyframes rainbow { 
+            0% { background: red; } 20% { background: yellow; } 40% { background: green; } 
+            60% { background: cyan; } 80% { background: blue; } 100% { background: red; } 
+        }
+
         .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
         .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: left; border: 2px solid #ffeeba; }
         .admin-panel input, .admin-panel select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
@@ -61,17 +72,14 @@
     
     <div id="settings" class="screen">
         <h2 style="margin-bottom: 25px;">Настройки</h2>
-        
         <div id="secret-input-box">
             <input type="password" id="secret-code-field" placeholder="Код админа">
             <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="verifyAdminCode()">Войти</button>
         </div>
-
         <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1);">
             <span>Тёмная тема</span>
             <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="width:22px; height:22px;">
         </div>
-
         <div id="auth-info" style="background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid rgba(128,128,128,0.1);">
             <button class="nav-btn" style="background:#fff; color:#000; border:1px solid #ddd; width:100%;" onclick="loginWithGoogle()">Привязать Google</button>
         </div>
@@ -79,7 +87,6 @@
             <p id="user-email" style="font-weight:bold;"></p>
             <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
         </div>
-
         <div id="admin-menu" class="admin-panel">
             <b>🛠 Админ-меню</b>
             <input type="number" id="adm-money-val" placeholder="Сумма Duks">
@@ -104,25 +111,26 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Список всех NFT в игре
     const ALL_ITEMS = [
         // Бедный
-        { n: "Перо", sell: 150, c: "var(--common)", i: "🪶", chance: 33 },
-        { n: "Урна", sell: 150, c: "var(--common)", i: "⚱️", chance: 33 },
-        { n: "Старый ботинок", sell: 150, c: "var(--common)", i: "👞", chance: 33 },
-        { n: "Золотой слиток", sell: 1000, c: "var(--legendary)", i: "🧈", chance: 1 },
+        { n: "Перо", sell: 150, r: "common", i: "🪶", chance: 33 },
+        { n: "Урна", sell: 150, r: "common", i: "⚱️", chance: 33 },
+        { n: "Старый ботинок", sell: 150, r: "common", i: "👞", chance: 33 },
+        { n: "Золотой слиток", sell: 1000, r: "legendary", i: "🧈", chance: 1 },
         // Мощный
-        { n: "Эспандер", sell: 1500, c: "var(--mythic)", i: "💪", chance: 50 },
-        { n: "Золотой эспандер", sell: 2000, c: "var(--mythic)", i: "💪✨", chance: 20 },
-        { n: "Алмазный эспандер", sell: 1500, c: "var(--mythic)", i: "💪💎", chance: 10 },
-        { n: "Божественный эспандер", sell: 10000, c: "rainbow", i: "☄️", chance: 1 },
+        { n: "Эспандер", sell: 1500, r: "mythic", i: "💪", chance: 50 },
+        { n: "Золотой эспандер", sell: 2000, r: "mythic", i: "💪✨", chance: 20 },
+        { n: "Алмазный эспандер", sell: 1500, r: "mythic", i: "💪💎", chance: 10 },
+        { n: "Божественный эспандер", sell: 10000, r: "exclusive", i: "☄️", chance: 1 },
         // @#₽#37₽
-        { n: "Золотой кубок", sell: 15000, c: "var(--legendary)", i: "🏆", chance: 5 },
-        { n: "Золотая монета", sell: 800, c: "var(--legendary)", i: "🪙", chance: 25 },
-        { n: "Мешок денег", sell: 5000, c: "var(--exclusive)", i: "💰", chance: 10 },
-        { n: "Телефон", sell: 3000, c: "var(--divine)", i: "📱", chance: 15 },
-        { n: "Сломанный телефон", sell: 200, c: "var(--common)", i: "🔌", chance: 25 },
-        { n: "Кухонный нож", sell: 1200, c: "var(--mythic)", i: "🔪", chance: 20 }
+        { n: "Золотой кубок", sell: 15000, r: "legendary", i: "🏆", chance: 5 },
+        { n: "Золотая монета", sell: 800, r: "legendary", i: "🪙", chance: 25 },
+        { n: "Мешок денег", sell: 5000, r: "exclusive", i: "💰", chance: 10 },
+        { n: "Телефон", sell: 3000, r: "epic", i: "📱", chance: 15 },
+        { n: "Сломанный телефон", sell: 200, r: "common", i: "🔌", chance: 25 },
+        { n: "Кухонный нож", sell: 1200, r: "mythic", i: "🔪", chance: 20 },
+        // Divine (Только админка)
+        { n: "Корона Создателя", sell: 50000, r: "divine", i: "👑", chance: 0 }
     ];
 
     const CASES_DATA = [
@@ -178,11 +186,14 @@
     function updateUI() {
         document.getElementById('b-val').innerText = b.toLocaleString();
         const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:50px;">Пусто</p>';
+        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:50px;">Инвентарь пуст</p>';
         inv.forEach((it, i) => {
-            const isR = it.c === 'rainbow';
+            let glowClass = "glow";
+            let glowStyle = `background: var(--${it.r})`;
+            if(it.r === 'exclusive') glowClass += " glow-exclusive";
+
             g.innerHTML += `<div class="item">
-                <div class="glow ${isR ? 'glow-rainbow' : ''}" style="background:${isR ? '' : it.c}"></div>
+                <div class="${glowClass}" style="${glowStyle}"></div>
                 <div style="font-size:35px; z-index:1;">${it.i}</div>
                 <button class="sell-btn" onclick="sell(${i})">${it.sell} D</button>
             </div>`;
@@ -214,6 +225,7 @@
     }
 
     function sell(i) { b += inv[i].sell; inv.splice(i, 1); save(); }
+    
     function show(id, btnId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -251,4 +263,5 @@
     init();
 </script>
 </body>
-</html>
+    </html>
+    
