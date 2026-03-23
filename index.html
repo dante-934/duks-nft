@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Instant Admin & Rainbow Glow</title>
+    <title>DuksNFT - Info & Fixed Glow</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -12,71 +12,54 @@
     <style>
         :root {
             --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff;
-            /* Базовые цвета свечения */
-            --common-glow: rgba(142, 142, 147, 0.3);
-            --epic-glow: rgba(175, 82, 222, 0.5);
-            --legendary-glow: rgba(255, 204, 0, 0.6);
-            --mythic-glow: rgba(255, 59, 48, 0.7);
-            --divine-glow: rgba(255, 255, 255, 0.9);
+            --common-glow: rgba(0, 122, 255, 0.2); --epic-glow: rgba(175, 82, 222, 0.4); 
+            --legendary-glow: rgba(255, 204, 0, 0.5); --mythic-glow: rgba(255, 59, 48, 0.5);
+            --rainbow: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
         }
-        [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; --divine-glow: rgba(200, 200, 200, 0.4); }
+        [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; }
         
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-        header { padding: 16px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px); }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; }
+        header { padding: 16px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         
         .user-bar { display: flex; align-items: center; gap: 12px; }
-        .avatar-box { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .avatar-box { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-        .balance-badge { background: var(--accent); color: white; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 13px; }
+        .balance-badge { background: var(--accent); color: white; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 14px; }
         
         nav { display: flex; gap: 8px; margin: 15px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
-        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: transparent; color: var(--text); font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; }
+        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: transparent; color: var(--text); font-weight: bold; cursor: pointer; font-size: 13px; }
         .nav-btn.active { background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: var(--accent); }
 
         .screen { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
         .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .case-card { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(128,128,128,0.1); }
+        .case-card { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1); }
+        .info-link { color: var(--accent); font-size: 11px; display: block; margin: 8px 0; cursor: pointer; font-weight: 600; text-decoration: underline; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .item-card { background: var(--card); border-radius: 18px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); min-height: 130px; text-align: center; }
+        .item-card { background: var(--card); border-radius: 18px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); text-align: center; min-height: 140px; }
         
-        /* Основной Glow стиль */
-        .item-card .glow-layer { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; border-radius: 18px; }
-
-        /* exclusive: Радужное анимированное свечение */
-        .rarity-exclusive {
-            background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-            background-size: 200% 200%;
-            animation: exclusiveGlow 4s linear infinite;
-            filter: blur(15px);
-            opacity: 0.5;
-        }
-        @keyframes exclusiveGlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Divine свечение */
-        .rarity-divine { background: var(--divine-glow); filter: blur(20px); box-shadow: 0 0 30px 5px rgba(255,255,255,0.8); opacity: 0.6; }
-
-        /* Стандартные свечения */
-        .rarity-common { background: var(--common-glow); filter: blur(10px); }
-        .rarity-epic { background: var(--epic-glow); filter: blur(15px); }
-        .rarity-legendary { background: var(--legendary-glow); filter: blur(18px); }
-        .rarity-mythic { background: var(--mythic-glow); filter: blur(20px); }
-
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 14px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { bottom: -50px; } to { bottom: 20px; } }
+        /* Свечение */
+        .glow-bg { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; }
+        .rarity-exclusive { background: var(--rainbow); background-size: 200% 200%; animation: exclusiveAnim 3s linear infinite; filter: blur(20px); opacity: 0.4; }
+        .rarity-common { background: var(--common-glow); filter: blur(15px); }
+        .rarity-epic { background: var(--epic-glow); filter: blur(18px); }
+        .rarity-legendary { background: var(--legendary-glow); filter: blur(20px); }
+        .rarity-mythic { background: var(--mythic-glow); filter: blur(22px); }
+        
+        @keyframes exclusiveAnim { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-body { background: var(--card); padding: 20px; border-radius: 20px; width: 80%; max-width: 300px; text-align: center; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--bg); color: var(--text); box-sizing: border-box; font-size: 15px; outline: none; }
-        input:focus { border-color: var(--accent); }
+        .modal-body { background: var(--card); padding: 20px; border-radius: 20px; width: 85%; max-width: 320px; position: relative; }
+        
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 13px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--bg); color: var(--text); box-sizing: border-box; }
     </style>
 </head>
+<script>
+    if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+</script>
 <body>
 
 <header>
@@ -84,8 +67,8 @@
         <div class="avatar-box" onclick="document.getElementById('f-in').click()"><img id="h-av" src="https://via.placeholder.com/100"></div>
         <input type="file" id="f-in" hidden onchange="uAv(event)">
         <div style="flex:1">
-            <div id="h-nick" style="font-weight:900; font-size:17px; cursor: pointer;" onclick="shNick()">Загрузка...</div>
-            <div style="font-size:10px; color:var(--accent); font-weight:bold; letter-spacing:0.5px;" id="h-id">ID: ...</div>
+            <div id="h-nick" style="font-weight:900; font-size:16px;" onclick="shNick()">Загрузка...</div>
+            <div style="font-size:10px; color:var(--accent); font-weight:bold;" id="h-id">ID: ...</div>
         </div>
         <div class="balance-badge"><span id="h-bal">0</span> D</div>
     </div>
@@ -99,56 +82,63 @@
 
 <main>
     <div id="inv" class="screen active">
-        <div id="h-lvl" style="font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center; opacity:0.6;">УРОВЕНЬ 1 | XP: 0</div>
+        <div id="h-lvl" style="font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center; opacity:0.6;">УРОВЕНЬ 1</div>
         <div class="grid" id="inv-grid"></div>
     </div>
 
     <div id="shop" class="screen">
         <div class="case-card">
             <h2 style="margin:0;">🔥 FireStore</h2>
-            <div style="font-weight:900; color:var(--accent); margin:10px 0; font-size:20px;">2,500 D</div>
-            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; padding:15px; font-size:15px;" onclick="opC('firestore')">ОТКРЫТЬ</button>
+            <div style="font-weight:900; color:var(--accent); margin:5px 0;">2,500 D</div>
+            <span class="info-link" onclick="shInf('firestore')">Посмотреть содержимое и шансы</span>
+            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white;" onclick="opC('firestore')">ОТКРЫТЬ</button>
         </div>
         <div class="case-card">
             <h2 style="margin:0;">🕶 Владик</h2>
-            <div style="font-weight:900; color:var(--accent); margin:10px 0; font-size:20px;">100 D</div>
-            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; padding:15px; font-size:15px;" onclick="opC('vladik')">ОТКРЫТЬ</button>
+            <div style="font-weight:900; color:var(--accent); margin:5px 0;">100 D</div>
+            <span class="info-link" onclick="shInf('vladik')">Посмотреть содержимое и шансы</span>
+            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white;" onclick="opC('vladik')">ОТКРЫТЬ</button>
         </div>
     </div>
 
     <div id="settings" class="screen">
-        <button class="nav-btn" onclick="tTh()" style="width:100%; height:45px; margin-bottom:10px; background:var(--card);">Сменить тему</button>
-        <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border:1px solid #ddd;" onclick="login()">Вход через Google</button>
+        <button class="nav-btn" onclick="tTh()" style="width:100%; margin-bottom:10px; background:var(--card);">Сменить тему</button>
+        <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black;" onclick="login()">Войти через Google</button>
         <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти</button>
 
-        <div id="a-box" style="display:none; margin-top:20px; border:1px dashed orange; padding:15px; border-radius:18px; background:rgba(255,165,0,0.05);">
-            <b style="color:orange; font-size:14px;">⚒️ ПАНЕЛЬ РАЗРАБОТЧИКА</b><br>
+        <div id="a-box" style="display:none; margin-top:15px; padding:15px; border:1px solid orange; border-radius:15px; background:rgba(255,165,0,0.05);">
+            <b style="color:orange">ADMIN PANEL</b>
             <input type="number" id="a-d" placeholder="+ Даксы (мгновенно)">
             <input type="number" id="a-x" placeholder="+ Опыт (мгновенно)">
             <select id="a-it"></select>
-            <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv(true)">ПРИМЕНИТЬ МГНОВЕННО</button>
-            <hr style="border:0; border-top:1px solid rgba(255,165,0,0.2); margin:15px 0;">
-            <input type="number" id="a-tid" placeholder="ID игрока (Таргет)">
-            <button class="nav-btn active" style="width:100%; margin-bottom:5px; background:var(--accent); color:white;" onclick="gv(false)">Выдать игроку</button>
-            <button class="nav-btn active" style="width:100%; background:#ff3b30; color:white;" onclick="resP()">ОБНУЛИТЬ АКК</button>
+            <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv(true)">ПРИМЕНИТЬ СЕБЕ</button>
+            <hr style="margin:15px 0; opacity:0.2;">
+            <input type="number" id="a-tid" placeholder="ID игрока">
+            <button class="nav-btn active" style="width:100%; margin-bottom:5px; background:var(--accent); color:white;" onclick="gv(false)">ВЫДАТЬ ТАРГЕТУ</button>
+            <button class="nav-btn active" style="width:100%; background:#ff3b30; color:white;" onclick="resP()">ОБНУЛИТЬ</button>
         </div>
     </div>
 </main>
 
-<div id="toast" class="toast"></div>
+<div id="m-inf" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
+    <h3 id="inf-t">Шансы</h3>
+    <div id="inf-l" style="text-align:left; font-size:13px; line-height:1.6;"></div>
+    <button class="nav-btn active" style="width:100%; margin-top:15px;" onclick="clM()">Понятно</button>
+</div></div>
 
 <div id="m-n" class="modal"><div class="modal-body">
     <h3>Смена ника</h3>
-    <input type="text" id="n-in" maxlength="12" placeholder="Ваш новый ник">
+    <input type="text" id="n-in" maxlength="12" placeholder="Уникальный ник">
     <button class="nav-btn active" style="width:100%; background:var(--accent); color:white;" onclick="svN()">Сохранить</button>
-    <button class="nav-btn" style="width:100%; margin-top:5px;" onclick="clM()">Отмена</button>
 </div></div>
 
 <div id="m-c" class="modal"><div class="modal-body">
-    <h3>Доступ разработчика</h3>
-    <input type="password" id="c-in" placeholder="Введите код">
-    <button class="nav-btn active" style="width:100%; background:var(--accent); color:white;" onclick="chC()">Войти</button>
+    <h3>Код админа</h3>
+    <input type="password" id="c-in">
+    <button class="nav-btn active" style="width:100%;" onclick="chC()">Вход</button>
 </div></div>
+
+<div id="toast" class="toast"></div>
 
 <script>
     const firebaseConfig = {
@@ -192,22 +182,15 @@
     }
 
     async function loadUser(uid) {
-        try {
-            const doc = await db.collection("users").doc(uid).get();
-            if (doc.exists) {
-                const data = doc.data();
-                pData = { ...pData, ...data, inv: data.inv || [] };
-                if (!pData.numericId || pData.numericId === 0) {
-                    pData.numericId = await getNextId();
-                    db.collection("users").doc(uid).update({ numericId: pData.numericId });
-                }
-            } else {
-                pData.numericId = await getNextId();
-                await db.collection("users").doc(uid).set(pData);
-            }
-            document.getElementById('h-id').innerText = `ID: ${pData.numericId}`;
-            upUI();
-        } catch(e) { console.error("Error loading user:", e); }
+        const doc = await db.collection("users").doc(uid).get();
+        if (doc.exists) {
+            pData = { ...pData, ...doc.data(), inv: doc.data().inv || [] };
+        } else {
+            pData.numericId = await getNextId();
+            await db.collection("users").doc(uid).set(pData);
+        }
+        document.getElementById('h-id').innerText = `ID: ${pData.numericId}`;
+        upUI();
     }
 
     async function getNextId() {
@@ -223,7 +206,7 @@
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
-        document.getElementById('h-nick').innerText = pData.nick || "Гость";
+        document.getElementById('h-nick').innerText = pData.nick;
         if(pData.av) document.getElementById('h-av').src = pData.av;
         const lvl = Math.floor(Math.sqrt((pData.xp || 0) / 100)) + 1;
         document.getElementById('h-lvl').innerText = `УРОВЕНЬ ${lvl} | XP: ${pData.xp}`;
@@ -231,87 +214,101 @@
         const g = document.getElementById('inv-grid');
         g.innerHTML = "";
         (pData.inv || []).forEach((it, i) => {
-            // Применяем glow класс в зависимости от редкости
-            const glowClass = `rarity-${it.r}`;
-            const sellBtn = it.r !== 'divine' ? `<button class="nav-btn active" style="height:25px; font-size:9px; margin-top:10px; width:90%;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>` : `<span style="font-size:9px; opacity:0.5; margin-top:10px;">DIVINE</span>`;
+            const glowCl = `rarity-${it.r}`;
+            const btn = it.r !== 'divine' ? `<button class="nav-btn active" style="height:25px; font-size:9px; margin-top:10px; width:90%; z-index:1;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>` : `<span style="font-size:8px; opacity:0.5; z-index:1; margin-top:10px;">HE ПРОДАЕТСЯ</span>`;
             
             g.innerHTML += `
                 <div class="item-card">
-                    <div class="glow-layer ${glowClass}"></div>
+                    <div class="glow-bg ${glowCl}"></div>
                     <div style="font-size:42px; z-index:1;">${it.i}</div>
-                    <div style="font-size:10px; font-weight:900; z-index:1; text-transform:uppercase; margin-top:5px;">${it.n}</div>
-                    ${sellBtn}
+                    <div style="font-size:10px; font-weight:900; z-index:1; margin-top:5px;">${it.n}</div>
+                    ${btn}
                 </div>`;
         });
     }
 
-    // Мгновенная выдача ресурсов Себе
+    function shInf(type) {
+        const l = document.getElementById('inf-l');
+        if(type === 'firestore') {
+            l.innerHTML = `
+                <b>Mythic:</b> 🐦‍🔥 Феникс (50%)<br>
+                <b>Mythic:</b> 🔦 Зол. Факел (25%)<br>
+                <b>Exclusive:</b> 💀 Огн. Скелет (15%)<br>
+                <b>Пусто:</b> (10%)
+            `;
+        } else {
+            l.innerHTML = `
+                <b>Common:</b> 🪶 Перо (99.9%)<br>
+                <b>Divine:</b> 🗿 Фиг. Владика (0.1%)
+            `;
+        }
+        document.getElementById('m-inf').style.display = 'flex';
+    }
+
     function gv(self) {
         const d = parseInt(document.getElementById('a-d').value || 0);
         const x = parseInt(document.getElementById('a-x').value || 0);
-        const itemIdx = document.getElementById('a-it').value;
-        const it = {...ITEMS[itemIdx]};
+        const it = {...ITEMS[document.getElementById('a-it').value]};
 
         if(self) {
-            // 1. Мгновенно обновляем локальные данные и UI
-            pData.b += d; 
-            pData.xp += x; 
-            if(d !== 0 || x !== 0) ms(`Ресурсы начислены (+${d}D, +${x}XP) ✅`);
-            
-            // Если выбран предмет для выдачи (проверка на всякий случай)
-            if(itemIdx !== "") {
-                pData.inv.push(it);
-                ms(`Выдан предмет: ${it.i} ${it.n} ✅`);
-            }
-            
-            upUI(); // Мгновенный рендер инвентаря
-
-            // 2. Синхронизируемся с Firebase в фоне (не блокируем UI)
-            if(auth.currentUser) {
-                db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true})
-                  .then(() => console.log("Background sync done"))
-                  .catch(e => console.error("Sync error:", e));
-            }
-            
-            // Очищаем поля ввода
-            document.getElementById('a-d').value = "";
-            document.getElementById('a-x').value = "";
+            pData.b += d; pData.xp += x; pData.inv.push(it);
+            upUI(); sync(); ms("Мгновенно начислено! ✅");
         } else {
-            // Логика выдачи другому игроку остается через БД (не мгновенно для нас)
             const tid = Number(document.getElementById('a-tid').value);
-            if(!tid) return ms("Введите ID игрока! ❌");
-            ms("Поиск игрока...");
             db.collection("users").where("numericId", "==", tid).get().then(snap => {
                 if(!snap.empty) {
                     const doc = snap.docs[0];
-                    const data = doc.data();
-                    const inv = data.inv || []; inv.push(it);
-                    db.collection("users").doc(doc.id).update({ 
-                        b: (data.b || 0) + d, 
-                        xp: (data.xp || 0) + x, 
-                        inv: inv 
-                    }).then(() => ms("Отправлено игроку! ✅"));
-                } else ms("ID не найден! ❌");
+                    const inv = doc.data().inv || []; inv.push(it);
+                    db.collection("users").doc(doc.id).update({ b: (doc.data().b || 0) + d, xp: (doc.data().xp || 0) + x, inv: inv });
+                    ms("Отправлено игроку! ✅");
+                } else ms("ID не найден!");
             });
         }
     }
 
-    // Остальные функции без изменений
+    async function svN() {
+        const v = document.getElementById('n-in').value.trim();
+        if(v.length < 3) return ms("Короткий ник!");
+        const snap = await db.collection("users").where("nick", "==", v).get();
+        if(!snap.empty) return ms("Ник уже занят! ❌");
+        pData.nick = v; sync(); clM(); ms("Ник изменен! ✅");
+    }
+
+    function opC(type) {
+        let win = null;
+        if(type === 'firestore') {
+            if(pData.b < 2500) return ms("Мало D!");
+            pData.b -= 2500;
+            const r = Math.random() * 100;
+            if(r < 50) win = {...ITEMS[3]}; else if(r < 75) win = {...ITEMS[4]}; else if(r < 90) win = {...ITEMS[5]};
+        } else {
+            if(pData.b < 100) return ms("Мало D!");
+            pData.b -= 100;
+            const r = Math.random() * 100;
+            win = (r < 0.1) ? {...ITEMS[7]} : {...ITEMS[6]};
+        }
+        if(win) { pData.inv.push(win); ms(`Выпало: ${win.i} ${win.n}`); } else ms("Пусто... 💨");
+        sync();
+    }
+
     function sl(i) { pData.b += pData.inv[i].sell; pData.inv.splice(i,1); sync(); }
+    function sw(id, bid) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(bid).classList.add('active');
+    }
+    function ms(t) { const toast = document.getElementById('toast'); toast.innerText = t; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
+    function tTh() { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme', t); }
     function clM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
     function shNick() { document.getElementById('m-n').style.display = 'flex'; }
-    async function svN() { const v = document.getElementById('n-in').value.trim(); if(!v) return; ms("Проверка уникальности..."); const snap = await db.collection("users").where("nick", "==", v).get(); if(!snap.empty) return ms("Ник занят! ❌"); pData.nick = v; sync(); clM(); ms("Ник изменен! ✅"); }
     function aCl() { sw('settings', 'b-s'); aClicks++; if(aClicks >= 5) { document.getElementById('m-c').style.display = 'flex'; aClicks = 0; } }
-    function chC() { if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") { document.getElementById('a-box').style.display = 'block'; clM(); ms("Доступ разрешен🔓"); } else ms("Неверный код! ❌"); }
-    function opC(type) { let win = null; if(type === 'firestore') { if(pData.b < 2500) return ms("Мало D!"); pData.b -= 2500; const r = Math.random() * 100; if(r < 50) win = {...ITEMS[3]}; else if(r < 75) win = {...ITEMS[4]}; else if(r < 90) win = {...ITEMS[5]}; } else { if(pData.b < 100) return ms("Мало D!"); pData.b -= 100; const r = Math.random() * 100; win = (r < 0.1) ? {...ITEMS[7]} : {...ITEMS[6]}; } if(win) { pData.inv.push(win); ms(`Выпало: ${win.i} ${win.n}`); } else ms("Пусто 💨"); sync(); }
-    function ms(t) { const toast = document.getElementById('toast'); toast.innerText = t; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
-    function tTh() { const current = document.documentElement.getAttribute('data-theme'); const next = current === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); localStorage.setItem('theme', next); }
-    function sw(id, bid) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); }
-    async function sync() { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); upUI(); }
+    function chC() { if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") { document.getElementById('a-box').style.display = 'block'; clM(); ms("Доступ разрешен!"); } }
+    function sync() { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); upUI(); }
     function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { auth.signOut().then(() => location.reload()); }
     function uAv(e) { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); }
-    async function resP() { const tid = Number(document.getElementById('a-tid').value); if(!confirm("ОБНУЛИТЬ?")) return; const snap = await db.collection("users").where("numericId", "==", tid).get(); if(!snap.empty) { await db.collection("users").doc(snap.docs[0].id).update({ b: 0, inv: [], xp: 0 }); ms("ОБНУЛЕНО ⚠️"); } }
+    async function resP() { if(!confirm("Точно?")) return; const tid = Number(document.getElementById('a-tid').value); const snap = await db.collection("users").where("numericId", "==", tid).get(); if(!snap.empty) { await db.collection("users").doc(snap.docs[0].id).update({ b: 0, inv: [], xp: 0 }); ms("Обнулено!"); } }
 
     init();
 </script>
