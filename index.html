@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Fix Build</title>
+    <title>DuksNFT - Fixed Load</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -18,7 +18,7 @@
         }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; }
         
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         
         .user-bar { display: flex; align-items: center; gap: 12px; }
@@ -50,7 +50,6 @@
     </style>
 </head>
 <script>
-    // Мгновенное применение темы
     if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 </script>
 <body>
@@ -68,7 +67,7 @@
 </header>
 
 <nav>
-    <button class="nav-btn active" id="b-i" onclick="sw('inv', 'b-i')">Сумка</button>
+    <button class="nav-btn active" id="b-i" onclick="sw('inv', 'b-i')">Инвентарь</button>
     <button class="nav-btn" id="b-c" onclick="sw('shop', 'b-c')">Кейсы</button>
     <button class="nav-btn" id="b-s" onclick="aCl()">⚙️</button>
 </nav>
@@ -82,49 +81,43 @@
     <div id="shop" class="screen">
         <div style="background:var(--card); padding:20px; border-radius:20px; text-align:center; margin-bottom:15px; border:1px solid rgba(128,128,128,0.2);">
             <h2 style="margin:0; color:#ff3b30;">🔥 FireStore</h2>
-            <p style="opacity:0.6; font-size:13px;">Цена: 2500 D | Mythic / Exclusive</p>
-            <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="opC('firestore')">Открыть</button>
+            <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="opC('firestore')">Открыть за 2500 D</button>
         </div>
         <div style="background:var(--card); padding:20px; border-radius:20px; text-align:center; border:1px solid rgba(128,128,128,0.2);">
             <h2 style="margin:0; color:var(--accent);">🕶 Владик</h2>
-            <p style="opacity:0.6; font-size:13px;">Цена: 100 D | Divine (0.1%)</p>
-            <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="opC('vladik')">Открыть</button>
+            <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="opC('vladik')">Открыть за 100 D</button>
         </div>
     </div>
 
     <div id="settings" class="screen">
         <button class="nav-btn" onclick="tTh()" style="width:100%; height:50px; margin-bottom:10px;">Сменить тему</button>
-        <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border: 1px solid #ddd;" onclick="login()">Войти через Google</button>
+        <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border: 1px solid #ddd;" onclick="login()">Google Вход</button>
         <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти</button>
 
         <div id="a-box" style="display:none; margin-top:20px; border:1px dashed orange; padding:15px; border-radius:15px;">
-            <b>АДМИН-ПАНЕЛЬ</b>
-            <hr>
-            <p style="font-size:11px; margin-bottom:5px;">Выдача себе:</p>
+            <b>АДМИН</b><br>
             <input type="number" id="a-d" placeholder="+ Даксы">
             <input type="number" id="a-x" placeholder="+ Опыт">
             <select id="a-it"></select>
-            <button class="nav-btn active" style="width:100%; background:#28a745;" onclick="gv(true)">Применить</button>
-            
-            <p style="font-size:11px; margin-top:15px; margin-bottom:5px;">Выдача игроку:</p>
+            <button class="nav-btn active" style="width:100%; background:#28a745;" onclick="gv(true)">Себе</button>
+            <hr>
             <input type="number" id="a-tid" placeholder="ID игрока">
-            <input type="number" id="a-td" placeholder="+ Даксы">
-            <button class="nav-btn active" style="width:100%; margin-bottom:5px;" onclick="gv(false)">Отправить</button>
-            <button class="nav-btn active" style="width:100%; background:#ff3b30;" onclick="resP()">ОБНУЛИТЬ ИГРОКА</button>
+            <button class="nav-btn active" style="width:100%; margin-bottom:5px;" onclick="gv(false)">Выдать игроку</button>
+            <button class="nav-btn active" style="width:100%; background:#ff3b30;" onclick="resP()">ОБНУЛИТЬ</button>
         </div>
     </div>
 </main>
 
 <div id="m-n" class="modal"><div class="modal-body">
-    <h3>Смена ника</h3>
-    <input type="text" id="n-in" maxlength="12" placeholder="Ваше имя">
-    <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="svN()">Сохранить</button>
+    <h3>Ник</h3>
+    <input type="text" id="n-in" maxlength="12">
+    <button class="nav-btn active" style="width:100%;" onclick="svN()">Сохранить</button>
 </div></div>
 
 <div id="m-c" class="modal"><div class="modal-body">
-    <h3>Код доступа</h3>
+    <h3>Пароль</h3>
     <input type="password" id="c-in">
-    <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="chC()">Войти</button>
+    <button class="nav-btn active" style="width:100%;" onclick="chC()">Войти</button>
 </div></div>
 
 <div id="toast" class="toast"></div>
@@ -157,23 +150,17 @@
     let pData = { b: 1000, inv: [], xp: 0, nick: "Игрок", av: "", numericId: 0 };
     let aClicks = 0;
 
-    // Главная функция с защитой от "зависания"
-    async function init() {
-        const timeout = setTimeout(() => {
-            if (pData.nick === "Загрузка...") {
-                pData.nick = "Гость (Оффлайн)";
-                upUI();
-                ms("Сервер не отвечает. Режим гостя.");
-            }
-        }, 5000);
-
-        auth.onAuthStateChanged(async (u) => {
+    // Сначала рисуем UI, потом грузим данные
+    function init() {
+        upUI(); // Показываем пустой интерфейс сразу
+        
+        auth.onAuthStateChanged((u) => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
-                await loadUser(u.uid);
-                clearTimeout(timeout);
+                loadUser(u.uid);
             } else {
+                pData.nick = "Гость";
                 upUI();
             }
         });
@@ -182,55 +169,43 @@
         ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
     }
 
-    async function loadUser(uid) {
-        try {
-            const userRef = db.collection("users").doc(uid);
-            const doc = await userRef.get();
-            
+    function loadUser(uid) {
+        db.collection("users").doc(uid).get().then(async (doc) => {
             if (doc.exists) {
                 const data = doc.data();
                 pData = { ...pData, ...data, inv: data.inv || [] };
-                // Если ID еще нет, создаем его
-                if (!pData.numericId || pData.numericId === 0) {
-                    const newId = await getNextId();
-                    pData.numericId = newId;
-                    await userRef.update({ numericId: newId });
+                if (!pData.numericId) {
+                    pData.numericId = await getNextId();
+                    db.collection("users").doc(uid).update({ numericId: pData.numericId });
                 }
             } else {
-                // Создаем нового пользователя
                 pData.numericId = await getNextId();
-                await userRef.set(pData);
+                db.collection("users").doc(uid).set(pData);
             }
             document.getElementById('h-id').innerText = `ID: ${pData.numericId}`;
             upUI();
-        } catch(e) {
-            console.error("Load error:", e);
-            ms("Ошибка БД. Режим гостя.");
+        }).catch(e => {
+            console.error(e);
+            pData.nick = "Ошибка сети";
             upUI();
-        }
+        });
     }
 
     async function getNextId() {
-        try {
-            const confRef = db.collection("settings").doc("counter");
-            return await db.runTransaction(async (t) => {
-                const doc = await t.get(confRef);
-                let next = 100000001;
-                if (doc.exists && doc.data().last) {
-                    next = doc.data().last + 1;
-                }
-                t.set(confRef, { last: next }, { merge: true });
-                return next;
-            });
-        } catch(e) {
-            return Math.floor(100000000 + Math.random() * 99999);
-        }
+        const confRef = db.collection("settings").doc("counter");
+        return db.runTransaction(async (t) => {
+            const doc = await t.get(confRef);
+            let next = 100000001;
+            if (doc.exists && doc.data().last) next = doc.data().last + 1;
+            t.set(confRef, { last: next }, { merge: true });
+            return next;
+        }).catch(() => Math.floor(100000000 + Math.random() * 99999));
     }
 
-    async function sync() {
+    function sync() {
         upUI();
         if (auth.currentUser) {
-            await db.collection("users").doc(auth.currentUser.uid).set(pData, { merge: true }).catch(console.error);
+            db.collection("users").doc(auth.currentUser.uid).set(pData, { merge: true });
         }
     }
 
@@ -242,18 +217,18 @@
         document.getElementById('h-lvl').innerText = `УРОВЕНЬ ${lvl} | ОПЫТ ${pData.xp}`;
         
         const g = document.getElementById('inv-grid');
+        if (!g) return;
         g.innerHTML = "";
         (pData.inv || []).forEach((it, i) => {
             const isEx = it.r === 'exclusive' ? 'rarity-exclusive' : '';
             const isDiv = it.r === 'divine' ? 'rarity-divine' : '';
             const glowColor = it.r === 'exclusive' ? '' : `background:var(--${it.r})`;
-            
             g.innerHTML += `
                 <div class="item-card ${isDiv}">
                     <div class="glow ${isEx}" style="${glowColor}"></div>
                     <div style="font-size:40px; z-index:1;">${it.i}</div>
                     <div style="font-size:10px; font-weight:900; z-index:1; margin-top:5px;">${it.n}</div>
-                    ${it.sell > 0 ? `<button class="nav-btn" style="height:25px; font-size:9px; margin-top:10px;" onclick="sl(${i})">ПРОДАТЬ</button>` : ''}
+                    ${it.sell > 0 ? `<button class="nav-btn" style="height:25px; font-size:9px; margin-top:10px; width:80%;" onclick="sl(${i})">ПРОДАТЬ</button>` : ''}
                 </div>`;
         });
     }
@@ -266,7 +241,7 @@
             if(r < 50) pData.inv.push({...ITEMS[3]});
             else if(r < 70) pData.inv.push({...ITEMS[4]});
             else if(r < 85) pData.inv.push({...ITEMS[5]});
-            else ms("Ничего не выпало...");
+            else ms("Пусто...");
         } else {
             if(pData.b < 100) return ms("Мало D!");
             pData.b -= 100;
@@ -281,7 +256,7 @@
     function shNick() { document.getElementById('m-n').style.display = 'flex'; }
     function clM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
     
-    async function svN() {
+    function svN() {
         const val = document.getElementById('n-in').value.trim();
         if(val) { pData.nick = val; sync(); clM(); }
     }
@@ -294,12 +269,12 @@
 
     function chC() {
         if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") {
-            document.getElementById('a-box').style.display = 'block'; clM(); ms("Доступ получен");
-        } else ms("Неверный код");
+            document.getElementById('a-box').style.display = 'block'; clM(); ms("Доступ разрешен");
+        }
     }
 
     async function gv(self) {
-        const d = parseInt(document.getElementById(self ? 'a-d' : 'a-td').value || 0);
+        const d = parseInt(document.getElementById('a-d').value || 0);
         const x = parseInt(document.getElementById('a-x').value || 0);
         const it = {...ITEMS[document.getElementById('a-it').value]};
         if(self) {
@@ -308,14 +283,52 @@
             const tid = Number(document.getElementById('a-tid').value);
             const snap = await db.collection("users").where("numericId", "==", tid).get();
             if(!snap.empty) {
-                const targetDoc = snap.docs[0];
-                const dta = targetDoc.data();
+                const doc = snap.docs[0];
+                const dta = doc.data();
                 const inv = dta.inv || []; inv.push(it);
-                await db.collection("users").doc(targetDoc.id).update({ b: (dta.b || 0) + d, inv: inv });
+                await db.collection("users").doc(doc.id).update({ b: (dta.b || 0) + d, inv: inv });
                 ms("Отправлено!");
             }
         }
     }
 
     async function resP() {
-    
+        const tid = Number(document.getElementById('a-tid').value);
+        const snap = await db.collection("users").where("numericId", "==", tid).get();
+        if(!snap.empty) {
+            await db.collection("users").doc(snap.docs[0].id).update({ b: 0, inv: [], xp: 0 });
+            ms("ОБНУЛЕНО");
+        }
+    }
+
+    function ms(t) {
+        const toast = document.getElementById('toast');
+        toast.innerText = t; toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 2000);
+    }
+
+    function tTh() {
+        const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+    }
+
+    function sw(id, bid) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(bid).classList.add('active');
+    }
+
+    function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+    function logout() { auth.signOut().then(() => location.reload()); }
+    function uAv(e) {
+        const r = new FileReader();
+        r.onloadend = () => { pData.av = r.result; sync(); };
+        if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
+    }
+
+    init();
+</script>
+</body>
+</html>
