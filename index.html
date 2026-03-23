@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Stable Build</title>
+    <title>DuksNFT - Bug Fix Build</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,14 +13,14 @@
         :root { --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff; --border: rgba(0,0,0,0.1); }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; --border: rgba(255,255,255,0.2); }
         
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; transition: background 0.3s; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
         
         .user-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; flex-shrink: 0; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .bordered-btn { border: 2px solid var(--accent) !important; background: transparent; color: var(--text); font-weight: bold; padding: 8px 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; display: inline-block; text-align: center; }
+        .bordered-btn { border: 2px solid var(--accent) !important; background: transparent; color: var(--text); font-weight: bold; padding: 8px 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; display: inline-block; text-align: center; font-size: 11px; }
         .bordered-btn:active { background: var(--accent); color: #fff; }
 
         nav { display: flex; gap: 5px; margin: 10px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
@@ -40,12 +40,12 @@
         .item-card { background: var(--card); border-radius: 18px; padding: 15px; text-align: center; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-body { background: var(--card); padding: 20px; border-radius: 25px; width: 85%; max-width: 340px; }
+        .modal-body { background: var(--card); padding: 20px; border-radius: 25px; width: 85%; max-width: 340px; box-sizing: border-box; }
         
         .badge { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: white; margin-left: 5px; font-weight: bold; }
         .badge-dev { background: #ffd700; color: #000; }
         
-        input, select { width: 100%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
         
         .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: bold; }
         @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
@@ -86,7 +86,7 @@
                     <img id="p-av" src="https://via.placeholder.com/100">
                 </div>
                 <input type="file" id="f-in" hidden onchange="uAv(event)">
-                <button class="bordered-btn" style="font-size:10px; margin-bottom:10px;" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
+                <button class="bordered-btn" style="margin-bottom:10px;" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
                 <div style="font-weight:900; font-size:18px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
             </div>
             <div class="slot-container">
@@ -111,32 +111,22 @@
         <button class="bordered-btn" onclick="tTh()" style="width:100%; margin-bottom:15px;">СМЕНИТЬ ТЕМУ</button>
         <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border:1px solid #ddd;" onclick="login()">Вход через Google</button>
         <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти из аккаунта</button>
-        
         <div id="a-box" style="display:none; margin-top:20px; padding:15px; border:2px dashed orange; border-radius:15px;">
-            <b style="color:orange;">ADMIN PANEL</b>
-            <input type="number" id="a-tid" placeholder="ID игрока (пусто = я)">
+            <b>ADMIN PANEL</b>
+            <input type="number" id="a-tid" placeholder="ID игрока">
             <input type="number" id="a-d" placeholder="+ Dacks">
-            <input type="number" id="a-x" placeholder="+ XP">
-            <select id="a-it"></select>
-            <select id="a-eff">
-                <option value="keep">Не менять эффект</option>
-                <option value="">Цвет ника: Обычный</option>
-                <option value="n-rgb">Радужный (RGB)</option>
-            </select>
-            <select id="a-bad">
-                <option value="keep">Не менять значок</option>
-                <option value="">Без значка</option>
-                <option value="badge-dev">🟡 Разработчик</option>
-            </select>
-            <button class="nav-btn active" style="width:100%; background:#28a745; color:white; margin-top:10px;" onclick="gv()">ПРИМЕНИТЬ (БЕЗ REFRESH)</button>
+            <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="gv()">ПРИМЕНИТЬ</button>
         </div>
     </div>
 </main>
 
-<div id="m-case" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
-    <h3 style="margin-top:0;">Содержимое кейса</h3>
-    <div id="case-items-list"></div>
-    <button class="nav-btn active" style="width:100%; margin-top:15px;" onclick="clM()">ЗАКРЫТЬ</button>
+<div id="m-n" class="modal"><div class="modal-body">
+    <h3>Новый ник</h3>
+    <input type="text" id="n-in" placeholder="Введите имя..." maxlength="12">
+    <div style="display:flex; gap:10px;">
+        <button class="nav-btn active" style="background:var(--accent); color:white;" onclick="svN()">СОХРАНИТЬ</button>
+        <button class="nav-btn" onclick="clM()">ОТМЕНА</button>
+    </div>
 </div></div>
 
 <div id="m-sh" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
@@ -144,10 +134,10 @@
     <div id="sh-list" style="max-height:250px; overflow-y:auto; display:grid; gap:8px;"></div>
 </div></div>
 
-<div id="m-n" class="modal"><div class="modal-body">
-    <h3>Новый ник</h3>
-    <input type="text" id="n-in" maxlength="12">
-    <button class="nav-btn active" style="width:100%;" onclick="svN()">СОХРАНИТЬ</button>
+<div id="m-case" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
+    <h3 style="margin-top:0;">Содержимое</h3>
+    <div id="case-items-list"></div>
+    <button class="nav-btn active" style="width:100%; margin-top:15px;" onclick="clM()">ЗАКРЫТЬ</button>
 </div></div>
 
 <div id="m-c" class="modal"><div class="modal-body">
@@ -181,11 +171,10 @@
     const db = firebase.firestore();
 
     function init() {
-        // Применяем сохраненную тему сразу
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-
         upUI();
+        
         auth.onAuthStateChanged(u => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
@@ -201,78 +190,68 @@
                 });
             }
         });
-        const s = document.getElementById('a-it');
-        s.innerHTML = `<option value="-1">Без выдачи NFT</option>`;
-        ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
     }
 
     function upUI() {
+        // Базовые элементы
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
         document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
-        document.getElementById('h-nick').innerText = pData.nick;
-        document.getElementById('h-nick').className = pData.eff || "";
-        document.getElementById('p-nick').innerText = pData.nick;
-        document.getElementById('p-nick').className = pData.eff || "";
         
+        // Никнеймы
+        const nicks = ['h-nick', 'p-nick'];
+        nicks.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; }
+        });
+        
+        // Значки
         const bHtml = pData.badge ? `<span class="badge ${pData.badge}">✓</span>` : "";
         document.getElementById('h-badge').innerHTML = bHtml;
         document.getElementById('p-badge').innerHTML = bHtml;
 
-        if(pData.av) { document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av; }
+        // Аватар
+        if(pData.av) { 
+            document.getElementById('h-av').src = pData.av; 
+            document.getElementById('p-av').src = pData.av; 
+        }
 
+        // Витрина
         pData.showcase.forEach((it, i) => {
             const s = document.getElementById(`sl-${i}`);
-            if(it) { s.innerHTML = it.i; s.classList.add('filled'); }
-            else { s.innerHTML = "+"; s.classList.remove('filled'); }
+            if(s) {
+                if(it) { s.innerHTML = it.i; s.classList.add('filled'); }
+                else { s.innerHTML = "+"; s.classList.remove('filled'); }
+            }
         });
 
+        // Инвентарь (Полная перерисовка)
         const g = document.getElementById('inv-grid');
-        g.innerHTML = "";
-        (pData.inv || []).forEach((it, i) => {
-            // Исправлено: добавление класса bordered-btn при отрисовке нового предмета
-            g.innerHTML += `<div class="item-card">
-                <div style="font-size:35px; margin-bottom:5px;">${it.i}</div>
-                <div style="font-size:12px; font-weight:bold; margin-bottom:10px;">${it.n}</div>
-                <button class="bordered-btn" style="font-size:9px; padding:5px 10px; width:90%;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>
-            </div>`;
-        });
+        if(g) {
+            g.innerHTML = "";
+            const currentInv = pData.inv || [];
+            currentInv.forEach((it, i) => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div style="font-size:35px; margin-bottom:5px;">${it.i}</div>
+                    <div style="font-size:12px; font-weight:bold; margin-bottom:10px;">${it.n}</div>
+                    <button class="bordered-btn" style="width:90%;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>
+                `;
+                g.appendChild(card);
+            });
+        }
     }
 
-    async function gv() {
-        const tid = document.getElementById('a-tid').value, d = parseInt(document.getElementById('a-d').value || 0), x = parseInt(document.getElementById('a-x').value || 0);
-        const e = document.getElementById('a-eff').value, b = document.getElementById('a-bad').value, itIdx = document.getElementById('a-it').value;
-        
-        let targetUid = auth.currentUser?.uid;
-        if(tid) {
-            const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get();
-            if(!snap.empty) targetUid = snap.docs[0].id; else return ms("ID не найден");
-        }
-
-        const doc = await db.collection("users").doc(targetUid).get();
-        let data = doc.data();
-
-        const update = {
-            b: (data.b || 0) + d,
-            xp: (data.xp || 0) + x
-        };
-        
-        if(e !== "keep") update.eff = e;
-        if(b !== "keep") update.badge = b;
-        if(itIdx != -1) {
-            const inv = data.inv || [];
-            inv.push({...ITEMS[itIdx]});
-            update.inv = inv;
-        }
-
-        await db.collection("users").doc(targetUid).update(update);
-        
-        // Живое обновление если админим себя
-        if(targetUid === auth.currentUser?.uid) {
-            pData = Object.assign(pData, update);
-            upUI();
-        }
-        ms("Применено! ✅");
-    }
+    // ИСПРАВЛЕННАЯ СМЕНА НИКА
+    window.svN = () => {
+        const val = document.getElementById('n-in').value.trim();
+        if(!val) return ms("Введите ник!");
+        pData.nick = val; // Сначала меняем локально
+        upUI(); // Обновляем экран
+        sync(); // Отправляем в базу
+        clM();
+        ms("Ник изменен! ✅");
+    };
 
     function sl(i) {
         const item = pData.inv[i];
@@ -284,37 +263,29 @@
 
     function sync() { upUI(); if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); }
 
-    function tTh() { 
-        const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; 
-        document.documentElement.setAttribute('data-theme', n); 
-        localStorage.setItem('theme', n); 
-    }
-
     window.sw = (id, bid) => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); };
     window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
     window.ms = (t) => { const st = document.getElementById('toast'); st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); };
+    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
     window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     window.logout = () => auth.signOut().then(() => location.reload());
     window.shNick = () => { document.getElementById('m-n').style.display='flex'; };
-    window.svN = () => { pData.nick = document.getElementById('n-in').value; sync(); clM(); };
     window.shCaseInfo = () => {
         const list = document.getElementById('case-items-list');
         list.innerHTML = "";
-        ITEMS.forEach(it => {
-            list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border);">${it.i} ${it.n} <b style="color:var(--accent)">${it.chance}</b></div>`;
-        });
+        ITEMS.forEach(it => { list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border);">${it.i} ${it.n} <b>${it.chance}</b></div>`; });
         document.getElementById('m-case').style.display = 'flex';
     };
-    window.opC = () => { if(pData.b < 2500) return ms("Недостаточно Dacks!"); pData.b -= 2500; const r = Math.random()*100; let win = (r < 15) ? {...ITEMS[0]} : (r < 20) ? {...ITEMS[1]} : (r < 50) ? {...ITEMS[2]} : {...ITEMS[3]}; pData.inv.push(win); sync(); ms(`Выпало: ${win.n}`); };
+    window.opC = () => { if(pData.b < 2500) return ms("Мало Dacks!"); pData.b -= 2500; const r = Math.random()*100; let win = (r < 15) ? {...ITEMS[0]} : (r < 20) ? {...ITEMS[1]} : (r < 50) ? {...ITEMS[2]} : {...ITEMS[3]}; pData.inv.push(win); sync(); ms(`Выпало: ${win.n}`); };
     window.aCl = () => { sw('settings', 'b-s'); window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-c').style.display='flex'; window.ac=0; } };
     window.chC = () => { if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") { document.getElementById('a-box').style.display='block'; clM(); } };
     window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
     window.opShowcase = (slot) => {
         window.targetSlot = slot;
         const list = document.getElementById('sh-list');
-        list.innerHTML = pData.inv.length ? "" : "Нет доступных NFT";
+        list.innerHTML = pData.inv.length ? "" : "Инвентарь пуст";
         pData.inv.forEach((it, i) => {
-            list.innerHTML += `<div onclick="setS(${i})" style="padding:12px; border:1px solid var(--border); border-radius:12px; cursor:pointer; background:var(--bg); display:flex; gap:10px;">${it.i} <b>${it.n}</b></div>`;
+            list.innerHTML += `<div onclick="setS(${i})" style="padding:12px; border:1px solid var(--border); border-radius:12px; cursor:pointer; background:var(--bg); margin-bottom:5px;">${it.i} <b>${it.n}</b></div>`;
         });
         document.getElementById('m-sh').style.display = 'flex';
     };
