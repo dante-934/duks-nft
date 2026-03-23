@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Rarity Update</title>
+    <title>DuksNFT - Major Update</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,11 +13,8 @@
         :root {
             --bg: #ffffff; --text: #1c1c1e; --header-bg: #f2f2f7;
             --nav-bg: #e5e5ea; --accent: #007aff; --card: #ffffff;
-            /* ЦВЕТА РЕДКОСТЕЙ */
-            --common: #007aff; 
-            --epic: #af52de;
-            --legendary: #ffcc00;
-            --mythic: #ff3b30;
+            --common: #007aff; --epic: #af52de; --legendary: #ffcc00;
+            --mythic: #ff3b30; --exclusive: linear-gradient(45deg, red, orange, yellow, green, blue, purple);
             --divine: #ffffff;
         }
         [data-theme="dark"] {
@@ -27,37 +24,54 @@
         }
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; user-select: none; }
         header { padding: 15px; background: var(--header-bg); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
+        
+        .user-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .avatar-circle { width: 40px; height: 40px; background: var(--nav-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid var(--accent); }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .stat-card { background: var(--nav-bg); padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; }
+
         .balance { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; }
         nav { display: flex; gap: 8px; margin-top: 10px; }
         .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 12px; background: var(--nav-bg); color: var(--text); font-weight: 700; font-size: 12px; cursor: pointer; }
         .nav-btn.active { background: var(--accent); color: white; }
+        
         .screen { display: none; padding: 20px; text-align: center; }
         .screen.active { display: block; }
-        .case-box { background: var(--card); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .open-button { width: 100%; padding: 16px; background: #34c759; color: white; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; }
+
+        /* АНИМАЦИЯ КЕЙСА */
+        .case-box { background: var(--card); padding: 25px; border-radius: 24px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); transition: 0.3s; position: relative; }
+        .case-opening { animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(3deg); } 50% { transform: rotate(-3deg); } 100% { transform: rotate(0); } }
+        
+        .drop-anim { animation: dropPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes dropPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .item { background: var(--card); padding: 15px; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 110px; justify-content: center; border: 1px solid rgba(128,128,128,0.1); }
         
-        /* ГЛОУ ЭФФЕКТЫ */
         .glow { position: absolute; width: 70px; height: 70px; filter: blur(25px); border-radius: 50%; opacity: 0.6; z-index: 0; }
         .glow-exclusive { animation: rainbow 3s linear infinite; opacity: 0.8; }
-        @keyframes rainbow { 
-            0% { background: red; } 20% { background: yellow; } 40% { background: green; } 
-            60% { background: cyan; } 80% { background: blue; } 100% { background: red; } 
-        }
+        @keyframes rainbow { 0% { background: red; } 33% { background: yellow; } 66% { background: blue; } 100% { background: red; } }
 
-        .sell-btn { z-index: 2; margin-top: 10px; width: 100%; border: 1px solid #ff3b30; color: #ff3b30; background: transparent; padding: 6px; border-radius: 10px; font-size: 10px; font-weight: 800; }
         .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: left; border: 2px solid #ffeeba; }
         .admin-panel input, .admin-panel select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; }
-        #secret-input-box { display: none; background: var(--nav-bg); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="font-weight:900; font-size:22px; color:var(--accent);">DuksNFT</div>
+    <div class="user-bar">
+        <div class="avatar-circle" id="user-av" onclick="changeAv()">👤</div>
+        <div style="flex:1">
+            <div id="user-name" style="font-weight:900; font-size:16px;" onclick="changeName()">Игрок</div>
+            <div id="user-lvl" style="font-size:10px; opacity:0.7">Уровень 1 (0 XP)</div>
+        </div>
         <div class="balance"><span id="b-val">0</span> D</div>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card">Ценность инвентаря: <br><span id="inv-worth">0</span> D</div>
+        <div class="stat-card">Предметов: <br><span id="inv-count">0</span></div>
     </div>
     <nav>
         <button class="nav-btn active" id="btn-cases" onclick="show('cases', 'btn-cases')">Кейсы</button>
@@ -71,28 +85,24 @@
     <div id="inventory" class="screen"><div class="grid" id="inv-g"></div></div>
     
     <div id="settings" class="screen">
-        <h2 style="margin-bottom: 25px;">Настройки</h2>
-        <div id="secret-input-box">
-            <input type="password" id="secret-code-field" placeholder="Код админа">
-            <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="verifyAdminCode()">Войти</button>
+        <div id="secret-input-box" style="display:none; margin-bottom:15px;">
+            <input type="password" id="secret-code-field" placeholder="Код">
+            <button class="nav-btn" onclick="verifyAdminCode()">Войти</button>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1);">
-            <span>Тёмная тема</span>
-            <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" style="width:22px; height:22px;">
-        </div>
-        <div id="auth-info" style="background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid rgba(128,128,128,0.1);">
-            <button class="nav-btn" style="background:#fff; color:#000; border:1px solid #ddd; width:100%;" onclick="loginWithGoogle()">Привязать Google</button>
-        </div>
-        <div id="user-profile" style="display:none; background: var(--card); padding: 20px; border-radius: 20px;">
-            <p id="user-email" style="font-weight:bold;"></p>
-            <button class="nav-btn" onclick="logout()" style="background:#ff3b30; color:white; width:100%;">Выйти</button>
-        </div>
+        <button class="nav-btn" onclick="toggleTheme()" style="width:100%; margin-bottom:10px;">Сменить тему</button>
+        <button class="nav-btn" onclick="loginWithGoogle()" id="btn-login" style="width:100%;">Войти в Google</button>
+        <button class="nav-btn" onclick="logout()" id="btn-logout" style="width:100%; display:none; background:#ff3b30; color:white;">Выйти</button>
+
         <div id="admin-menu" class="admin-panel">
-            <b>🛠 Админ-меню</b>
-            <input type="number" id="adm-money-val" placeholder="Сумма Duks">
-            <button class="nav-btn" onclick="addCustomMoney()">Выдать</button>
-            <select id="adm-item-select"></select>
-            <button class="nav-btn" onclick="addCustomItem()">Добавить предмет</button>
+            <b>🛠 УПРАВЛЕНИЕ (СЕБЕ)</b>
+            <input type="number" id="adm-money" placeholder="+ Даксы">
+            <input type="number" id="adm-xp" placeholder="+ XP">
+            <select id="adm-items"></select>
+            <button class="nav-btn" onclick="adminGive(true)" style="background:#28a745; color:white; width:100%;">Выдать себе</button>
+            <hr>
+            <b>👤 УПРАВЛЕНИЕ ДРУГИМИ</b>
+            <input type="text" id="adm-target-name" placeholder="Ник игрока">
+            <button class="nav-btn" onclick="adminGive(false)" style="background:#007aff; color:white; width:100%;">Выдать игроку по нику</button>
         </div>
     </div>
 </main>
@@ -112,156 +122,176 @@
     const db = firebase.firestore();
 
     const ALL_ITEMS = [
-        // Бедный
         { n: "Перо", sell: 150, r: "common", i: "🪶", chance: 33 },
         { n: "Урна", sell: 150, r: "common", i: "⚱️", chance: 33 },
         { n: "Старый ботинок", sell: 150, r: "common", i: "👞", chance: 33 },
         { n: "Золотой слиток", sell: 1000, r: "legendary", i: "🧈", chance: 1 },
-        // Мощный
         { n: "Эспандер", sell: 1500, r: "mythic", i: "💪", chance: 50 },
         { n: "Золотой эспандер", sell: 2000, r: "mythic", i: "💪✨", chance: 20 },
         { n: "Алмазный эспандер", sell: 1500, r: "mythic", i: "💪💎", chance: 10 },
         { n: "Божественный эспандер", sell: 10000, r: "exclusive", i: "☄️", chance: 1 },
-        // @#₽#37₽
         { n: "Золотой кубок", sell: 15000, r: "legendary", i: "🏆", chance: 5 },
-        { n: "Золотая монета", sell: 800, r: "legendary", i: "🪙", chance: 25 },
         { n: "Мешок денег", sell: 5000, r: "exclusive", i: "💰", chance: 10 },
         { n: "Телефон", sell: 3000, r: "epic", i: "📱", chance: 15 },
-        { n: "Сломанный телефон", sell: 200, r: "common", i: "🔌", chance: 25 },
-        { n: "Кухонный нож", sell: 1200, r: "mythic", i: "🔪", chance: 20 },
-        // Divine (Только админка)
         { n: "Корона Создателя", sell: 50000, r: "divine", i: "👑", chance: 0 }
     ];
 
     const CASES_DATA = [
         { name: "Бедный", price: 200, icon: "📦", items: [ALL_ITEMS[0], ALL_ITEMS[1], ALL_ITEMS[2], ALL_ITEMS[3]] },
         { name: "Мощный", price: 2000, icon: "⚡", items: [ALL_ITEMS[4], ALL_ITEMS[5], ALL_ITEMS[6], ALL_ITEMS[7]] },
-        { name: "@#₽#37₽", price: 5000, icon: "🏷️", items: [ALL_ITEMS[8], ALL_ITEMS[9], ALL_ITEMS[10], ALL_ITEMS[11], ALL_ITEMS[12], ALL_ITEMS[13]] }
+        { name: "@#₽#37₽", price: 5000, icon: "🏷️", items: [ALL_ITEMS[8], ALL_ITEMS[9], ALL_ITEMS[10], ALL_ITEMS[11]] }
     ];
 
-    let b = 1000; let inv = []; let adminClicks = 0;
+    let uData = { b: 1000, inv: [], xp: 0, nick: "Игрок", av: "👤" };
+    let adminClicks = 0;
 
     async function init() {
-        if(localStorage.getItem('theme') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('theme-toggle').checked = true;
-        }
-        const lb = localStorage.getItem('db');
-        const li = localStorage.getItem('di');
-        if(lb) b = parseInt(lb);
-        if(li) inv = JSON.parse(li);
-
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                document.getElementById('auth-info').style.display = 'none';
-                document.getElementById('user-profile').style.display = 'block';
-                document.getElementById('user-email').innerText = user.email;
-                await loadCloud(user);
+                document.getElementById('btn-login').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'block';
+                await loadCloud(user.uid);
             }
             updateUI();
         });
-
-        const sel = document.getElementById('adm-item-select');
+        const sel = document.getElementById('adm-items');
         ALL_ITEMS.forEach((it, i) => sel.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
         renderCases();
-        updateUI();
     }
 
-    async function loadCloud(user) {
-        const doc = await db.collection("users").doc(user.uid).get();
-        if (doc.exists) {
-            const data = doc.data();
-            b = data.balance || 0;
-            inv = data.inventory || [];
-        }
+    async function loadCloud(uid) {
+        const doc = await db.collection("users").doc(uid).get();
+        if (doc.exists) uData = {...uData, ...doc.data()};
+        else await db.collection("users").doc(uid).set(uData);
     }
 
     function save() {
-        localStorage.setItem('db', b);
-        localStorage.setItem('di', JSON.stringify(inv));
         updateUI();
-        if (auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ balance: b, inventory: inv }, { merge: true });
+        if (auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(uData, { merge: true });
     }
 
     function updateUI() {
-        document.getElementById('b-val').innerText = b.toLocaleString();
-        const g = document.getElementById('inv-g');
-        g.innerHTML = inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.5; margin-top:50px;">Инвентарь пуст</p>';
-        inv.forEach((it, i) => {
-            let glowClass = "glow";
-            let glowStyle = `background: var(--${it.r})`;
-            if(it.r === 'exclusive') glowClass += " glow-exclusive";
+        document.getElementById('b-val').innerText = uData.b.toLocaleString();
+        document.getElementById('user-name').innerText = uData.nick;
+        document.getElementById('user-av').innerText = uData.av;
+        
+        const lvl = Math.floor(Math.sqrt(uData.xp / 100)) + 1;
+        document.getElementById('user-lvl').innerText = `Уровень ${lvl} (${uData.xp} XP)`;
 
-            g.innerHTML += `<div class="item">
-                <div class="${glowClass}" style="${glowStyle}"></div>
+        let totalWorth = 0;
+        const g = document.getElementById('inv-g');
+        g.innerHTML = uData.inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.3; margin-top:50px;">Инвентарь пуст</p>';
+        
+        uData.inv.forEach((it, i) => {
+            totalWorth += it.sell;
+            let gc = it.r === 'exclusive' ? 'glow glow-exclusive' : 'glow';
+            let gs = it.r === 'exclusive' ? '' : `background: var(--${it.r})`;
+            g.innerHTML += `<div class="item drop-anim">
+                <div class="${gc}" style="${gs}"></div>
                 <div style="font-size:35px; z-index:1;">${it.i}</div>
                 <button class="sell-btn" onclick="sell(${i})">${it.sell} D</button>
             </div>`;
         });
+
+        document.getElementById('inv-worth').innerText = totalWorth.toLocaleString();
+        document.getElementById('inv-count').innerText = uData.inv.length;
     }
 
     function renderCases() {
         document.getElementById('cases').innerHTML = CASES_DATA.map((c, i) => `
-            <div class="case-box">
+            <div class="case-box" id="case-${i}">
                 <div style="font-size:50px;">${c.icon}</div>
                 <h2 style="margin:10px 0;">${c.name}</h2>
                 <button class="open-button" onclick="openC(${i})">${c.price} Duks</button>
             </div>`).join('');
     }
 
-    function openC(caseIdx) {
-        const c = CASES_DATA[caseIdx];
-        if (b < c.price) return alert('Мало денег');
-        b -= c.price;
-
-        const pool = [];
-        c.items.forEach(item => {
-            for(let i=0; i < item.chance; i++) pool.push(item);
-        });
+    function openC(i) {
+        const c = CASES_DATA[i];
+        if (uData.b < c.price) return alert('Недостаточно Duks');
         
-        const win = pool[Math.floor(Math.random() * pool.length)];
-        inv.push({...win});
-        save();
+        const box = document.getElementById(`case-${i}`);
+        box.classList.add('case-opening');
+        
+        setTimeout(() => {
+            uData.b -= c.price;
+            const pool = [];
+            c.items.forEach(item => { for(let k=0; k<item.chance; k++) pool.push(item); });
+            const win = {...pool[Math.floor(Math.random() * pool.length)]};
+            
+            uData.inv.push(win);
+            uData.xp += 25; // XP за открытие
+            box.classList.remove('case-opening');
+            save();
+        }, 600);
     }
 
-    function sell(i) { b += inv[i].sell; inv.splice(i, 1); save(); }
+    function sell(i) { uData.b += uData.inv[i].sell; uData.inv.splice(i, 1); save(); }
     
+    function changeName() {
+        const n = prompt("Введите новый ник:", uData.nick);
+        if(n) { uData.nick = n; save(); }
+    }
+
+    function changeAv() {
+        const a = prompt("Введите эмодзи для аватара:", uData.av);
+        if(a) { uData.av = a; save(); }
+    }
+
     function show(id, btnId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        if(btnId) document.getElementById(btnId).classList.add('active');
-    }
-
-    function toggleTheme() {
-        const dark = document.getElementById('theme-toggle').checked;
-        document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
-        localStorage.setItem('theme', dark ? 'dark' : 'light');
+        document.getElementById(btnId).classList.add('active');
     }
 
     function handleSettingsClick() {
         show('settings', 'btn-settings');
         adminClicks++;
-        if(adminClicks >= 5) {
-            document.getElementById('secret-input-box').style.display = 'block';
-            adminClicks = 0;
-        }
+        if(adminClicks >= 5) { document.getElementById('secret-input-box').style.display = 'block'; adminClicks = 0; }
     }
 
     function verifyAdminCode() {
         if(document.getElementById('secret-code-field').value === "Zxc1234Zxc") {
             document.getElementById('admin-menu').style.display = 'block';
             document.getElementById('secret-input-box').style.display = 'none';
-        } else alert("Ошибка");
+        }
     }
 
-    function addCustomMoney() { b += parseInt(document.getElementById('adm-money-val').value || 0); save(); }
-    function addCustomItem() { inv.push({...ALL_ITEMS[document.getElementById('adm-item-select').value]}); save(); }
+    async function adminGive(toSelf) {
+        const d = parseInt(document.getElementById('adm-money').value || 0);
+        const x = parseInt(document.getElementById('adm-xp').value || 0);
+        const it = ALL_ITEMS[document.getElementById('adm-items').value];
+
+        if(toSelf) {
+            uData.b += d; uData.xp += x; uData.inv.push({...it});
+            save();
+            alert("Выдано!");
+        } else {
+            const target = document.getElementById('adm-target-name').value;
+            const snap = await db.collection("users").where("nick", "==", target).get();
+            if(!snap.empty) {
+                const userId = snap.docs[0].id;
+                const remoteData = snap.docs[0].data();
+                remoteData.balance = (remoteData.balance || 0) + d;
+                remoteData.xp = (remoteData.xp || 0) + x;
+                remoteData.inventory = remoteData.inventory || [];
+                remoteData.inventory.push({...it});
+                await db.collection("users").doc(userId).update(remoteData);
+                alert("Успешно отправлено игроку " + target);
+            } else alert("Игрок не найден");
+        }
+    }
+
+    function toggleTheme() {
+        const t = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', t);
+    }
+
     function loginWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { auth.signOut().then(() => { localStorage.clear(); location.reload(); }); }
 
     init();
 </script>
 </body>
-    </html>
-    
+</html>
