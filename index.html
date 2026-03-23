@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Clean Build</title>
+    <title>DuksNFT - Glow Update</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,40 +13,57 @@
         :root { --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff; --border: rgba(0,0,0,0.1); }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; --border: rgba(255,255,255,0.2); }
         
+        * { transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease; }
+
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
         
+        /* Цвета ников */
+        .c-red { color: #ff3b30 !important; } .c-blue { color: #007aff !important; }
+        .c-purple { color: #af52de !important; } .c-yellow { color: #ffcc00 !important; }
+        .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: 900; }
+        @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        /* НОВАЯ СИСТЕМА СВЕЧЕНИЯ */
+        .gl-common { box-shadow: 0 0 12px rgba(0, 122, 255, 0.6); border-color: #007aff !important; }
+        .gl-epic { box-shadow: 0 0 12px rgba(175, 82, 222, 0.7); border-color: #af52de !important; }
+        .gl-legendary { box-shadow: 0 0 12px rgba(255, 204, 0, 0.8); border-color: #ffcc00 !important; }
+        .gl-mythic { box-shadow: 0 0 15px rgba(255, 59, 48, 0.9); border-color: #ff3b30 !important; }
+        .gl-exclusive { border-color: transparent !important; animation: glow-rgb 3s linear infinite; border: 2px solid; }
+        .gl-divine { box-shadow: 0 0 20px rgba(255, 255, 255, 0.9); border-color: #ffffff !important; }
+
+        @keyframes glow-rgb {
+            0% { box-shadow: 0 0 12px red; border-color: red; }
+            33% { box-shadow: 0 0 12px green; border-color: green; }
+            66% { box-shadow: 0 0 12px blue; border-color: blue; }
+            100% { box-shadow: 0 0 12px red; border-color: red; }
+        }
+
         .user-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; flex-shrink: 0; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .bordered-btn { border: 2px solid var(--accent) !important; background: transparent; color: var(--text); font-weight: bold; padding: 8px 15px; border-radius: 12px; cursor: pointer; transition: 0.2s; display: inline-block; text-align: center; font-size: 11px; }
-        .bordered-btn:active { background: var(--accent); color: #fff; }
-
+        .bordered-btn { border: 2px solid var(--accent) !important; background: transparent; color: var(--text); font-weight: bold; padding: 8px 15px; border-radius: 12px; cursor: pointer; }
         nav { display: flex; gap: 5px; margin: 10px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
         .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: transparent; color: var(--text); font-weight: 900; font-size: 11px; cursor: pointer; }
         .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        .screen { display: none; padding: 15px; animation: fadeIn 0.2s; }
+        .screen { display: none; padding: 15px; }
         .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* НОВЫЕ СТИЛИ ОБВОДКИ НИКА */
-        .out-red { text-shadow: -1px -1px 0 #ff3b30, 1px -1px 0 #ff3b30, -1px 1px 0 #ff3b30, 1px 1px 0 #ff3b30; }
-        .out-blue { text-shadow: -1px -1px 0 #007aff, 1px -1px 0 #007aff, -1px 1px 0 #007aff, 1px 1px 0 #007aff; }
-        .out-purple { text-shadow: -1px -1px 0 #af52de, 1px -1px 0 #af52de, -1px 1px 0 #af52de, 1px 1px 0 #af52de; }
-        .out-yellow { text-shadow: -1px -1px 0 #ffcc00, 1px -1px 0 #ffcc00, -1px 1px 0 #ffcc00, 1px 1px 0 #ffcc00; }
-        .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: bold; }
-        @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        .slot-container { display: flex; flex-direction: column; gap: 10px; }
+        .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
+        .slot.filled { border-style: solid; background: var(--card); }
 
-        .badge { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: white; margin-left: 5px; font-weight: bold; border: 1px solid rgba(0,0,0,0.1); }
-        .b-yt { background: #ff0000; } /* Красная - Ютубер */
-        .b-top { background: #007aff; } /* Синяя - Лучший игрок */
-        .b-dev { background: #ffcc00; color: #000; } /* Желтая - Разработчик */
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .item-card { background: var(--card); border-radius: 18px; padding: 15px; text-align: center; border: 1px solid var(--border); }
+
+        .badge { width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: white; margin-left: 5px; }
+        .b-yt { background: #ff0000; } .b-top { background: #007aff; } .b-dev { background: #ffcc00; color: #000; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-body { background: var(--card); padding: 20px; border-radius: 25px; width: 85%; max-width: 340px; box-sizing: border-box; }
-        input, select { width: 100%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
+        .modal-body { background: var(--card); padding: 20px; border-radius: 25px; width: 85%; max-width: 340px; }
+        input, select { width: 100%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; }
     </style>
 </head>
@@ -63,64 +80,66 @@
         </div>
         <div style="text-align:right;">
             <div style="font-weight:900; color:var(--accent); font-size:15px;"><span id="h-bal">0</span> D</div>
-            <div id="h-lvl" style="font-size:10px; opacity:0.6;">LVL 1</div>
+            <div id="h-lvl" style="font-size:10px; opacity:0.6;">XP: <span id="h-xp">0</span></div>
         </div>
     </div>
 </header>
 
 <nav>
     <button class="nav-btn active" id="b-p" onclick="sw('profile', 'b-p')">ПРОФИЛЬ</button>
-    <button class="nav-btn" id="b-c" onclick="sw('shop', 'b-c')">КЕЙСЫ</button>
     <button class="nav-btn" id="b-i" onclick="sw('inv', 'b-i')">ИНВЕНТАРЬ</button>
-    <button class="nav-btn bordered-btn" id="b-s" onclick="aCl()" style="flex:0.3; margin-left:5px; padding:0;">⚙️</button>
+    <button class="nav-btn" id="b-s" onclick="sw('settings', 'b-s')">НАСТРОЙКИ</button>
+    <button class="nav-btn bordered-btn" onclick="aCl()" style="flex:0.3; margin-left:5px; padding:0;">⚙️</button>
 </nav>
 
 <main>
     <div id="profile" class="screen active">
-        <div style="background: var(--card); border-radius: 20px; padding: 20px; text-align: center; border: 1px solid var(--border);">
-            <div class="avatar-box" style="width:90px; height:90px; margin:0 auto 15px;" onclick="document.getElementById('f-in').click()">
-                <img id="p-av" src="https://via.placeholder.com/100">
+        <div style="background:var(--card); border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; border:1px solid var(--border);">
+            <div style="text-align:center; flex:1;">
+                <div class="avatar-box" style="width:80px; height:80px; margin:0 auto 10px;" onclick="document.getElementById('f-in').click()">
+                    <img id="p-av" src="https://via.placeholder.com/100">
+                </div>
+                <input type="file" id="f-in" hidden onchange="uAv(event)">
+                <button class="bordered-btn" style="font-size:10px;" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
+                <div style="font-weight:900; font-size:18px; margin-top:10px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
             </div>
-            <input type="file" id="f-in" hidden onchange="uAv(event)">
-            <button class="bordered-btn" style="margin-bottom:15px;" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
-            <div style="font-weight:900; font-size:20px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
+            <div class="slot-container">
+                <div class="slot" id="sl-0" onclick="opShowcase(0)">+</div>
+                <div class="slot" id="sl-1" onclick="opShowcase(1)">+</div>
+            </div>
         </div>
     </div>
 
-    <div id="inv" class="screen">
-        <div style="text-align:center; opacity:0.5; margin-top:50px;">Инвентарь пуст</div>
-    </div>
-
-    <div id="shop" class="screen">
-        <div style="text-align:center; opacity:0.5; margin-top:50px;">Магазин скоро обновится...</div>
-    </div>
+    <div id="inv" class="screen"><div class="grid" id="inv-grid"></div></div>
 
     <div id="settings" class="screen">
         <button class="bordered-btn" onclick="tTh()" style="width:100%; margin-bottom:15px;">СМЕНИТЬ ТЕМУ</button>
         <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border:1px solid #ddd;" onclick="login()">Вход через Google</button>
-        <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти из аккаунта</button>
+        <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти</button>
         
         <div id="a-box" style="display:none; margin-top:20px; padding:15px; border:2px dashed orange; border-radius:15px;">
             <b style="color:orange;">ADMIN PANEL</b>
-            <input type="number" id="a-tid" placeholder="ID игрока (пусто = я)">
+            <input type="number" id="a-tid" placeholder="ID игрока">
             <input type="number" id="a-d" placeholder="+ Dacks">
+            <input type="number" id="a-x" placeholder="+ XP">
+            <select id="a-it"></select>
             <select id="a-eff">
-                <option value="keep">Не менять обводку</option>
-                <option value="">Без обводки</option>
-                <option value="out-red">Красная обводка</option>
-                <option value="out-blue">Синяя обводка</option>
-                <option value="out-purple">Фиолетовая обводка</option>
-                <option value="out-yellow">Желтая обводка</option>
-                <option value="n-rgb">Радужный (RGB)</option>
+                <option value="keep">Цвет ника: Не менять</option>
+                <option value="">Обычный</option>
+                <option value="c-red">Красный</option>
+                <option value="c-blue">Синий</option>
+                <option value="c-purple">Фиолетовый</option>
+                <option value="c-yellow">Желтый</option>
+                <option value="n-rgb">Радужный</option>
             </select>
             <select id="a-bad">
-                <option value="keep">Не менять галочку</option>
-                <option value="">Без галочки</option>
+                <option value="keep">Галочка: Не менять</option>
+                <option value="">Нет</option>
                 <option value="b-yt">🔴 Ютубер</option>
-                <option value="b-top">🔵 Лучший игрок</option>
+                <option value="b-top">🔵 Топ игрок</option>
                 <option value="b-dev">🟡 Разработчик</option>
             </select>
-            <button class="nav-btn active" style="width:100%; background:#28a745; color:white; margin-top:10px;" onclick="gv()">ПРИМЕНИТЬ</button>
+            <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv()">ПРИМЕНИТЬ</button>
         </div>
     </div>
 </main>
@@ -131,8 +150,12 @@
     <button class="nav-btn active" style="width:100%;" onclick="svN()">СОХРАНИТЬ</button>
 </div></div>
 
+<div id="m-sh" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
+    <h3>Выставить в витрину</h3>
+    <div id="sh-list" style="max-height:250px; overflow-y:auto;"></div>
+</div></div>
+
 <div id="m-c" class="modal"><div class="modal-body">
-    <h3>Admin Access</h3>
     <input type="password" id="c-in" placeholder="Ключ">
     <button class="nav-btn active" style="width:100%;" onclick="chC()">ВОЙТИ</button>
 </div></div>
@@ -140,19 +163,19 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8",
-        authDomain: "duksnft.firebaseapp.com",
-        projectId: "duksnft",
-        storageBucket: "duksnft.firebasestorage.app",
-        messagingSenderId: "774746155070",
-        appId: "1:774746155070:web:8e9718290ea579ffd8096f"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8", authDomain: "duksnft.firebaseapp.com", projectId: "duksnft", storageBucket: "duksnft.firebasestorage.app", messagingSenderId: "774746155070", appId: "1:774746155070:web:8e9718290ea579ffd8096f" };
+    
+    // Новые NFT (только админ) с исправленным свечением
+    const ADMIN_ITEMS = [
+        { n: "Утка", sell: 5000, r: "Exclusive", i: "🦆", glow: "gl-exclusive" },
+        { n: "Золотая утка", sell: 0, r: "Divine", i: "🐥", glow: "gl-divine", unsel: true },
+        { n: "Алмазная утка", sell: 0, r: "Divine", i: "💎", glow: "gl-divine", unsel: true },
+        { n: "Бриллиантовая утка", sell: 0, r: "Divine", i: "✨", glow: "gl-divine", unsel: true }
+    ];
 
-    let pData = { b: 0, inv: [], xp: 0, nick: "Гость", av: "", numericId: 0, eff: "", badge: "" };
+    let pData = { b: 0, inv: [], xp: 0, nick: "Гость", av: "", numericId: 0, eff: "", badge: "", showcase: [null, null] };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const auth = firebase.auth(); const db = firebase.firestore();
 
     function init() {
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -160,78 +183,79 @@
         upUI();
         auth.onAuthStateChanged(u => {
             if (u) {
-                document.getElementById('l-in').style.display = 'none';
-                document.getElementById('l-out').style.display = 'block';
+                document.getElementById('l-in').style.display = 'none'; document.getElementById('l-out').style.display = 'block';
                 db.collection("users").doc(u.uid).get().then(doc => {
                     if (doc.exists) pData = Object.assign(pData, doc.data());
-                    else {
-                        pData.numericId = Math.floor(100000 + Math.random() * 899999);
-                        pData.nick = u.displayName || "Игрок";
-                        db.collection("users").doc(u.uid).set(pData);
-                    }
+                    else { pData.numericId = Math.floor(100000 + Math.random() * 899999); pData.nick = u.displayName || "Игрок"; db.collection("users").doc(u.uid).set(pData); }
                     upUI();
                 });
             }
         });
+        const s = document.getElementById('a-it');
+        s.innerHTML = `<option value="-1">Без выдачи NFT</option>`;
+        ADMIN_ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
     }
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
+        document.getElementById('h-xp').innerText = pData.xp || 0;
         document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
-        
-        ['h-nick', 'p-nick'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; }
-        });
-        
+        ['h-nick', 'p-nick'].forEach(id => { const el = document.getElementById(id); if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } });
         const bHtml = pData.badge ? `<span class="badge ${pData.badge}">✓</span>` : "";
-        document.getElementById('h-badge').innerHTML = bHtml;
-        document.getElementById('p-badge').innerHTML = bHtml;
-
+        document.getElementById('h-badge').innerHTML = bHtml; document.getElementById('p-badge').innerHTML = bHtml;
         if(pData.av) { document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av; }
+
+        pData.showcase.forEach((it, i) => {
+            const s = document.getElementById(`sl-${i}`);
+            if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; }
+            else { s.innerHTML = "+"; s.className = "slot"; }
+        });
+
+        const g = document.getElementById('inv-grid'); g.innerHTML = "";
+        (pData.inv || []).forEach((it, i) => {
+            g.innerHTML += `<div class="item-card ${it.glow || ''}">
+                <div style="font-size:35px;">${it.i}</div>
+                <div style="font-size:12px; font-weight:bold;">${it.n}</div>
+                <button class="bordered-btn" style="width:100%; margin-top:10px;" onclick="sl(${i})" ${it.unsel ? 'disabled style="opacity:0.5"' : ''}>
+                    ${it.unsel ? 'DIVINE' : 'ПРОДАТЬ ' + it.sell}
+                </button>
+            </div>`;
+        });
     }
 
     async function gv() {
-        const tid = document.getElementById('a-tid').value, d = parseInt(document.getElementById('a-d').value || 0);
-        const e = document.getElementById('a-eff').value, b = document.getElementById('a-bad').value;
-        
-        let targetUid = auth.currentUser?.uid;
+        const tid = document.getElementById('a-tid').value, d = parseInt(document.getElementById('a-d').value || 0), x = parseInt(document.getElementById('a-x').value || 0);
+        const e = document.getElementById('a-eff').value, b = document.getElementById('a-bad').value, itIdx = document.getElementById('a-it').value;
+        let tUid = auth.currentUser?.uid;
         if(tid) {
             const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get();
-            if(!snap.empty) targetUid = snap.docs[0].id; else return ms("ID не найден");
+            if(!snap.empty) tUid = snap.docs[0].id; else return ms("ID не найден");
         }
-
-        const doc = await db.collection("users").doc(targetUid).get();
+        const doc = await db.collection("users").doc(tUid).get();
         let data = doc.data();
-        const update = { b: (data.b || 0) + d };
-        
-        if(e !== "keep") update.eff = e;
-        if(b !== "keep") update.badge = b;
-
-        await db.collection("users").doc(targetUid).update(update);
-        if(targetUid === auth.currentUser?.uid) { pData = Object.assign(pData, update); upUI(); }
-        ms("Применено! ✅");
+        const upd = { b: (data.b || 0) + d, xp: (data.xp || 0) + x };
+        if(e !== "keep") upd.eff = e; if(b !== "keep") upd.badge = b;
+        if(itIdx != -1) { const inv = data.inv || []; inv.push({...ADMIN_ITEMS[itIdx]}); upd.inv = inv; }
+        await db.collection("users").doc(tUid).update(upd);
+        if(tUid === auth.currentUser?.uid) { pData = Object.assign(pData, upd); upUI(); }
+        ms("Готово! ✅");
     }
 
-    window.svN = () => {
-        const val = document.getElementById('n-in').value.trim();
-        if(!val) return ms("Введите ник!");
-        pData.nick = val;
-        upUI(); sync(); clM();
-    };
-
+    window.svN = () => { pData.nick = document.getElementById('n-in').value; upUI(); sync(); clM(); };
+    function sl(i) { pData.b += pData.inv[i].sell; pData.inv.splice(i, 1); sync(); }
     function sync() { upUI(); if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); }
-
+    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
     window.sw = (id, bid) => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); };
     window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
     window.ms = (t) => { const st = document.getElementById('toast'); st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); };
-    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
     window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     window.logout = () => auth.signOut().then(() => location.reload());
     window.shNick = () => { document.getElementById('m-n').style.display='flex'; };
-    window.aCl = () => { sw('settings', 'b-s'); window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-c').style.display='flex'; window.ac=0; } };
+    window.aCl = () => { window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-c').style.display='flex'; window.ac=0; } };
     window.chC = () => { if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") { document.getElementById('a-box').style.display='block'; clM(); } };
     window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
+    window.opShowcase = (s) => { window.tSl = s; const l = document.getElementById('sh-list'); l.innerHTML = ""; pData.inv.forEach((it, i) => { l.innerHTML += `<div onclick="setS(${i})" style="padding:10px; border-bottom:1px solid var(--border);">${it.i} ${it.n}</div>`; }); document.getElementById('m-sh').style.display = 'flex'; };
+    window.setS = (i) => { pData.showcase[window.tSl] = pData.inv[i]; sync(); clM(); };
 
     init();
 </script>
