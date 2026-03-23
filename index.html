@@ -3,59 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Classic Admin & Fixed UI</title>
+    <title>DuksNFT - Ultra Admin Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // Мгновенное применение темы ДО загрузки body
         if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     </script>
 
     <style>
         :root {
             --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff;
-            --mythic-glow: rgba(255, 59, 48, 0.5); --exclusive-glow: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            --mythic-glow: rgba(255, 59, 48, 0.4); 
+            --exclusive-glow: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
         }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; }
         
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         
-        .user-bar { display: flex; align-items: center; gap: 12px; }
-        .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
+        .user-bar { display: flex; align-items: center; gap: 10px; }
+        .avatar-box { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; flex-shrink: 0; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-        .balance-badge { background: var(--accent); color: white; padding: 6px 12px; border-radius: 20px; font-weight: 800; }
         
-        nav { display: flex; gap: 5px; margin: 10px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
-        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: transparent; color: var(--text); font-weight: bold; cursor: pointer; font-size: 12px; }
-        .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Галочки */
+        .badge { width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; color: white; margin-left: 4px; vertical-align: middle; font-weight: bold; }
+        .badge-yt { background: #ff0000; } .badge-best { background: #007aff; } .badge-dev { background: #ffd700; color: #000; }
 
-        .screen { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .case-card { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.1); }
-        .info-link { color: var(--accent); font-size: 11px; display: block; margin: 10px 0; cursor: pointer; text-decoration: underline; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .item-card { background: var(--card); border-radius: 18px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); min-height: 150px; }
-        
-        .glow-bg { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; pointer-events: none; }
-        .rarity-exclusive { background: var(--exclusive-glow); background-size: 200%; animation: rgb 3s linear infinite; filter: blur(25px); opacity: 0.35; }
-        .rarity-mythic { background: var(--mythic-glow); filter: blur(20px); }
+        /* Цвета ников */
+        .n-blue { color: #007aff; } .n-yellow { color: #ffd700; } .n-red { color: #ff3b30; }
+        .n-rgb { background: var(--exclusive-glow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200%; animation: rgb 3s linear infinite; font-weight: bold; }
         @keyframes rgb { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-body { background: var(--card); padding: 20px; border-radius: 25px; width: 85%; max-width: 320px; }
+        nav { display: flex; gap: 5px; margin: 10px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
+        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: transparent; color: var(--text); font-weight: bold; cursor: pointer; font-size: 11px; }
+        .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .screen { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .item-card { background: var(--card); border-radius: 18px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(128,128,128,0.1); overflow: hidden; }
+        .glow { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; pointer-events: none; }
+        .rarity-exclusive { background: var(--exclusive-glow); background-size: 200%; animation: rgb 3s linear infinite; filter: blur(20px); opacity: 0.3; }
+        .rarity-mythic { background: var(--mythic-glow); filter: blur(20px); }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-body { background: var(--card); padding: 20px; border-radius: 20px; width: 85%; max-width: 320px; }
         
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--bg); color: var(--text); }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--bg); color: var(--text); box-sizing: border-box; }
         
-        /* Стили старой админки */
-        .admin-section { margin-top: 15px; border: 1px solid orange; padding: 15px; border-radius: 15px; background: rgba(255,165,0,0.05); }
+        .admin-box { margin-top: 15px; padding: 15px; border: 2px dashed orange; border-radius: 15px; background: rgba(255,165,0,0.05); }
     </style>
 </head>
 <body>
@@ -63,11 +65,17 @@
 <header>
     <div class="user-bar">
         <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src="https://via.placeholder.com/100"></div>
-        <div style="flex:1">
-            <div id="h-nick" style="font-weight:900; font-size:18px;">Загрузка...</div>
-            <div style="font-size:10px; color:var(--accent); font-weight:bold;" id="h-id">ID: ...</div>
+        <div style="flex:1; overflow: hidden;">
+            <div id="h-nick-wrap" style="font-weight:900; font-size:16px; display:flex; align-items:center;">
+                <span id="h-nick">Загрузка...</span>
+                <span id="h-badge"></span>
+            </div>
+            <div id="h-id" style="font-size:10px; color:var(--accent); font-weight:bold;">ID: ...</div>
         </div>
-        <div class="balance-badge"><span id="h-bal">0</span> D</div>
+        <div style="text-align:right;">
+            <div style="font-weight:900; color:var(--accent); font-size:14px;"><span id="h-bal">0</span> D</div>
+            <div id="h-lvl" style="font-size:9px; opacity:0.6; font-weight:bold;">LVL 1</div>
+        </div>
     </div>
 </header>
 
@@ -80,16 +88,16 @@
 
 <main>
     <div id="profile" class="screen active">
-        <div style="background:var(--card); border-radius:25px; padding:20px; display:flex; gap:20px; align-items:center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-            <div style="text-align:center; flex:1;">
-                <img id="p-av" src="https://via.placeholder.com/100" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--accent);">
-                <h3 id="p-nick" style="margin:10px 0 5px 0;">...</h3>
-                <div id="p-lvl-tag" style="font-size:11px; font-weight:bold; color:var(--accent);">УРОВЕНЬ 1</div>
+        <div style="background:var(--card); border-radius:20px; padding:20px; text-align:center;">
+            <div class="avatar-box" style="width:100px; height:100px; margin:0 auto;" onclick="document.getElementById('f-in').click()">
+                <img id="p-av" src="https://via.placeholder.com/100">
             </div>
-            <div id="p-showcase" style="display:flex; flex-direction:column; gap:8px;">
-                <div class="slot" id="sl-0" style="width:50px; height:50px; border:2px dashed #ccc; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px;" onclick="shSel(0)">+</div>
-                <div class="slot" id="sl-1" style="width:50px; height:50px; border:2px dashed #ccc; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px;" onclick="shSel(1)">+</div>
-            </div>
+            <input type="file" id="f-in" hidden onchange="uAv(event)">
+            <h2 id="p-nick-wrap" style="margin:15px 0 5px 0; display:flex; align-items:center; justify-content:center;">
+                <span id="p-nick">...</span>
+                <span id="p-badge"></span>
+            </h2>
+            <button class="nav-btn active" style="font-size:10px; padding:5px 15px; width:auto; margin-top:10px;" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
         </div>
     </div>
 
@@ -98,59 +106,56 @@
     </div>
 
     <div id="shop" class="screen">
-        <div class="case-card">
+        <div class="case-card" style="background:var(--card); border-radius:20px; padding:20px; text-align:center;">
             <h2 style="margin:0;">🔥 FireStore</h2>
-            <div style="font-weight:900; color:var(--accent); margin:5px 0; font-size:22px;">2,500 D</div>
-            <span class="info-link" onclick="shInf('firestore')">Посмотреть содержимое и шансы</span>
-            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; padding:12px;" onclick="opC('firestore')">ОТКРЫТЬ</button>
-        </div>
-        <div class="case-card">
-            <h2 style="margin:0;">🕶 Владик</h2>
-            <div style="font-weight:900; color:var(--accent); margin:5px 0; font-size:22px;">100 D</div>
-            <span class="info-link" onclick="shInf('vladik')">Посмотреть содержимое и шансы</span>
-            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; padding:12px;" onclick="opC('vladik')">ОТКРЫТЬ</button>
+            <div style="font-weight:900; color:var(--accent); margin:10px 0; font-size:20px;">2,500 D</div>
+            <span style="color:var(--accent); font-size:11px; text-decoration:underline; cursor:pointer;" onclick="shInf('firestore')">Шансы и содержимое</span>
+            <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; margin-top:10px; padding:12px;" onclick="opC('firestore')">ОТКРЫТЬ</button>
         </div>
     </div>
 
     <div id="settings" class="screen">
-        <button class="nav-btn" onclick="tTh()" style="width:100%; background:var(--card); height:45px;">Сменить тему</button>
-        <button id="l-in" class="nav-btn" style="width:100%; margin-top:10px; background:white; color:black; border:1px solid #ddd;" onclick="login()">Вход через Google</button>
-        
-        <div id="a-box" style="display:none;" class="admin-section">
-            <b style="color:orange;">⚒️ АДМИН ПАНЕЛЬ (ВЕРСИЯ 1.2)</b>
+        <button class="nav-btn" onclick="tTh()" style="width:100%; background:var(--card); height:45px; margin-bottom:10px;">Сменить тему</button>
+        <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border:1px solid #ddd;" onclick="login()">Войти через Google</button>
+        <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти</button>
+
+        <div id="a-box" style="display:none;" class="admin-box">
+            <b style="color:orange; font-size:12px;">ADMIN CONSOLE</b>
             <div style="margin-top:10px;">
-                <small>ВЫДАТЬ СЕБЕ:</small>
+                <small>СЕБЕ / ИГРОКУ ПО ID:</small>
+                <input type="number" id="a-tid" placeholder="ID (пусто = себе)">
                 <input type="number" id="a-d" placeholder="+ Даксы">
+                <input type="number" id="a-x" placeholder="+ XP">
                 <select id="a-it"></select>
-                <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv(true)">ПОЛУЧИТЬ</button>
-            </div>
-            <hr style="margin:15px 0; opacity:0.2;">
-            <div>
-                <small>ВЫДАТЬ ИГРОКУ (ПО ID):</small>
-                <input type="number" id="a-tid" placeholder="ID игрока">
-                <button class="nav-btn active" style="width:100%; background:var(--accent); color:white;" onclick="gv(false)">ОТПРАВИТЬ</button>
-                <button class="nav-btn active" style="width:100%; background:#ff3b30; color:white; margin-top:5px;" onclick="resP()">ОБНУЛИТЬ АККАУНТ</button>
+                <select id="a-eff">
+                    <option value="">Цвет ника: Обычный</option>
+                    <option value="n-blue">Синий</option>
+                    <option value="n-yellow">Жёлтый</option>
+                    <option value="n-red">Красный</option>
+                    <option value="n-rgb">RGB (Радуга)</option>
+                </select>
+                <select id="a-bad">
+                    <option value="">Без галочки</option>
+                    <option value="badge-yt">🔴 YouTube</option>
+                    <option value="badge-best">🔵 Лучший</option>
+                    <option value="badge-dev">🟡 Разработчик</option>
+                </select>
+                <button class="nav-btn active" style="width:100%; background:#28a745; color:white; margin-top:10px;" onclick="gv()">ПРИМЕНИТЬ</button>
             </div>
         </div>
     </div>
 </main>
 
-<div id="m-inf" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
-    <h3 id="inf-t">Шансы</h3>
-    <div id="inf-l" style="font-size:14px; line-height:1.8;"></div>
-    <button class="nav-btn active" style="width:100%; margin-top:15px;" onclick="clM()">Закрыть</button>
-</div></div>
-
-<div id="m-sel" class="modal"><div class="modal-body">
-    <h3>Витрина</h3>
-    <div id="sel-list" style="max-height:300px; overflow-y:auto;"></div>
-    <button class="nav-btn" style="width:100%; margin-top:10px;" onclick="clM()">Отмена</button>
+<div id="m-n" class="modal"><div class="modal-body">
+    <h3>Смена ника</h3>
+    <input type="text" id="n-in" maxlength="12" placeholder="Новый ник">
+    <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; margin-top:10px;" onclick="svN()">Сохранить</button>
 </div></div>
 
 <div id="m-c" class="modal"><div class="modal-body">
-    <h3>Admin Access</h3>
-    <input type="password" id="c-in" placeholder="Code">
-    <button class="nav-btn active" style="width:100%;" onclick="chC()">Войти</button>
+    <h3>Admin Key</h3>
+    <input type="password" id="c-in">
+    <button class="nav-btn active" style="width:100%;" onclick="chC()">Вход</button>
 </div></div>
 
 <div id="toast" class="toast"></div>
@@ -177,8 +182,7 @@
         { n: "Фигурка Владика", sell: 0, r: "divine", i: "🗿" }
     ];
 
-    let pData = { b: 1000, inv: [], xp: 0, nick: "Гость", av: "", numericId: 0, showcase: [null, null] };
-    let curSlot = 0;
+    let pData = { b: 0, inv: [], xp: 0, nick: "Гость", av: "", numericId: 0, eff: "", badge: "", showcase: [] };
     let aClicks = 0;
 
     function init() {
@@ -186,19 +190,21 @@
         auth.onAuthStateChanged(u => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
+                document.getElementById('l-out').style.display = 'block';
                 loadUser(u.uid);
             }
         });
         const s = document.getElementById('a-it');
+        s.innerHTML = `<option value="-1">Без NFT</option>`;
         ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
     }
 
     async function loadUser(uid) {
         const doc = await db.collection("users").doc(uid).get();
         if (doc.exists) {
-            pData = { ...pData, ...doc.data(), inv: doc.data().inv || [] };
+            pData = { ...pData, ...doc.data() };
         } else {
-            pData.numericId = Math.floor(100000000 + Math.random() * 900000000);
+            pData.numericId = Math.floor(100000 + Math.random() * 899999);
             await db.collection("users").doc(uid).set(pData);
         }
         upUI();
@@ -206,93 +212,95 @@
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
-        document.getElementById('h-nick').innerText = pData.nick;
-        document.getElementById('p-nick').innerText = pData.nick;
         document.getElementById('h-id').innerText = `ID: ${pData.numericId}`;
-        if(pData.av) {
-            document.getElementById('h-av').src = pData.av;
-            document.getElementById('p-av').src = pData.av;
-        }
-
         const lvl = Math.floor(Math.sqrt((pData.xp || 0) / 100)) + 1;
-        document.getElementById('p-lvl-tag').innerText = `УРОВЕНЬ ${lvl} | XP: ${pData.xp}`;
+        document.getElementById('h-lvl').innerText = `LVL ${lvl}`;
 
-        // Витрина
-        pData.showcase.forEach((it, i) => {
-            const el = document.getElementById(`sl-${i}`);
-            if(it) el.innerHTML = it.i; else el.innerHTML = "+";
-        });
+        // Ники
+        const nS = pData.eff || "";
+        document.getElementById('h-nick').className = nS;
+        document.getElementById('h-nick').innerText = pData.nick;
+        document.getElementById('p-nick').className = nS;
+        document.getElementById('p-nick').innerText = pData.nick;
+
+        // Галочки
+        const b = pData.badge;
+        const bHtml = b ? `<span class="badge ${b}">✓</span>` : "";
+        document.getElementById('h-badge').innerHTML = bHtml;
+        document.getElementById('p-badge').innerHTML = bHtml;
+
+        if(pData.av) { document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av; }
 
         // Инвентарь
         const g = document.getElementById('inv-grid');
         g.innerHTML = "";
         (pData.inv || []).forEach((it, i) => {
-            const sellBtn = it.n !== 'Фигурка Владика' ? `<button class="nav-btn active" style="height:25px; font-size:9px; width:90%; z-index:1;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>` : `<span style="font-size:8px; opacity:0.5;">DIVINE</span>`;
+            const sBtn = it.n !== 'Фигурка Владика' ? `<button class="nav-btn active" style="height:25px; font-size:9px; width:90%; z-index:1;" onclick="sl(${i})">ПРОДАТЬ ${it.sell}</button>` : `<span style="font-size:8px; opacity:0.5; z-index:1;">DIVINE</span>`;
             g.innerHTML += `
                 <div class="item-card">
-                    <div class="glow-bg rarity-${it.r}"></div>
+                    <div class="glow rarity-${it.r}"></div>
                     <div style="font-size:42px; z-index:1;">${it.i}</div>
-                    <div style="font-size:10px; font-weight:900; z-index:1;">${it.n}</div>
-                    ${sellBtn}
+                    <div style="font-size:10px; font-weight:900; z-index:1; margin-top:5px;">${it.n}</div>
+                    ${sBtn}
                 </div>`;
         });
     }
 
-    function shInf(type) {
-        const l = document.getElementById('inf-l');
-        if(type === 'firestore') {
-            l.innerHTML = `🐦‍🔥 Феникс: 50%<br>🔦 Факел: 25%<br>💀 Скелет: 15%<br>💨 Пусто: 10%`;
-        } else {
-            l.innerHTML = `🪶 Перо: 99.9%<br>🗿 Фигурка Владика: 0.1%`;
-        }
-        document.getElementById('m-inf').style.display = 'flex';
-    }
-
-    function opC(type) {
-        let cost = type === 'firestore' ? 2500 : 100;
-        if(pData.b < cost) return ms("Мало D!");
-        pData.b -= cost;
-        let win = null;
-        const r = Math.random() * 100;
-        if(type === 'firestore') {
-            if(r < 50) win = {...ITEMS[0]}; else if(r < 75) win = {...ITEMS[1]}; else if(r < 90) win = {...ITEMS[2]};
-        } else {
-            win = (r < 0.1) ? {...ITEMS[4]} : {...ITEMS[3]};
-        }
-        if(win) pData.inv.push(win);
-        sync(); ms(win ? `Выпало: ${win.n}` : "Пусто!");
-    }
-
-    function sl(i) {
-        const item = pData.inv[i];
-        pData.b += item.sell;
-        // Чистка витрины если предмет там стоял
-        pData.showcase = pData.showcase.map(s => (s && s.n === item.n) ? null : s);
-        pData.inv.splice(i, 1);
-        sync();
-    }
-
-    function gv(self) {
+    function gv() {
+        const tid = document.getElementById('a-tid').value;
         const d = parseInt(document.getElementById('a-d').value || 0);
-        const it = {...ITEMS[document.getElementById('a-it').value]};
-        if(self) {
-            pData.b += d; pData.inv.push(it);
-            sync(); ms("Выдано! ✅");
+        const x = parseInt(document.getElementById('a-x').value || 0);
+        const e = document.getElementById('a-eff').value;
+        const b = document.getElementById('a-bad').value;
+        const itIdx = document.getElementById('a-it').value;
+
+        const update = { b: firebase.firestore.FieldValue.increment(d), xp: firebase.firestore.FieldValue.increment(x) };
+        if(e !== undefined) update.eff = e;
+        if(b !== undefined) update.badge = b;
+
+        const performUpdate = async (docId) => {
+            if(itIdx != -1) {
+                const doc = await db.collection("users").doc(docId).get();
+                const inv = doc.data().inv || [];
+                inv.push({...ITEMS[itIdx]});
+                update.inv = inv;
+            }
+            await db.collection("users").doc(docId).update(update);
+            if(docId === auth.currentUser?.uid) { 
+                const newDoc = await db.collection("users").doc(docId).get();
+                pData = newDoc.data(); upUI();
+            }
+            ms("Выполнено! ✅");
+        };
+
+        if(!tid) {
+            if(auth.currentUser) performUpdate(auth.currentUser.uid);
         } else {
-            const tid = Number(document.getElementById('a-tid').value);
-            db.collection("users").where("numericId", "==", tid).get().then(snap => {
-                if(!snap.empty) {
-                    const doc = snap.docs[0];
-                    const data = doc.data();
-                    const inv = data.inv || []; inv.push(it);
-                    db.collection("users").doc(doc.id).update({ b: (data.b || 0) + d, inv: inv });
-                    ms("Отправлено игроку!");
-                }
+            db.collection("users").where("numericId", "==", parseInt(tid)).get().then(s => {
+                if(!s.empty) performUpdate(s.docs[0].id); else ms("ID не найден!");
             });
         }
     }
 
-    function sync() { upUI(); if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); }
+    async function svN() {
+        const v = document.getElementById('n-in').value.trim();
+        if(v.length < 3) return ms("Короткий ник!");
+        const snap = await db.collection("users").where("nick", "==", v).get();
+        if(!snap.empty) return ms("Ник занят!");
+        pData.nick = v; sync(); clM();
+    }
+
+    function opC(t) {
+        if(pData.b < 2500) return ms("Мало D!");
+        pData.b -= 2500;
+        const r = Math.random()*100;
+        let win = null;
+        if(r < 50) win = {...ITEMS[0]}; else if(r < 75) win = {...ITEMS[1]}; else if(r < 90) win = {...ITEMS[2]};
+        if(win) pData.inv.push(win);
+        sync(); ms(win ? `Выпало: ${win.n}` : "Пусто!");
+    }
+
+    function sl(i) { pData.b += pData.inv[i].sell; pData.inv.splice(i,1); sync(); }
     function sw(id, bid) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -305,24 +313,15 @@
         localStorage.setItem('theme', next);
     }
     function clM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+    function shNick() { document.getElementById('m-n').style.display = 'flex'; }
     function aCl() { sw('settings', 'b-s'); aClicks++; if(aClicks >= 5) { document.getElementById('m-c').style.display = 'flex'; aClicks = 0; } }
     function chC() { if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") { document.getElementById('a-box').style.display = 'block'; clM(); } }
     function ms(t) { const toast = document.getElementById('toast'); toast.innerText = t; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
+    function sync() { upUI(); if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); }
     function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-
-    function shSel(slot) {
-        curSlot = slot;
-        const list = document.getElementById('sel-list');
-        list.innerHTML = "";
-        pData.inv.forEach((it, i) => {
-            list.innerHTML += `<div onclick="setS(${i})" style="padding:10px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:10px; cursor:pointer;">
-                <span style="font-size:20px;">${it.i}</span> <span>${it.n}</span>
-            </div>`;
-        });
-        document.getElementById('m-sel').style.display = 'flex';
-    }
-    function setS(i) { pData.showcase[curSlot] = pData.inv[i]; sync(); clM(); }
-    async function resP() { if(confirm("Обнулить?")) { const tid = Number(document.getElementById('a-tid').value); const snap = await db.collection("users").where("numericId", "==", tid).get(); if(!snap.empty) { await db.collection("users").doc(snap.docs[0].id).update({ b: 0, inv: [], xp: 0 }); ms("Обнулено!"); } } }
+    function logout() { auth.signOut().then(() => location.reload()); }
+    function uAv(e) { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); }
+    function shInf(t) { alert("Mythic: 75% | Exclusive: 15% | Пусто: 10%"); }
 
     init();
 </script>
