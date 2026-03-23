@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Engine Fix</title>
+    <title>DuksNFT - Ultra Fix</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,6 +13,7 @@
         :root {
             --bg: #ffffff; --text: #1c1c1e; --accent: #007aff; --card: #f2f2f7;
             --common: #007aff; --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
+            --exclusive: linear-gradient(45deg, #ff3b30, #ffcc00, #34c759, #007aff, #af52de);
         }
         [data-theme="dark"] {
             --bg: #121212; --text: #ffffff; --card: #1c1c1e;
@@ -21,30 +22,28 @@
         header { padding: 15px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         
         .user-bar { display: flex; align-items: center; gap: 12px; }
-        .avatar-box { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; }
+        .avatar-box { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
         .balance-badge { background: var(--accent); color: white; padding: 5px 12px; border-radius: 15px; font-weight: 800; font-size: 13px; }
         
         nav { display: flex; gap: 5px; margin-top: 10px; }
-        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; font-size: 12px; }
+        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; font-size: 11px; cursor: pointer; }
         .nav-btn.active { background: var(--accent); color: white; }
 
         .screen { display: none; padding: 20px; }
         .screen.active { display: block; }
 
-        /* Элементы инвентаря */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .item-card { background: var(--card); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(128,128,128,0.1); }
+        .item-card { background: var(--card); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(128,128,128,0.1); overflow: hidden; }
         .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.4; z-index: 0; }
 
-        /* Модальные окна */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-body { background: var(--bg); padding: 25px; border-radius: 20px; width: 80%; max-width: 300px; text-align: center; }
         .modal input, .modal select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; background: var(--bg); color: var(--text); box-sizing: border-box; }
 
-        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid #ffeeba; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 3000; }
+        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid #ffeeba; text-align: left; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 3000; font-size: 12px; }
     </style>
 </head>
 <body data-theme="light">
@@ -56,13 +55,13 @@
         </div>
         <input type="file" id="file-in" hidden accept="image/*" onchange="upAv(event)">
         <div style="flex:1">
-            <div id="head-nick" style="font-weight:800; font-size:16px;" onclick="showNickModal()">Загрузка...</div>
+            <div id="head-nick" style="font-weight:800; font-size:16px; color:var(--accent); cursor:pointer;" onclick="showNickModal()">Загрузка...</div>
             <div id="head-lvl" style="font-size:10px; opacity:0.6;">Уровень 1</div>
         </div>
         <div class="balance-badge"><span id="head-bal">0</span> D</div>
     </div>
     <nav>
-        <button class="nav-btn active" id="b-cases" onclick="tab('cases', 'b-cases')">Магазин</button>
+        <button class="nav-btn active" id="b-cases" onclick="tab('cases', 'b-cases')">Кейсы</button>
         <button class="nav-btn" id="b-inv" onclick="tab('inv', 'b-inv')">Инвентарь</button>
         <button class="nav-btn" id="b-set" onclick="admClick()">⚙️</button>
     </nav>
@@ -73,36 +72,41 @@
     <div id="inv" class="screen"><div class="grid" id="inv-grid"></div></div>
     <div id="settings" class="screen">
         <h3>Настройки</h3>
-        <button class="nav-btn" onclick="toggleT()" style="width:100%; margin-bottom:10px;">Сменить тему</button>
-        <button class="nav-btn" id="l-in" onclick="login()" style="width:100%;">Войти через Google</button>
-        <button class="nav-btn" id="l-out" onclick="logout()" style="display:none; width:100%; background:#ff3b30; color:white;">Выйти</button>
+        <button class="nav-btn" onclick="toggleT()" style="width:100%; margin-bottom:10px; height: 45px;">Сменить тему</button>
+        <button class="nav-btn" id="l-in" onclick="login()" style="width:100%; height: 45px;">Войти через Google</button>
+        <button class="nav-btn" id="l-out" onclick="logout()" style="display:none; width:100%; background:#ff3b30; color:white; height: 45px;">Выйти</button>
 
         <div id="adm-box" class="admin-panel">
-            <b>🛠 ADMIN MENU</b>
-            <input type="number" id="adm-d" placeholder="+ Деньги">
-            <input type="number" id="adm-x" placeholder="+ XP">
+            <b style="font-size: 14px;">🛠 ADMIN PANEL</b><br><br>
+            <label style="font-size: 11px;">Ресурсы:</label>
+            <input type="number" id="adm-d" placeholder="+ Деньги (Duks)">
+            <input type="number" id="adm-x" placeholder="+ Опыт (XP)">
+            <label style="font-size: 11px;">Предмет:</label>
             <select id="adm-items"></select>
-            <button class="nav-btn" onclick="give(true)" style="width:100%; background:#28a745; color:white; margin:5px 0;">Себе</button>
-            <input type="text" id="adm-target" placeholder="Ник игрока">
-            <button class="nav-btn" onclick="give(false)" style="width:100%; background:#007aff; color:white;">Выдать игроку</button>
+            <button class="nav-btn" onclick="give(true)" style="width:100%; background:#28a745; color:white; margin:10px 0; height: 40px;">Выдать СЕБЕ</button>
+            <hr style="opacity: 0.2;">
+            <label style="font-size: 11px;">Цель (Ник игрока):</label>
+            <input type="text" id="adm-target" placeholder="Введите точный ник">
+            <button class="nav-btn" onclick="give(false)" style="width:100%; background:#007aff; color:white; height: 40px;">Выдать ИГРОКУ</button>
         </div>
     </div>
 </main>
 
 <div id="m-nick" class="modal">
     <div class="modal-body">
-        <h3>Новое имя</h3>
-        <input type="text" id="nick-input" maxlength="12" placeholder="Введите ник">
-        <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="saveN()">Сохранить</button>
+        <h3>Смена имени</h3>
+        <p style="font-size: 11px; opacity: 0.6;">Ник должен быть уникальным</p>
+        <input type="text" id="nick-input" maxlength="12" placeholder="Ваш новый ник">
+        <button class="nav-btn" style="background:var(--accent); color:white; width:100%; margin-top: 10px;" onclick="saveN()">Сохранить в облаке</button>
         <button class="nav-btn" style="width:100%; margin-top:5px;" onclick="closeM()">Отмена</button>
     </div>
 </div>
 
 <div id="m-code" class="modal">
     <div class="modal-body">
-        <h3>Код доступа</h3>
-        <input type="password" id="code-input" placeholder="****">
-        <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="checkC()">Войти</button>
+        <h3>Доступ разработчика</h3>
+        <input type="password" id="code-input" placeholder="Введите код">
+        <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="checkC()">Подтвердить</button>
         <button class="nav-btn" style="width:100%; margin-top:5px;" onclick="closeM()">Отмена</button>
     </div>
 </div>
@@ -127,27 +131,20 @@
         { n: "Перо", sell: 150, r: "common", i: "🪶", chance: 33 },
         { n: "Урна", sell: 150, r: "common", i: "⚱️", chance: 33 },
         { n: "Ботинок", sell: 150, r: "common", i: "👞", chance: 33 },
-        { n: "Слиток", sell: 1000, r: "legendary", i: "🧈", chance: 1 },
-        { n: "Эспандер", sell: 1500, r: "mythic", i: "💪", chance: 50 },
-        { n: "Золотой эспандер", sell: 2000, r: "mythic", i: "💪✨", chance: 20 },
-        { n: "Алмазный эспандер", sell: 1500, r: "mythic", i: "💪💎", chance: 10 },
+        { n: "Слиток", sell: 1000, r: "legendary", i: "🧈", chance: 5 },
+        { n: "Эспандер", sell: 1500, r: "mythic", i: "💪", chance: 15 },
         { n: "Божественный эспандер", sell: 10000, r: "exclusive", i: "☄️", chance: 1 },
-        { n: "Кубок", sell: 15000, r: "legendary", i: "🏆", chance: 5 },
-        { n: "Мешок денег", sell: 5000, r: "exclusive", i: "💰", chance: 10 },
-        { n: "Телефон", sell: 3000, r: "epic", i: "📱", chance: 15 },
-        { n: "Корона", sell: 50000, r: "divine", i: "👑", chance: 1 }
+        { n: "Корона", sell: 50000, r: "mythic", i: "👑", chance: 1 }
     ];
 
     const CASES = [
         { name: "Обычный", p: 200, icon: "📦", pool: [0,1,2] },
-        { name: "Редкий", p: 2000, icon: "⚡", pool: [4,5,6,7] },
-        { name: "Легендарный", p: 5000, icon: "💎", pool: [8,9,10,11] }
+        { name: "Легендарный", p: 5000, icon: "💎", pool: [3,4,5,6] }
     ];
 
-    let user = { b: 1000, inv: [], xp: 0, nick: "Гость", av: "" };
+    let user = { b: 1000, inv: [], xp: 0, nick: "Загрузка...", av: "" };
     let aClicks = 0;
 
-    // Сохраняем тему
     document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
 
     async function init() {
@@ -156,6 +153,8 @@
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
                 await loadCloud(u.uid);
+            } else {
+                user.nick = "Гость";
             }
             updateUI();
         });
@@ -167,12 +166,17 @@
     async function loadCloud(uid) {
         const d = await db.collection("users").doc(uid).get();
         if (d.exists) user = {...user, ...d.data()};
-        else await db.collection("users").doc(uid).set(user);
+        else {
+            user.nick = "Игрок_" + Math.floor(Math.random()*9999);
+            await db.collection("users").doc(uid).set(user);
+        }
     }
 
     async function sync() {
         updateUI();
-        if (auth.currentUser) await db.collection("users").doc(auth.currentUser.uid).set(user, { merge: true });
+        if (auth.currentUser) {
+            return db.collection("users").doc(auth.currentUser.uid).update(user);
+        }
     }
 
     function updateUI() {
@@ -196,21 +200,19 @@
     function renderCases() {
         document.getElementById('cases').innerHTML = CASES.map((c, i) => `
             <div style="background:var(--card); padding:20px; border-radius:20px; margin-bottom:15px; text-align:center;">
-                <span style="font-size:50px;" id="ico-${i}">${c.icon}</span>
+                <span style="font-size:50px; display:inline-block;" id="ico-${i}">${c.icon}</span>
                 <h4>${c.name}</h4>
-                <button class="nav-btn" style="background:#34c759; color:white; width:100%;" onclick="openC(${i})">${c.p} Duks</button>
+                <button class="nav-btn" style="background:#34c759; color:white; width:100%; height:40px;" onclick="openC(${i})">${c.p} Duks</button>
             </div>`).join('');
     }
 
     function openC(i) {
         if (user.b < CASES[i].p) return msg("Недостаточно D!");
         
-        // МГНОВЕННОЕ СПИСАНИЕ
         user.b -= CASES[i].p;
         sync(); 
         
         const ico = document.getElementById(`ico-${i}`);
-        ico.style.display = "inline-block";
         ico.animate([{transform:'scale(1)'},{transform:'scale(1.3)'},{transform:'scale(1)'}], {duration:300});
 
         setTimeout(() => {
@@ -238,13 +240,16 @@
     
     async function saveN() {
         const val = document.getElementById('nick-input').value.trim();
-        if(!val) return;
+        if(!val || val.length < 2) return msg("Ник слишком короткий");
+        
+        msg("Проверка ника...");
         const s = await db.collection("users").where("nick", "==", val).get();
         if(!s.empty) return msg("Ник занят!");
+
         user.nick = val;
-        await sync();
+        await sync(); 
         closeM();
-        msg("Ник изменен!");
+        msg("Ник успешно изменен!");
     }
 
     function admClick() {
@@ -257,6 +262,7 @@
         if(document.getElementById('code-input').value === "Zxc1234Zxc") {
             document.getElementById('adm-box').style.display = 'block';
             closeM();
+            msg("Доступ разрешен");
         } else msg("Неверный код");
     }
 
@@ -269,30 +275,36 @@
             user.b += d; user.xp += x; user.inv.push({...it}); sync();
             msg("Выдано себе");
         } else {
-            const nick = document.getElementById('adm-target').value;
-            const snap = await db.collection("users").where("nick", "==", nick).get();
+            const targetNick = document.getElementById('adm-target').value.trim();
+            if(!targetNick) return msg("Введите ник цели!");
+            
+            msg("Поиск игрока...");
+            const snap = await db.collection("users").where("nick", "==", targetNick).get();
+            
             if(!snap.empty) {
-                const id = snap.docs[0].id;
-                const data = snap.docs[0].data();
+                const targetDoc = snap.docs[0];
+                const targetId = targetDoc.id;
+                const targetData = targetDoc.data();
                 
-                // Исправленная логика обновления чужого аккаунта
-                const newInv = data.inv || [];
-                newInv.push({...it});
-                
-                await db.collection("users").doc(id).update({
-                    b: (data.b || 0) + d,
-                    xp: (data.xp || 0) + x,
-                    inv: newInv
+                const updatedInv = targetData.inv || [];
+                updatedInv.push({...it});
+
+                await db.collection("users").doc(targetId).update({
+                    b: (targetData.b || 0) + d,
+                    xp: (targetData.xp || 0) + x,
+                    inv: updatedInv
                 });
-                msg("Отправлено игроку " + nick);
-            } else msg("Игрок не найден");
+                msg("Успешно выдано игроку: " + targetNick);
+            } else {
+                msg("Игрок с таким ником не найден");
+            }
         }
     }
 
     function msg(t) {
         const toast = document.getElementById('toast');
         toast.innerText = t; toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 2000);
+        setTimeout(() => toast.style.display = 'none', 2500);
     }
 
     function toggleT() {
@@ -314,5 +326,4 @@
     init();
 </script>
 </body>
-    </html>
-    
+</html>
