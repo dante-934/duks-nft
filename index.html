@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Ultra Fix</title>
+    <title>DuksNFT - Professional Build</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,57 +13,57 @@
         :root {
             --bg: #ffffff; --text: #1c1c1e; --accent: #007aff; --card: #f2f2f7;
             --common: #007aff; --epic: #af52de; --legendary: #ffcc00; --mythic: #ff3b30;
-            --exclusive: linear-gradient(45deg, #ff3b30, #ffcc00, #34c759, #007aff, #af52de);
         }
         [data-theme="dark"] {
             --bg: #121212; --text: #ffffff; --card: #1c1c1e;
         }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
-        header { padding: 15px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; }
         
+        header { padding: 15px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         .user-bar { display: flex; align-items: center; gap: 12px; }
         .avatar-box { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .balance-badge { background: var(--accent); color: white; padding: 5px 12px; border-radius: 15px; font-weight: 800; font-size: 13px; }
+        .balance-badge { background: var(--accent); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 13px; }
         
         nav { display: flex; gap: 5px; margin-top: 10px; }
-        .nav-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; font-size: 11px; cursor: pointer; }
+        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; font-size: 12px; cursor: pointer; }
         .nav-btn.active { background: var(--accent); color: white; }
 
-        .screen { display: none; padding: 20px; }
+        .screen { display: none; padding: 20px; min-height: 80vh; }
         .screen.active { display: block; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .item-card { background: var(--card); border-radius: 15px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(128,128,128,0.1); overflow: hidden; }
-        .glow { position: absolute; width: 60px; height: 60px; filter: blur(20px); border-radius: 50%; opacity: 0.4; z-index: 0; }
+        .item-card { background: var(--card); border-radius: 18px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(128,128,128,0.1); }
+        .glow { position: absolute; width: 60px; height: 60px; filter: blur(25px); border-radius: 50%; opacity: 0.4; z-index: 0; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-body { background: var(--bg); padding: 25px; border-radius: 20px; width: 80%; max-width: 300px; text-align: center; }
-        .modal input, .modal select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ccc; background: var(--bg); color: var(--text); box-sizing: border-box; }
+        /* Модальные окна */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+        .modal-body { background: var(--bg); padding: 25px; border-radius: 24px; width: 85%; max-width: 320px; text-align: center; }
+        .modal input, .modal select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); box-sizing: border-box; font-size: 16px; }
 
-        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid #ffeeba; text-align: left; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 3000; font-size: 12px; }
+        .admin-panel { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 18px; margin-top: 15px; border: 2px solid #ffeeba; text-align: left; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 25px; display: none; z-index: 3000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body data-theme="light">
 
 <header>
     <div class="user-bar">
-        <div class="avatar-box" onclick="document.getElementById('file-in').click()">
-            <img id="head-av" src="https://via.placeholder.com/50">
+        <div class="avatar-box" onclick="document.getElementById('f-in').click()">
+            <img id="h-av" src="https://via.placeholder.com/50">
         </div>
-        <input type="file" id="file-in" hidden accept="image/*" onchange="upAv(event)">
+        <input type="file" id="f-in" hidden accept="image/*" onchange="uAv(event)">
         <div style="flex:1">
-            <div id="head-nick" style="font-weight:800; font-size:16px; color:var(--accent); cursor:pointer;" onclick="showNickModal()">Загрузка...</div>
-            <div id="head-lvl" style="font-size:10px; opacity:0.6;">Уровень 1</div>
+            <div id="h-nick" style="font-weight:900; font-size:18px;" onclick="shNick()">Загрузка...</div>
+            <div id="h-lvl" style="font-size:11px; opacity:0.6;">Уровень 1</div>
         </div>
-        <div class="balance-badge"><span id="head-bal">0</span> D</div>
+        <div class="balance-badge"><span id="h-bal">0</span> D</div>
     </div>
     <nav>
-        <button class="nav-btn active" id="b-cases" onclick="tab('cases', 'b-cases')">Кейсы</button>
-        <button class="nav-btn" id="b-inv" onclick="tab('inv', 'b-inv')">Инвентарь</button>
-        <button class="nav-btn" id="b-set" onclick="admClick()">⚙️</button>
+        <button class="nav-btn active" id="t-c" onclick="sw('cases', 't-c')">Кейсы</button>
+        <button class="nav-btn" id="t-i" onclick="sw('inv', 't-i')">Инвентарь</button>
+        <button class="nav-btn" id="t-s" onclick="aCl()">⚙️</button>
     </nav>
 </header>
 
@@ -71,45 +71,38 @@
     <div id="cases" class="screen active"></div>
     <div id="inv" class="screen"><div class="grid" id="inv-grid"></div></div>
     <div id="settings" class="screen">
-        <h3>Настройки</h3>
-        <button class="nav-btn" onclick="toggleT()" style="width:100%; margin-bottom:10px; height: 45px;">Сменить тему</button>
-        <button class="nav-btn" id="l-in" onclick="login()" style="width:100%; height: 45px;">Войти через Google</button>
-        <button class="nav-btn" id="l-out" onclick="logout()" style="display:none; width:100%; background:#ff3b30; color:white; height: 45px;">Выйти</button>
+        <h3>Профиль и Система</h3>
+        <button class="nav-btn" onclick="tTh()" style="width:100%; margin-bottom:10px; height:50px;">Сменить тему</button>
+        <button class="nav-btn" onclick="resAcc()" style="width:100%; margin-bottom:10px; height:50px; background:#ff9500; color:white;">Обнулить аккаунт</button>
+        <button class="nav-btn" id="l-in" onclick="login()" style="width:100%; background:white; color:black; border:1px solid #ddd;">Войти через Google</button>
+        <button class="nav-btn" id="l-out" onclick="logout()" style="display:none; width:100%; background:#ff3b30; color:white;">Выйти</button>
 
-        <div id="adm-box" class="admin-panel">
-            <b style="font-size: 14px;">🛠 ADMIN PANEL</b><br><br>
-            <label style="font-size: 11px;">Ресурсы:</label>
-            <input type="number" id="adm-d" placeholder="+ Деньги (Duks)">
-            <input type="number" id="adm-x" placeholder="+ Опыт (XP)">
-            <label style="font-size: 11px;">Предмет:</label>
-            <select id="adm-items"></select>
-            <button class="nav-btn" onclick="give(true)" style="width:100%; background:#28a745; color:white; margin:10px 0; height: 40px;">Выдать СЕБЕ</button>
-            <hr style="opacity: 0.2;">
-            <label style="font-size: 11px;">Цель (Ник игрока):</label>
-            <input type="text" id="adm-target" placeholder="Введите точный ник">
-            <button class="nav-btn" onclick="give(false)" style="width:100%; background:#007aff; color:white; height: 40px;">Выдать ИГРОКУ</button>
+        <div id="a-box" class="admin-panel">
+            <b>🛠 ПАНЕЛЬ УПРАВЛЕНИЯ</b>
+            <input type="number" id="a-d" placeholder="+ Duks">
+            <input type="number" id="a-x" placeholder="+ XP">
+            <select id="a-it"></select>
+            <button class="nav-btn" onclick="gv(true)" style="width:100%; background:#28a745; color:white; margin:5px 0;">Выдать себе</button>
+            <hr style="border:0; border-top:1px solid #ffeeba; margin:10px 0;">
+            <input type="text" id="a-t" placeholder="Ник игрока">
+            <button class="nav-btn" onclick="gv(false)" style="width:100%; background:#007aff; color:white;">Выдать игроку</button>
         </div>
     </div>
 </main>
 
-<div id="m-nick" class="modal">
-    <div class="modal-body">
-        <h3>Смена имени</h3>
-        <p style="font-size: 11px; opacity: 0.6;">Ник должен быть уникальным</p>
-        <input type="text" id="nick-input" maxlength="12" placeholder="Ваш новый ник">
-        <button class="nav-btn" style="background:var(--accent); color:white; width:100%; margin-top: 10px;" onclick="saveN()">Сохранить в облаке</button>
-        <button class="nav-btn" style="width:100%; margin-top:5px;" onclick="closeM()">Отмена</button>
-    </div>
-</div>
+<div id="m-n" class="modal"><div class="modal-body">
+    <h3>Смена ника</h3>
+    <input type="text" id="n-in" maxlength="12" placeholder="Новое имя">
+    <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="svN()">Сохранить</button>
+    <button class="nav-btn" style="width:100%; margin-top:8px;" onclick="clM()">Отмена</button>
+</div></div>
 
-<div id="m-code" class="modal">
-    <div class="modal-body">
-        <h3>Доступ разработчика</h3>
-        <input type="password" id="code-input" placeholder="Введите код">
-        <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="checkC()">Подтвердить</button>
-        <button class="nav-btn" style="width:100%; margin-top:5px;" onclick="closeM()">Отмена</button>
-    </div>
-</div>
+<div id="m-c" class="modal"><div class="modal-body">
+    <h3>Админ-панель</h3>
+    <input type="password" id="c-in" placeholder="Код">
+    <button class="nav-btn" style="background:var(--accent); color:white; width:100%;" onclick="chC()">Войти</button>
+    <button class="nav-btn" style="width:100%; margin-top:8px;" onclick="clM()">Отмена</button>
+</div></div>
 
 <div id="toast" class="toast"></div>
 
@@ -131,189 +124,188 @@
         { n: "Перо", sell: 150, r: "common", i: "🪶", chance: 33 },
         { n: "Урна", sell: 150, r: "common", i: "⚱️", chance: 33 },
         { n: "Ботинок", sell: 150, r: "common", i: "👞", chance: 33 },
-        { n: "Слиток", sell: 1000, r: "legendary", i: "🧈", chance: 5 },
-        { n: "Эспандер", sell: 1500, r: "mythic", i: "💪", chance: 15 },
+        { n: "Слиток", sell: 1000, r: "legendary", i: "🧈", chance: 1 },
+        { n: "Эспандер", sell: 1500, r: "mythic", i: "💪", chance: 50 },
+        { n: "Золотой эспандер", sell: 2000, r: "mythic", i: "💪✨", chance: 20 },
         { n: "Божественный эспандер", sell: 10000, r: "exclusive", i: "☄️", chance: 1 },
-        { n: "Корона", sell: 50000, r: "mythic", i: "👑", chance: 1 }
+        { n: "Мешок денег", sell: 5000, r: "exclusive", i: "💰", chance: 10 },
+        { n: "Телефон", sell: 3000, r: "epic", i: "📱", chance: 15 },
+        { n: "Корона", sell: 50000, r: "divine", i: "👑", chance: 1 }
     ];
 
     const CASES = [
-        { name: "Обычный", p: 200, icon: "📦", pool: [0,1,2] },
-        { name: "Легендарный", p: 5000, icon: "💎", pool: [3,4,5,6] }
+        { name: "Стандарт", p: 200, icon: "📦", pool: [0,1,2] },
+        { name: "Премиум", p: 2000, icon: "⚡", pool: [4,5,6] },
+        { name: "Лимитка", p: 5000, icon: "💎", pool: [7,8,9] }
     ];
 
-    let user = { b: 1000, inv: [], xp: 0, nick: "Загрузка...", av: "" };
-    let aClicks = 0;
+    let pData = { b: 1000, inv: [], xp: 0, nick: "Новичок", av: "" };
+    let clicks = 0;
 
-    document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+    // Инициализация темы мгновенно
+    document.body.setAttribute('data-theme', localStorage.getItem('game-theme') || 'light');
 
     async function init() {
         auth.onAuthStateChanged(async (u) => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
-                await loadCloud(u.uid);
-            } else {
-                user.nick = "Гость";
+                await load(u.uid);
             }
-            updateUI();
+            upUI();
         });
-        const s = document.getElementById('adm-items');
+        const s = document.getElementById('a-it');
         ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
-        renderCases();
+        rnCs();
     }
 
-    async function loadCloud(uid) {
+    async function load(uid) {
         const d = await db.collection("users").doc(uid).get();
-        if (d.exists) user = {...user, ...d.data()};
-        else {
-            user.nick = "Игрок_" + Math.floor(Math.random()*9999);
-            await db.collection("users").doc(uid).set(user);
-        }
+        if (d.exists) pData = {...pData, ...d.data()};
+        else await db.collection("users").doc(uid).set(pData);
     }
 
     async function sync() {
-        updateUI();
+        upUI();
         if (auth.currentUser) {
-            return db.collection("users").doc(auth.currentUser.uid).update(user);
+            await db.collection("users").doc(auth.currentUser.uid).set(pData, { merge: true });
         }
     }
 
-    function updateUI() {
-        document.getElementById('head-bal').innerText = user.b.toLocaleString();
-        document.getElementById('head-nick').innerText = user.nick;
-        if(user.av) document.getElementById('head-av').src = user.av;
-        const lvl = Math.floor(Math.sqrt(user.xp / 100)) + 1;
-        document.getElementById('head-lvl').innerText = `Уровень ${lvl} (${user.xp} XP)`;
+    function upUI() {
+        document.getElementById('h-bal').innerText = pData.b.toLocaleString();
+        document.getElementById('h-nick').innerText = pData.nick;
+        if(pData.av) document.getElementById('h-av').src = pData.av;
+        const lvl = Math.floor(Math.sqrt(pData.xp / 100)) + 1;
+        document.getElementById('h-lvl').innerText = `Уровень ${lvl} (${pData.xp} XP)`;
         
         const g = document.getElementById('inv-grid');
-        g.innerHTML = user.inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.3; text-align:center;">Пусто</p>';
-        user.inv.forEach((it, i) => {
+        g.innerHTML = pData.inv.length ? '' : '<p style="grid-column:1/-1; opacity:0.3; text-align:center;">Инвентарь пуст</p>';
+        pData.inv.forEach((it, i) => {
             g.innerHTML += `<div class="item-card">
                 <div class="glow" style="background:var(--${it.r})"></div>
                 <div style="font-size:35px; z-index:1;">${it.i}</div>
-                <button class="nav-btn" style="margin-top:10px; font-size:9px; border:1px solid red; color:red; background:none;" onclick="sell(${i})">Продать ${it.sell}</button>
+                <button class="nav-btn" style="margin-top:10px; font-size:9px; border:1px solid red; color:red; background:none;" onclick="sl(${i})">Продать ${it.sell}</button>
             </div>`;
         });
     }
 
-    function renderCases() {
+    function rnCs() {
         document.getElementById('cases').innerHTML = CASES.map((c, i) => `
-            <div style="background:var(--card); padding:20px; border-radius:20px; margin-bottom:15px; text-align:center;">
-                <span style="font-size:50px; display:inline-block;" id="ico-${i}">${c.icon}</span>
-                <h4>${c.name}</h4>
-                <button class="nav-btn" style="background:#34c759; color:white; width:100%; height:40px;" onclick="openC(${i})">${c.p} Duks</button>
+            <div style="background:var(--card); padding:20px; border-radius:22px; margin-bottom:15px; text-align:center;">
+                <span style="font-size:55px; display:inline-block;" id="ico-${i}">${c.icon}</span>
+                <h3 style="margin:10px 0;">${c.name}</h3>
+                <button class="nav-btn" style="background:#34c759; color:white; width:100%;" onclick="opC(${i})">${c.p} Duks</button>
             </div>`).join('');
     }
 
-    function openC(i) {
-        if (user.b < CASES[i].p) return msg("Недостаточно D!");
-        
-        user.b -= CASES[i].p;
+    function opC(i) {
+        if (pData.b < CASES[i].p) return ms("Не хватает Duks!");
+        pData.b -= CASES[i].p;
         sync(); 
         
         const ico = document.getElementById(`ico-${i}`);
-        ico.animate([{transform:'scale(1)'},{transform:'scale(1.3)'},{transform:'scale(1)'}], {duration:300});
+        ico.animate([{transform:'scale(1)'},{transform:'scale(1.2) rotate(5deg)'},{transform:'scale(1)'}], 300);
 
         setTimeout(() => {
             const p = [];
             CASES[i].pool.forEach(idx => { for(let k=0; k<ITEMS[idx].chance; k++) p.push(ITEMS[idx]); });
             const win = {...p[Math.floor(Math.random()*p.length)]};
-            user.inv.push(win);
-            user.xp += 30;
+            pData.inv.push(win);
+            pData.xp += 40;
             sync();
-            msg("Выпало: " + win.n);
+            ms("Выпало: " + win.n);
         }, 300);
     }
 
-    function sell(i) { user.b += user.inv[i].sell; user.inv.splice(i,1); sync(); }
+    function sl(i) { pData.b += pData.inv[i].sell; pData.inv.splice(i,1); sync(); }
 
-    function upAv(e) {
+    function uAv(e) {
         const f = e.target.files[0];
         const r = new FileReader();
-        r.onloadend = () => { user.av = r.result; sync(); };
+        r.onloadend = () => { pData.av = r.result; sync(); };
         if(f) r.readAsDataURL(f);
     }
 
-    function showNickModal() { document.getElementById('m-nick').style.display = 'flex'; }
-    function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+    function shNick() { document.getElementById('m-n').style.display = 'flex'; }
+    function clM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
     
-    async function saveN() {
-        const val = document.getElementById('nick-input').value.trim();
-        if(!val || val.length < 2) return msg("Ник слишком короткий");
+    async function svN() {
+        const val = document.getElementById('n-in').value.trim();
+        if(!val || val === pData.nick) return clM();
         
-        msg("Проверка ника...");
         const s = await db.collection("users").where("nick", "==", val).get();
-        if(!s.empty) return msg("Ник занят!");
+        if(!s.empty) return ms("Этот ник уже занят!");
 
-        user.nick = val;
-        await sync(); 
-        closeM();
-        msg("Ник успешно изменен!");
+        pData.nick = val;
+        if (auth.currentUser) {
+            await db.collection("users").doc(auth.currentUser.uid).update({ nick: val });
+        }
+        sync(); clM(); ms("Ник изменен!");
     }
 
-    function admClick() {
-        tab('settings', 'b-set');
-        aClicks++;
-        if(aClicks >= 5) { document.getElementById('m-code').style.display = 'flex'; aClicks = 0; }
+    function aCl() {
+        sw('settings', 't-s');
+        clicks++;
+        if(clicks >= 5) { document.getElementById('m-c').style.display = 'flex'; clicks = 0; }
     }
 
-    function checkC() {
-        if(document.getElementById('code-input').value === "Zxc1234Zxc") {
-            document.getElementById('adm-box').style.display = 'block';
-            closeM();
-            msg("Доступ разрешен");
-        } else msg("Неверный код");
+    function chC() {
+        if(document.getElementById('c-in').value === "Zxc1234Zxc") {
+            document.getElementById('a-box').style.display = 'block';
+            clM(); ms("Режим разработчика");
+        } else ms("Ошибка");
     }
 
-    async function give(self) {
-        const d = parseInt(document.getElementById('adm-d').value || 0);
-        const x = parseInt(document.getElementById('adm-x').value || 0);
-        const it = ITEMS[document.getElementById('adm-items').value];
+    async function gv(self) {
+        const d = parseInt(document.getElementById('a-d').value || 0);
+        const x = parseInt(document.getElementById('a-x').value || 0);
+        const it = {...ITEMS[document.getElementById('a-it').value]};
 
         if(self) {
-            user.b += d; user.xp += x; user.inv.push({...it}); sync();
-            msg("Выдано себе");
+            pData.b += d; pData.xp += x; pData.inv.push(it); sync();
+            ms("Выдано");
         } else {
-            const targetNick = document.getElementById('adm-target').value.trim();
-            if(!targetNick) return msg("Введите ник цели!");
-            
-            msg("Поиск игрока...");
-            const snap = await db.collection("users").where("nick", "==", targetNick).get();
-            
+            const tNick = document.getElementById('a-t').value.trim();
+            const snap = await db.collection("users").where("nick", "==", tNick).get();
             if(!snap.empty) {
                 const targetDoc = snap.docs[0];
-                const targetId = targetDoc.id;
-                const targetData = targetDoc.data();
+                const tData = targetDoc.data();
                 
-                const updatedInv = targetData.inv || [];
-                updatedInv.push({...it});
-
-                await db.collection("users").doc(targetId).update({
-                    b: (targetData.b || 0) + d,
-                    xp: (targetData.xp || 0) + x,
-                    inv: updatedInv
-                });
-                msg("Успешно выдано игроку: " + targetNick);
-            } else {
-                msg("Игрок с таким ником не найден");
-            }
+                const up = {
+                    b: (tData.b || 0) + d,
+                    xp: (tData.xp || 0) + x,
+                    inv: tData.inv || []
+                };
+                up.inv.push(it);
+                
+                await db.collection("users").doc(targetDoc.id).update(up);
+                ms(`Успешно выдано ${tNick}`);
+            } else ms("Игрок не найден!");
         }
     }
 
-    function msg(t) {
+    function resAcc() {
+        if(confirm("Вы уверены? Весь прогресс будет стерт!")) {
+            pData = { b: 1000, inv: [], xp: 0, nick: pData.nick, av: pData.av };
+            sync();
+            ms("Аккаунт обнулен");
+        }
+    }
+
+    function ms(t) {
         const toast = document.getElementById('toast');
         toast.innerText = t; toast.style.display = 'block';
         setTimeout(() => toast.style.display = 'none', 2500);
     }
 
-    function toggleT() {
+    function tTh() {
         const t = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.body.setAttribute('data-theme', t);
-        localStorage.setItem('theme', t);
+        localStorage.setItem('game-theme', t);
     }
 
-    function tab(id, bid) {
+    function sw(id, bid) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
