@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Bug Fix Build</title>
+    <title>DuksNFT - Fix Build</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -18,24 +18,23 @@
         }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; }
         
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid rgba(128,128,128,0.2); position: sticky; top: 0; z-index: 1000; }
         
         .user-bar { display: flex; align-items: center; gap: 12px; }
         .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        .balance-badge { background: var(--accent); color: white; padding: 7px 15px; border-radius: 20px; font-weight: 800; font-size: 14px; }
+        .balance-badge { background: var(--accent); color: white; padding: 7px 15px; border-radius: 20px; font-weight: 800; }
         
         nav { display: flex; gap: 8px; margin: 15px 16px; }
-        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: rgba(128,128,128,0.1); color: var(--text); font-weight: bold; cursor: pointer; }
         .nav-btn.active { background: var(--accent); color: white; }
 
-        .screen { display: none; padding: 20px; min-height: 200px; }
+        .screen { display: none; padding: 20px; }
         .screen.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .case-card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(128,128,128,0.2); text-align: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .item-card { background: var(--card); border-radius: 22px; padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; border: 1px solid rgba(128,128,128,0.1); text-align: center; }
         
@@ -44,15 +43,14 @@
         @keyframes rainbow { 0% { filter: hue-rotate(0deg) blur(25px); } 100% { filter: hue-rotate(360deg) blur(25px); } }
         .rarity-divine { background: #fff; box-shadow: 0 0 15px #fff; border: 1px solid #ddd; }
 
-        .admin-section { background: rgba(255,165,0,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px dashed orange; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-body { background: var(--bg); padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: 1px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); box-sizing: border-box; }
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 3000; font-weight: bold; font-size: 14px; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; display: none; z-index: 3000; font-weight: bold; }
     </style>
 </head>
 <script>
-    // Применяем тему моментально до загрузки body
+    // Мгновенное применение темы
     if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 </script>
 <body>
@@ -82,14 +80,14 @@
     </div>
 
     <div id="shop" class="screen">
-        <div class="case-card">
+        <div style="background:var(--card); padding:20px; border-radius:20px; text-align:center; margin-bottom:15px; border:1px solid rgba(128,128,128,0.2);">
             <h2 style="margin:0; color:#ff3b30;">🔥 FireStore</h2>
-            <p style="opacity:0.6; font-size:13px;">Цена: 2500 D | Шанс: Mythic, Exclusive</p>
+            <p style="opacity:0.6; font-size:13px;">Цена: 2500 D | Mythic / Exclusive</p>
             <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="opC('firestore')">Открыть</button>
         </div>
-        <div class="case-card">
+        <div style="background:var(--card); padding:20px; border-radius:20px; text-align:center; border:1px solid rgba(128,128,128,0.2);">
             <h2 style="margin:0; color:var(--accent);">🕶 Владик</h2>
-            <p style="opacity:0.6; font-size:13px;">Цена: 100 D | Шанс: Divine (0.1%)</p>
+            <p style="opacity:0.6; font-size:13px;">Цена: 100 D | Divine (0.1%)</p>
             <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="opC('vladik')">Открыть</button>
         </div>
     </div>
@@ -97,38 +95,35 @@
     <div id="settings" class="screen">
         <button class="nav-btn" onclick="tTh()" style="width:100%; height:50px; margin-bottom:10px;">Сменить тему</button>
         <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border: 1px solid #ddd;" onclick="login()">Войти через Google</button>
-        <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти из системы</button>
+        <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти</button>
 
-        <div id="a-box" style="display:none; margin-top:20px;">
-            <div class="admin-section">
-                <b>ЛИЧНЫЕ РЕСУРСЫ</b>
-                <input type="number" id="a-d" placeholder="+ Даксы">
-                <input type="number" id="a-x" placeholder="+ Опыт">
-                <select id="a-it"></select>
-                <button class="nav-btn active" style="width:100%; background:#28a745;" onclick="gv(true)">Применить</button>
-            </div>
-            <div class="admin-section">
-                <b>УПРАВЛЕНИЕ ИГРОКОМ</b>
-                <input type="number" id="a-tid" placeholder="ID цели">
-                <input type="number" id="a-td" placeholder="+ Даксы">
-                <input type="number" id="a-tx" placeholder="+ Опыт">
-                <button class="nav-btn active" style="width:100%; margin-bottom:8px;" onclick="gv(false)">Выдать</button>
-                <button class="nav-btn active" style="width:100%; background:#ff3b30;" onclick="resP()">ОБНУЛИТЬ ПОЛНОСТЬЮ</button>
-            </div>
+        <div id="a-box" style="display:none; margin-top:20px; border:1px dashed orange; padding:15px; border-radius:15px;">
+            <b>АДМИН-ПАНЕЛЬ</b>
+            <hr>
+            <p style="font-size:11px; margin-bottom:5px;">Выдача себе:</p>
+            <input type="number" id="a-d" placeholder="+ Даксы">
+            <input type="number" id="a-x" placeholder="+ Опыт">
+            <select id="a-it"></select>
+            <button class="nav-btn active" style="width:100%; background:#28a745;" onclick="gv(true)">Применить</button>
+            
+            <p style="font-size:11px; margin-top:15px; margin-bottom:5px;">Выдача игроку:</p>
+            <input type="number" id="a-tid" placeholder="ID игрока">
+            <input type="number" id="a-td" placeholder="+ Даксы">
+            <button class="nav-btn active" style="width:100%; margin-bottom:5px;" onclick="gv(false)">Отправить</button>
+            <button class="nav-btn active" style="width:100%; background:#ff3b30;" onclick="resP()">ОБНУЛИТЬ ИГРОКА</button>
         </div>
     </div>
 </main>
 
 <div id="m-n" class="modal"><div class="modal-body">
-    <h3>Сменить имя</h3>
-    <input type="text" id="n-in" maxlength="12" placeholder="Введите ник">
+    <h3>Смена ника</h3>
+    <input type="text" id="n-in" maxlength="12" placeholder="Ваше имя">
     <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="svN()">Сохранить</button>
-    <button class="nav-btn" style="width:100%; margin-top:5px;" onclick="clM()">Отмена</button>
 </div></div>
 
 <div id="m-c" class="modal"><div class="modal-body">
-    <h3>Доступ к панели</h3>
-    <input type="password" id="c-in" placeholder="Код">
+    <h3>Код доступа</h3>
+    <input type="password" id="c-in">
     <button class="nav-btn active" style="width:100%; margin-top:10px;" onclick="chC()">Войти</button>
 </div></div>
 
@@ -159,43 +154,58 @@
         { n: "Фигурка Владика", sell: 0, r: "divine", i: "🗿" }
     ];
 
-    let pData = { b: 1000, inv: [], xp: 0, nick: "Гость", av: "", numericId: 0 };
+    let pData = { b: 1000, inv: [], xp: 0, nick: "Игрок", av: "", numericId: 0 };
     let aClicks = 0;
 
+    // Главная функция с защитой от "зависания"
     async function init() {
+        const timeout = setTimeout(() => {
+            if (pData.nick === "Загрузка...") {
+                pData.nick = "Гость (Оффлайн)";
+                upUI();
+                ms("Сервер не отвечает. Режим гостя.");
+            }
+        }, 5000);
+
         auth.onAuthStateChanged(async (u) => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
                 await loadUser(u.uid);
+                clearTimeout(timeout);
             } else {
-                pData.nick = "Гость";
                 upUI();
             }
         });
+        
         const s = document.getElementById('a-it');
         ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
     }
 
     async function loadUser(uid) {
         try {
-            const doc = await db.collection("users").doc(uid).get();
+            const userRef = db.collection("users").doc(uid);
+            const doc = await userRef.get();
+            
             if (doc.exists) {
                 const data = doc.data();
-                pData = {...pData, ...data, inv: data.inv || []};
-                if(!pData.numericId || pData.numericId === 0) {
-                    pData.numericId = await getNextId();
-                    await db.collection("users").doc(uid).update({numericId: pData.numericId});
+                pData = { ...pData, ...data, inv: data.inv || [] };
+                // Если ID еще нет, создаем его
+                if (!pData.numericId || pData.numericId === 0) {
+                    const newId = await getNextId();
+                    pData.numericId = newId;
+                    await userRef.update({ numericId: newId });
                 }
             } else {
+                // Создаем нового пользователя
                 pData.numericId = await getNextId();
-                await db.collection("users").doc(uid).set(pData);
+                await userRef.set(pData);
             }
             document.getElementById('h-id').innerText = `ID: ${pData.numericId}`;
             upUI();
         } catch(e) {
-            console.error(e);
-            ms("Ошибка данных. Перезагрузите.");
+            console.error("Load error:", e);
+            ms("Ошибка БД. Режим гостя.");
             upUI();
         }
     }
@@ -206,35 +216,34 @@
             return await db.runTransaction(async (t) => {
                 const doc = await t.get(confRef);
                 let next = 100000001;
-                if (doc.exists && doc.data().last) next = doc.data().last + 1;
+                if (doc.exists && doc.data().last) {
+                    next = doc.data().last + 1;
+                }
                 t.set(confRef, { last: next }, { merge: true });
                 return next;
             });
         } catch(e) {
-            return 100000000 + Math.floor(Math.random() * 999);
+            return Math.floor(100000000 + Math.random() * 99999);
         }
     }
 
     async function sync() {
         upUI();
         if (auth.currentUser) {
-            try {
-                await db.collection("users").doc(auth.currentUser.uid).set(pData, { merge: true });
-            } catch(e) { console.error("Sync error:", e); }
+            await db.collection("users").doc(auth.currentUser.uid).set(pData, { merge: true }).catch(console.error);
         }
     }
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
-        document.getElementById('h-nick').innerText = pData.nick || "Гость";
+        document.getElementById('h-nick').innerText = pData.nick || "Игрок";
         if(pData.av) document.getElementById('h-av').src = pData.av;
         const lvl = Math.floor(Math.sqrt((pData.xp || 0) / 100)) + 1;
         document.getElementById('h-lvl').innerText = `УРОВЕНЬ ${lvl} | ОПЫТ ${pData.xp}`;
         
         const g = document.getElementById('inv-grid');
         g.innerHTML = "";
-        const inv = pData.inv || [];
-        inv.forEach((it, i) => {
+        (pData.inv || []).forEach((it, i) => {
             const isEx = it.r === 'exclusive' ? 'rarity-exclusive' : '';
             const isDiv = it.r === 'divine' ? 'rarity-divine' : '';
             const glowColor = it.r === 'exclusive' ? '' : `background:var(--${it.r})`;
@@ -243,8 +252,8 @@
                 <div class="item-card ${isDiv}">
                     <div class="glow ${isEx}" style="${glowColor}"></div>
                     <div style="font-size:40px; z-index:1;">${it.i}</div>
-                    <div style="font-size:10px; font-weight:900; z-index:1; text-transform:uppercase; margin-top:5px;">${it.n}</div>
-                    ${it.sell > 0 ? `<button class="nav-btn" style="font-size:9px; height:25px; margin-top:8px; width:80%;" onclick="sl(${i})">ПРОДАТЬ</button>` : ''}
+                    <div style="font-size:10px; font-weight:900; z-index:1; margin-top:5px;">${it.n}</div>
+                    ${it.sell > 0 ? `<button class="nav-btn" style="height:25px; font-size:9px; margin-top:10px;" onclick="sl(${i})">ПРОДАТЬ</button>` : ''}
                 </div>`;
         });
     }
@@ -257,7 +266,7 @@
             if(r < 50) pData.inv.push({...ITEMS[3]});
             else if(r < 70) pData.inv.push({...ITEMS[4]});
             else if(r < 85) pData.inv.push({...ITEMS[5]});
-            else ms("Пусто...");
+            else ms("Ничего не выпало...");
         } else {
             if(pData.b < 100) return ms("Мало D!");
             pData.b -= 100;
@@ -285,18 +294,28 @@
 
     function chC() {
         if(document.getElementById('c-in').value === "duksnft_zxc1234zxc") {
-            document.getElementById('a-box').style.display = 'block'; clM(); ms("Доступ разрешен");
+            document.getElementById('a-box').style.display = 'block'; clM(); ms("Доступ получен");
         } else ms("Неверный код");
     }
 
     async function gv(self) {
         const d = parseInt(document.getElementById(self ? 'a-d' : 'a-td').value || 0);
-        const x = parseInt(document.getElementById(self ? 'a-x' : 'a-tx').value || 0);
+        const x = parseInt(document.getElementById('a-x').value || 0);
         const it = {...ITEMS[document.getElementById('a-it').value]};
-
         if(self) {
-            pData.b += d; pData.xp += x; pData.inv.push(it); sync(); ms("Выполнено!");
+            pData.b += d; pData.xp += x; pData.inv.push(it); sync();
         } else {
             const tid = Number(document.getElementById('a-tid').value);
-            const snap = await db.collection("
+            const snap = await db.collection("users").where("numericId", "==", tid).get();
+            if(!snap.empty) {
+                const targetDoc = snap.docs[0];
+                const dta = targetDoc.data();
+                const inv = dta.inv || []; inv.push(it);
+                await db.collection("users").doc(targetDoc.id).update({ b: (dta.b || 0) + d, inv: inv });
+                ms("Отправлено!");
+            }
+        }
+    }
+
+    async function resP() {
     
