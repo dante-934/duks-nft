@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Game Edition</title>
+    <title>DuksNFT - Fixed Engine</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -70,7 +70,7 @@
         <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src="https://via.placeholder.com/100"></div>
         <div style="flex:1; overflow: hidden;">
             <div id="h-nick-wrap" style="font-weight:900; font-size:16px; display:flex; align-items:center;">
-                <span id="h-nick">...</span>
+                <span id="h-nick">Вход...</span>
                 <span id="h-badge" onclick="shBadgeInfo()"></span>
             </div>
             <div id="h-id" style="font-size:10px; color:var(--accent); font-weight:bold;">ID: ...</div>
@@ -89,7 +89,7 @@
     <button class="nav-btn" id="b-s" onclick="aCl()">⚙️</button>
 </nav>
 
-<main>
+<main id="main-content">
     <div id="profile" class="screen active">
         <div class="profile-container">
             <div style="flex:1; text-align:center;">
@@ -212,6 +212,9 @@
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
                 loadUser(u.uid);
+            } else {
+                // Если не залогинен, сбрасываем в дефолт
+                document.getElementById('h-nick').innerText = "Гость";
             }
         });
         const s = document.getElementById('a-it');
@@ -220,20 +223,27 @@
     }
 
     async function loadUser(uid) {
-        const doc = await db.collection("users").doc(uid).get();
-        if (doc.exists) {
-            pData = { ...pData, ...doc.data() };
+        try {
+            const doc = await db.collection("users").doc(uid).get();
+            if (doc.exists) {
+                pData = { ...pData, ...doc.data() };
+            } else {
+                pData.numericId = Math.floor(100000 + Math.random() * 899999);
+                pData.nick = "Игрок" + pData.numericId;
+                await db.collection("users").doc(uid).set(pData);
+            }
             if(!pData.showcase) pData.showcase = [null, null];
-        } else {
-            pData.numericId = Math.floor(100000 + Math.random() * 899999);
-            await db.collection("users").doc(uid).set(pData);
+            if(!pData.inv) pData.inv = [];
+            upUI();
+        } catch (e) {
+            console.error("Load Error:", e);
+            ms("Ошибка загрузки данных");
         }
-        upUI();
     }
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
-        document.getElementById('h-id').innerText = `ID: ${pData.numericId}`;
+        document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
         const lvl = Math.floor(Math.sqrt((pData.xp || 0) / 100)) + 1;
         document.getElementById('h-lvl').innerText = `LVL ${lvl}`;
 
@@ -250,11 +260,12 @@
 
         if(pData.av) { document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av; }
 
-        // Витрина
         pData.showcase.forEach((it, i) => {
             const el = document.getElementById(`sl-${i}`);
-            if(it) { el.innerHTML = it.i; el.classList.add('filled'); }
-            else { el.innerHTML = "+"; el.classList.remove('filled'); }
+            if(el) {
+                if(it) { el.innerHTML = it.i; el.classList.add('filled'); }
+                else { el.innerHTML = "+"; el.classList.remove('filled'); }
+            }
         });
 
         const g = document.getElementById('inv-grid');
@@ -366,12 +377,4 @@
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(bid).classList.add('active');
-    }
-    function tTh() { 
-        const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', n);
-        localStorage.setItem('theme', n);
-    }
-    function clM() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-    function shNick() { document.getElementById('m-n').style.display = 'flex
+        d
