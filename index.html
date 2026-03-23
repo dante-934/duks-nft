@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Fixed Engine</title>
+    <title>DuksNFT - Ultra Fixed</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -70,7 +70,7 @@
         <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src="https://via.placeholder.com/100"></div>
         <div style="flex:1; overflow: hidden;">
             <div id="h-nick-wrap" style="font-weight:900; font-size:16px; display:flex; align-items:center;">
-                <span id="h-nick">Вход...</span>
+                <span id="h-nick">...</span>
                 <span id="h-badge" onclick="shBadgeInfo()"></span>
             </div>
             <div id="h-id" style="font-size:10px; color:var(--accent); font-weight:bold;">ID: ...</div>
@@ -98,7 +98,7 @@
                 </div>
                 <input type="file" id="f-in" hidden onchange="uAv(event)">
                 <h2 id="p-nick-wrap" style="margin:12px 0 5px 0; display:flex; align-items:center; justify-content:center;">
-                    <span id="p-nick">...</span>
+                    <span id="p-nick">Гость</span>
                     <span id="p-badge" onclick="shBadgeInfo()"></span>
                 </h2>
                 <button class="nav-btn active" style="font-size:10px; padding:5px 12px; width:auto;" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
@@ -154,9 +154,9 @@
 </main>
 
 <div id="m-badge" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
-    <h3 id="badge-title" style="margin-top:0;">Статус</h3>
-    <p id="badge-desc" style="opacity:0.8; line-height:1.4;"></p>
-    <button class="nav-btn active" style="width:100%;" onclick="clM()">Понятно</button>
+    <h3 id="badge-title">Статус</h3>
+    <p id="badge-desc"></p>
+    <button class="nav-btn active" style="width:100%;" onclick="clM()">Ок</button>
 </div></div>
 
 <div id="m-sh" class="modal" onclick="clM()"><div class="modal-body" onclick="event.stopPropagation()">
@@ -166,9 +166,9 @@
 </div></div>
 
 <div id="m-n" class="modal"><div class="modal-body">
-    <h3>Смена ника</h3>
-    <input type="text" id="n-in" maxlength="12" placeholder="Новый ник">
-    <button class="nav-btn active" style="width:100%; background:var(--accent); color:white; margin-top:10px;" onclick="svN()">Сохранить</button>
+    <h3>Никнейм</h3>
+    <input type="text" id="n-in" maxlength="12">
+    <button class="nav-btn active" style="width:100%;" onclick="svN()">Сохранить</button>
 </div></div>
 
 <div id="m-c" class="modal"><div class="modal-body">
@@ -206,15 +206,16 @@
     let targetSlot = 0;
 
     function init() {
-        upUI();
+        upUI(); // Сначала показываем интерфейс гостя
         auth.onAuthStateChanged(u => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none';
                 document.getElementById('l-out').style.display = 'block';
                 loadUser(u.uid);
             } else {
-                // Если не залогинен, сбрасываем в дефолт
                 document.getElementById('h-nick').innerText = "Гость";
+                document.getElementById('l-in').style.display = 'block';
+                document.getElementById('l-out').style.display = 'none';
             }
         });
         const s = document.getElementById('a-it');
@@ -226,7 +227,8 @@
         try {
             const doc = await db.collection("users").doc(uid).get();
             if (doc.exists) {
-                pData = { ...pData, ...doc.data() };
+                const data = doc.data();
+                pData = { ...pData, ...data };
             } else {
                 pData.numericId = Math.floor(100000 + Math.random() * 899999);
                 pData.nick = "Игрок" + pData.numericId;
@@ -236,14 +238,14 @@
             if(!pData.inv) pData.inv = [];
             upUI();
         } catch (e) {
-            console.error("Load Error:", e);
-            ms("Ошибка загрузки данных");
+            console.error(e);
+            upUI(); // Даже при ошибке обновляем UI
         }
     }
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
-        document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
+        document.getElementById('h-id').innerText = pData.numericId ? `ID: ${pData.numericId}` : "ID: ...";
         const lvl = Math.floor(Math.sqrt((pData.xp || 0) / 100)) + 1;
         document.getElementById('h-lvl').innerText = `LVL ${lvl}`;
 
@@ -286,9 +288,9 @@
         const b = pData.badge;
         const t = document.getElementById('badge-title');
         const d = document.getElementById('badge-desc');
-        if(b === 'badge-yt') { t.innerText = "YouTube"; d.innerText = "Этот значок принадлежит официальным контент-мейкерам проекта."; }
-        else if(b === 'badge-best') { t.innerText = "Лучший игрок"; d.innerText = "Особая отметка для игроков, занявших топовые места в сезоне."; }
-        else if(b === 'badge-dev') { t.innerText = "Разработчик"; d.innerText = "Владелец этого аккаунта является создателем или администратором игры."; }
+        if(b === 'badge-yt') { t.innerText = "YouTube"; d.innerText = "Официальный контент-мейкер."; }
+        else if(b === 'badge-best') { t.innerText = "Лучший игрок"; d.innerText = "Топ игрок сезона."; }
+        else if(b === 'badge-dev') { t.innerText = "Разработчик"; d.innerText = "Администратор проекта."; }
         else return;
         document.getElementById('m-badge').style.display = 'flex';
     }
@@ -297,10 +299,10 @@
         targetSlot = slot;
         const list = document.getElementById('sh-list');
         list.innerHTML = "";
-        if(pData.inv.length === 0) list.innerHTML = "<p style='text-align:center; opacity:0.5;'>У вас нет NFT</p>";
-        pData.inv.forEach((it, i) => {
-            list.innerHTML += `<div onclick="setShowcase(${i})" style="padding:12px; border:1px solid rgba(128,128,128,0.2); border-radius:12px; display:flex; align-items:center; gap:10px; cursor:pointer; background:var(--bg);">
-                <span style="font-size:24px;">${it.i}</span> <b>${it.n}</b>
+        if((pData.inv || []).length === 0) list.innerHTML = "<p style='text-align:center;'>Нет NFT</p>";
+        (pData.inv || []).forEach((it, i) => {
+            list.innerHTML += `<div onclick="setShowcase(${i})" style="padding:10px; border:1px solid rgba(128,128,128,0.2); border-radius:10px; display:flex; gap:10px; cursor:pointer;">
+                <span>${it.i}</span> <b>${it.n}</b>
             </div>`;
         });
         document.getElementById('m-sh').style.display = 'flex';
@@ -308,7 +310,7 @@
 
     function setShowcase(invIdx) {
         pData.showcase[targetSlot] = pData.inv[invIdx];
-        sync(); clM(); ms("Витрина обновлена!");
+        sync(); clM();
     }
 
     function gv() {
@@ -335,7 +337,7 @@
                 const n = await db.collection("users").doc(id).get();
                 pData = n.data(); upUI();
             }
-            ms("Применено! ✅");
+            ms("Ок! ✅");
         };
 
         if(!tid) { if(auth.currentUser) pUp(auth.currentUser.uid); }
@@ -348,33 +350,8 @@
 
     async function svN() {
         const v = document.getElementById('n-in').value.trim();
-        if(v.length < 3) return ms("Слишком коротко!");
+        if(v.length < 3) return ms("Мин. 3 символа");
         const s = await db.collection("users").where("nick", "==", v).get();
-        if(!s.empty) return ms("Ник занят!");
+        if(!s.empty) return ms("Ник занят");
         pData.nick = v; sync(); clM();
-    }
-
-    function opC(t) {
-        if(pData.b < 2500) return ms("Мало D!");
-        pData.b -= 2500;
-        const r = Math.random()*100;
-        let win = null;
-        if(r < 50) win = {...ITEMS[0]}; else if(r < 75) win = {...ITEMS[1]}; else if(r < 90) win = {...ITEMS[2]};
-        if(win) pData.inv.push(win);
-        sync(); ms(win ? `Выпало: ${win.n}` : "Пусто!");
-    }
-
-    function sl(i) {
-        const item = pData.inv[i];
-        pData.b += item.sell;
-        pData.showcase = pData.showcase.map(s => (s && s.n === item.n) ? null : s);
-        pData.inv.splice(i,1);
-        sync();
-    }
     
-    function sync() { upUI(); if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); }
-    function sw(id, bid) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        d
