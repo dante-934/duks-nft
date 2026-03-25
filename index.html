@@ -3,234 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, landscape=true">
-    <title>Air Hockey Pro - Google Auth</title>
+    <title>Caramel Hockey - Top 1 World</title>
     <style>
-        :root { --bg: #eef2f5; --primary: #4285F4; --text: #333; }
-        body, html { 
-            margin: 0; padding: 0; overflow: hidden; background: var(--bg); 
-            font-family: 'Segoe UI', sans-serif; width: 100vw; height: 100vh;
-            touch-action: none;
-        }
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #fff; font-family: 'Arial Rounded MT Bold', sans-serif; touch-action: none; }
+        #game-ui { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Верхняя панель Elo */
+        #top-info { width: 90%; display: flex; justify-content: space-between; padding: 20px; color: #555; font-size: 24px; text-shadow: 1px 1px 0 #fff; }
+        .stars { color: #ffcc00; font-size: 30px; letter-spacing: 5px; }
 
-        #start-screen {
-            position: fixed; width: 100%; height: 100%; background: white;
-            z-index: 1000; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-        }
-
-        /* Стиль профиля как на скриншоте */
-        #profile-card {
-            display: flex; flex-direction: column; align-items: center;
-            background: linear-gradient(180deg, #dceeff 0%, #f0f7ff 100%);
-            padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        #avatar-container {
-            width: 120px; height: 120px; border-radius: 50%;
-            border: 6px solid #ff3b30; /* Красный круг как на фото */
-            overflow: hidden; background: white; display: flex;
-            justify-content: center; align-items: center; margin-bottom: 10px;
-        }
-
-        #avatar-img { width: 100%; height: 100%; object-fit: cover; }
-
-        #nickname { font-size: 24px; font-weight: bold; color: #333; margin: 5px 0; }
-        #elo-text { font-size: 18px; color: #777; }
-
-        /* Кнопка Google */
-        .google-btn {
-            display: flex; align-items: center; background: white;
-            border: 1px solid #dadce0; padding: 10px 20px; border-radius: 4px;
-            cursor: pointer; font-weight: 500; transition: 0.2s;
-        }
-        .google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .google-btn img { width: 18px; margin-right: 10px; }
-
-        /* Интерфейс игры */
-        #top-bar {
-            position: absolute; top: 0; width: 100%; height: 60px;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; box-sizing: border-box; z-index: 10;
-        }
-
-        canvas { 
-            background: #fff; border: 5px solid #d1d9e0; border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: block;
-        }
-
-        .hidden { display: none !important; }
-        button.play-btn { 
-            margin-top: 15px; background: #ff3b30; color: white; border: none;
-            padding: 12px 40px; border-radius: 50px; font-size: 18px; cursor: pointer;
-        }
+        /* Экран Гола */
+        #goal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 100; }
+        .goal-cloud { background: white; padding: 40px 80px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; border: 8px solid currentColor; font-size: 80px; font-weight: bold; transform: scale(0); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .show-goal { display: flex !important; }
+        
+        canvas { display: block; background: #e3f2fd; cursor: none; }
     </style>
 </head>
 <body>
 
-<div id="start-screen">
-    <div id="profile-card">
-        <div id="avatar-container">
-            <img id="avatar-img" src="https://www.w3schools.com/howto/img_avatar.png" alt="Avatar">
-        </div>
-        <div id="nickname">Войти в профиль</div>
-        <div id="elo-text">общий Elo <span id="val-elo">0</span></div>
+<div id="game-ui">
+    <div id="top-info">
+        <div>моё эло: <span id="my-elo">204</span></div>
+        <div class="stars">★★★★★</div>
+        <div>эло противника: <span id="opp-elo">273</span></div>
     </div>
-
-    <div id="google-auth-btn" class="google-btn" onclick="fakeGoogleLogin()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg">
-        Войти через Google
-    </div>
-
-    <button id="btn-play" class="play-btn hidden" onclick="initGame()">ИГРАТЬ</button>
 </div>
 
-<div id="top-bar" class="hidden">
-    <div style="display:flex; align-items:center;">
-        <img id="mini-avatar" src="" style="width:35px; height:35px; border-radius:50%; border:2px solid red; margin-right:10px;">
-        <b id="mini-nick">User</b>
-    </div>
-    <div>🏆 Elo: <span id="ui-elo">0</span> | <span onclick="checkAdmin()" style="cursor:pointer">⚙️</span></div>
+<div id="goal-overlay">
+    <div class="goal-cloud" id="goal-text">GOAL!</div>
 </div>
 
-<canvas id="hockeyCanvas" class="hidden"></canvas>
+<canvas id="arena"></canvas>
 
 <script>
-const canvas = document.getElementById('hockeyCanvas');
+const canvas = document.getElementById('arena');
 const ctx = canvas.getContext('2d');
+const goalOverlay = document.getElementById('goal-overlay');
+const goalText = document.getElementById('goal-text');
 
-let user = { nick: "jejiejdjowe", elo: 84829, photo: "", clicks: 0 };
-let isGame = false;
+let isPlaying = true;
+let score = { p1: 0, p2: 0 };
 
-// Параметры тел
-const puck = { x: 0, y: 0, dx: 0, dy: 0, r: 18 };
-const p1 = { x: 0, y: 0, r: 38 };
-const bot = { x: 0, y: 0, r: 38 };
+// Физические константы
+const FRICTION = 0.985; // Трение льда
+const MAX_SPEED = 20;
 
-function fakeGoogleLogin() {
-    // Имитация получения данных от Google
-    user.photo = "https://i.pravatar.cc/150?u=jejiejdjowe"; // Случайное фото
-    document.getElementById('avatar-img').src = user.photo;
-    document.getElementById('nickname').innerText = user.nick;
-    document.getElementById('val-elo').innerText = user.elo;
-    
-    document.getElementById('google-auth-btn').classList.add('hidden');
-    document.getElementById('btn-play').classList.remove('hidden');
-}
+// Объекты
+const puck = { x: 0, y: 0, vx: 0, vy: 0, r: 20 };
+const p1 = { x: 0, y: 0, r: 45, color: '#ff4444', prevX: 0, prevY: 0 };
+const p2 = { x: 0, y: 0, r: 45, color: '#4444ff' };
 
-function initGame() {
-    document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('top-bar').classList.remove('hidden');
-    canvas.classList.remove('hidden');
-    
-    document.getElementById('mini-avatar').src = user.photo;
-    document.getElementById('mini-nick').innerText = user.nick;
-    document.getElementById('ui-elo').innerText = user.elo;
-
-    if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-    
-    isGame = true;
-    resize();
+function init() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     resetPuck();
-    requestAnimationFrame(update);
+    p1.x = 150; p1.y = canvas.height / 2;
+    p2.x = canvas.width - 150; p2.y = canvas.height / 2;
 }
-
-function resize() {
-    canvas.width = window.innerWidth * 0.95;
-    canvas.height = window.innerHeight * 0.75;
-    p1.x = 100; p1.y = canvas.height / 2;
-    bot.x = canvas.width - 100; bot.y = canvas.height / 2;
-}
-window.onresize = resize;
 
 function resetPuck() {
     puck.x = canvas.width / 2;
     puck.y = canvas.height / 2;
-    puck.dx = 4; puck.dy = 2;
+    puck.vx = 0;
+    puck.vy = 0;
 }
 
-// УПРАВЛЕНИЕ: ТОЛЬКО ДВИЖЕНИЕ (БЕЗ ТЕЛЕПОРТАЦИИ ПРИ КЛИКЕ)
-function onMove(e) {
-    if(!isGame) return;
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+// Рисование кота в шлеме
+function drawCat(x, y, r, color, isP1) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (!isP1) ctx.scale(-1, 1);
 
-    let targetX = clientX - rect.left;
-    let targetY = clientY - rect.top;
+    // Тело/Голова
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
 
-    // Ограничение зоной игрока
-    if(targetX < canvas.width/2 - p1.r) p1.x = targetX;
-    p1.y = targetY;
+    // Шлем
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(0, -5, r, Math.PI, 0); ctx.fill();
+    
+    // Глаза
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(-15, 0, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(15, 0, 10, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(-12, 0, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(18, 0, 4, 0, Math.PI*2); ctx.fill();
+
+    // Усы
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(25, 5); ctx.lineTo(40, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(25, 10); ctx.lineTo(40, 15); ctx.stroke();
+
+    ctx.restore();
 }
 
-canvas.addEventListener('mousemove', onMove);
-canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onMove(e); }, {passive:false});
+function drawArena() {
+    // Лёд
+    ctx.fillStyle = '#e3f2fd';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Разметка
+    ctx.strokeStyle = 'rgba(33, 150, 243, 0.3)';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height); ctx.stroke();
+
+    // Декор (Снежинки/Звезды)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '30px Arial';
+    ctx.fillText('❄', 100, 100); ctx.fillText('★', canvas.width - 150, 120);
+    ctx.fillText('★', 200, canvas.height - 100); ctx.fillText('❄', canvas.width - 250, canvas.height - 200);
+}
+
+function showGoalEffect(winnerColor) {
+    isPlaying = false;
+    goalOverlay.style.background = winnerColor + 'aa';
+    goalText.style.color = winnerColor;
+    goalOverlay.classList.add('show-goal');
+    setTimeout(() => goalText.style.transform = 'scale(1)', 10);
+
+    setTimeout(() => {
+        goalOverlay.classList.remove('show-goal');
+        goalText.style.transform = 'scale(0)';
+        resetPuck();
+        isPlaying = true;
+    }, 1500);
+}
 
 function update() {
-    if(!isGame) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!isPlaying) return;
 
-    // Поле
-    ctx.strokeStyle = "#ddd"; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
+    // Движение шайбы с трением
+    puck.vx *= FRICTION;
+    puck.vy *= FRICTION;
+    puck.x += puck.vx;
+    puck.y += puck.vy;
 
-    // Бот
-    bot.y += (puck.y - bot.y) * 0.07;
+    // Отскок от бортов
+    if (puck.y < puck.r || puck.y > canvas.height - puck.r) puck.vy *= -1;
 
-    // Физика шайбы
-    puck.x += puck.dx;
-    puck.y += puck.dy;
+    // Логика бота (Противник)
+    let botTargetY = puck.y;
+    p2.y += (botTargetY - p2.y) * 0.07;
+    p2.x = canvas.width - 100;
 
-    // Стенки
-    if(puck.y < puck.r || puck.y > canvas.height - puck.r) puck.dy *= -1;
-
-    // ФИЗИКА УДАРА (БЕЗ ПРОХОЖДЕНИЯ СКВОЗЬ ТЕЛО)
-    [p1, bot].forEach(p => {
+    // Столкновения (Передача импульса)
+    [p1, p2].forEach(p => {
         let dx = puck.x - p.x;
         let dy = puck.y - p.y;
-        let distance = Math.sqrt(dx*dx + dy*dy);
-        let minDistance = puck.r + p.r;
+        let dist = Math.hypot(dx, dy);
 
-        if (distance < minDistance) {
-            // 1. Выталкиваем шайбу, чтобы она не была внутри биты
-            let overlap = minDistance - distance;
-            let nx = dx / distance; // Нормаль X
-            let ny = dy / distance; // Нормаль Y
+        if (dist < puck.r + p.r) {
+            // Вычисление угла столкновения
+            let angle = Math.atan2(dy, dx);
             
-            puck.x += nx * overlap;
-            puck.y += ny * overlap;
+            // Если это игрок, добавляем импульс от движения руки
+            if (p === p1) {
+                let mouseVX = p1.x - p1.prevX;
+                let mouseVY = p1.y - p1.prevY;
+                puck.vx = Math.cos(angle) * 10 + mouseVX * 0.5;
+                puck.vy = Math.sin(angle) * 10 + mouseVY * 0.5;
+            } else {
+                puck.vx = Math.cos(angle) * 12;
+                puck.vy = Math.sin(angle) * 12;
+            }
 
-            // 2. Меняем вектор движения (отскок)
-            puck.dx = nx * 8; // 8 - сила отскока
-            puck.dy = ny * 8;
+            // Выталкивание шайбы (чтобы не застревала)
+            puck.x = p.x + Math.cos(angle) * (puck.r + p.r);
+            puck.y = p.y + Math.sin(angle) * (puck.r + p.r);
         }
     });
 
-    // Голы
-    if(puck.x < 0 || puck.x > canvas.width) resetPuck();
+    // Проверка гола
+    if (puck.x < -puck.r) showGoalEffect('#4444ff');
+    if (puck.x > canvas.width + puck.r) showGoalEffect('#ff4444');
 
-    // Отрисовка
-    ctx.fillStyle = "#3498db"; ctx.beginPath(); ctx.arc(p1.x, p1.y, p1.r, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#e74c3c"; ctx.beginPath(); ctx.arc(bot.x, bot.y, bot.r, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#2c3e50"; ctx.beginPath(); ctx.arc(puck.x, puck.y, puck.r, 0, Math.PI*2); ctx.fill();
-
-    requestAnimationFrame(update);
+    // Ограничение скорости
+    puck.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, puck.vx));
+    puck.vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, puck.vy));
 }
 
-function checkAdmin() {
-    user.clicks++;
-    if(user.clicks >= 15) {
-        let p = prompt("Пароль:");
-        if(p === "mnbvcxz1234") {
-            user.elo = 999999;
-            document.getElementById('ui-elo').innerText = user.elo;
-            document.getElementById('mini-nick').style.color = "gold";
-            alert("ADMIN ACTIVE");
-        }
-        user.clicks = 0;
-    }
+function render() {
+    drawArena();
+    
+    // Шайба
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(puck.x, puck.y, puck.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+    drawCat(p1.x, p1.y, p1.r, p1.color, true);
+    drawCat(p2.x, p2.y, p2.r, p2.color, false);
+
+    update();
+    requestAnimationFrame(render);
 }
+
+// Управление
+canvas.addEventListener('mousemove', e => {
+    p1.prevX = p1.x;
+    p1.prevY = p1.y;
+    p1.x = e.clientX;
+    p1.y = e.clientY;
+    // Ограничение зоной игрока (половина поля)
+    if (p1.x > canvas.width / 2 - p1.r) p1.x = canvas.width / 2 - p1.r;
+});
+
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    p1.prevX = p1.x;
+    p1.prevY = p1.y;
+    p1.x = touch.clientX;
+    p1.y = touch.clientY;
+    if (p1.x > canvas.width / 2 - p1.r) p1.x = canvas.width / 2 - p1.r;
+}, { passive: false });
+
+init();
+render();
 </script>
 </body>
 </html>
