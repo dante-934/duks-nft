@@ -2,228 +2,292 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, landscape=true">
-    <title>Caramel Hockey - Top 1 World</title>
-    <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; background: #fff; font-family: 'Arial Rounded MT Bold', sans-serif; touch-action: none; }
-        #game-ui { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; align-items: center; }
-        
-        /* Верхняя панель Elo */
-        #top-info { width: 90%; display: flex; justify-content: space-between; padding: 20px; color: #555; font-size: 24px; text-shadow: 1px 1px 0 #fff; }
-        .stars { color: #ffcc00; font-size: 30px; letter-spacing: 5px; }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DuksNFT - Bugfix Update</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
 
-        /* Экран Гола */
-        #goal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 100; }
-        .goal-cloud { background: white; padding: 40px 80px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; border: 8px solid currentColor; font-size: 80px; font-weight: bold; transform: scale(0); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .show-goal { display: flex !important; }
+    <style>
+        :root { --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff; --border: rgba(0,0,0,0.1); }
+        [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; --border: rgba(255,255,255,0.2); }
         
-        canvas { display: block; background: #e3f2fd; cursor: none; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; transition: background 0.3s; user-select: none; }
+        header { padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+        
+        /* Эффекты свечения */
+        .gl-exclusive { border: 2px solid; animation: glow-rgb 3s linear infinite; box-shadow: 0 0 8px rgba(0,122,255,0.3); }
+        .gl-divine { border: 2px solid #ffffff !important; box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
+        [data-theme="light"] .gl-divine { border: 2px solid #000 !important; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+
+        @keyframes glow-rgb { 0% { box-shadow: 0 0 10px red; border-color: red; } 33% { box-shadow: 0 0 10px green; border-color: green; } 66% { box-shadow: 0 0 10px blue; border-color: blue; } 100% { box-shadow: 0 0 10px red; border-color: red; } }
+
+        .c-red { color: #ff3b30 !important; font-weight: bold; }
+        .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: 900; }
+        @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        nav { display: flex; gap: 5px; margin: 10px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
+        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: transparent; color: var(--text); font-weight: 900; font-size: 11px; cursor: pointer; }
+        .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .screen { display: none; padding: 15px; }
+        .screen.active { display: block; }
+        
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .item-card { background: var(--card); border-radius: 18px; padding: 15px; text-align: center; border: 1px solid var(--border); box-sizing: border-box; transition: 0.3s; }
+        
+        .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; transition: 0.3s; }
+        .slot.filled { border-style: solid; background: var(--card); }
+        
+        .badge { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: white; margin-left: 5px; font-weight: bold; cursor: pointer; vertical-align: middle; }
+        .b-dev { background: #ffcc00; color: #000; } .b-yt { background: #ff0000; } .b-top { background: #007aff; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-body { background: var(--card); padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; border: 1px solid var(--border); }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 13px; }
+        .bordered-btn { border: 2px solid var(--accent); background: transparent; color: var(--text); font-weight: bold; padding: 8px 15px; border-radius: 12px; cursor: pointer; font-size: 11px; }
     </style>
 </head>
 <body>
 
-<div id="game-ui">
-    <div id="top-info">
-        <div>моё эло: <span id="my-elo">204</span></div>
-        <div class="stars">★★★★★</div>
-        <div>эло противника: <span id="opp-elo">273</span></div>
+<script>
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+
+<header>
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src="https://via.placeholder.com/100"></div>
+            <div>
+                <div style="font-weight:900; font-size:16px;"><span id="h-nick">...</span><span id="h-badge"></span></div>
+                <div id="h-id" style="font-size:10px; color:var(--accent); font-weight:bold;">ID: ...</div>
+            </div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-weight:900; color:var(--accent); font-size:15px;"><span id="h-bal">0</span> D</div>
+            <div style="font-size:10px; opacity:0.6;">XP: <span id="h-xp">0</span></div>
+        </div>
     </div>
-</div>
+</header>
 
-<div id="goal-overlay">
-    <div class="goal-cloud" id="goal-text">GOAL!</div>
-</div>
+<nav>
+    <button class="nav-btn active" id="b-p" onclick="sw('profile', 'b-p')">ПРОФИЛЬ</button>
+    <button class="nav-btn" id="b-i" onclick="sw('inv', 'b-i')">ИНВЕНТАРЬ</button>
+    <button class="nav-btn" id="b-s" onclick="sw('settings', 'b-s')">⚙️</button>
+</nav>
 
-<canvas id="arena"></canvas>
+<main>
+    <div id="profile" class="screen active">
+        <div style="background:var(--card); border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; border:1px solid var(--border);">
+            <div style="text-align:center; flex:1;">
+                <div class="avatar-box" style="width:80px; height:80px; margin:0 auto 10px;" onclick="document.getElementById('f-in').click()"><img id="p-av" src="https://via.placeholder.com/100"></div>
+                <input type="file" id="f-in" hidden onchange="uAv(event)">
+                <button class="bordered-btn" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
+                <div style="font-weight:900; font-size:18px; margin-top:10px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="slot" id="sl-0" onclick="opShowcase(0)">+</div>
+                <div class="slot" id="sl-1" onclick="opShowcase(1)">+</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inv" class="screen"><div class="grid" id="inv-grid"></div></div>
+
+    <div id="settings" class="screen">
+        <button class="bordered-btn" onclick="tTh()" style="width:100%; margin-bottom:15px; height:50px;">СМЕНИТЬ ТЕМУ</button>
+        <button id="l-in" class="nav-btn" style="width:100%; background:white; color:black; border:1px solid #ddd;" onclick="login()">Вход через Google</button>
+        <button id="l-out" class="nav-btn" style="width:100%; background:#ff3b30; color:white; display:none;" onclick="logout()">Выйти</button>
+        
+        <div id="a-box" style="display:none; margin-top:20px; padding:15px; border:2px dashed orange; border-radius:15px;">
+            <b style="color:orange;">ADMIN PANEL</b>
+            <input type="number" id="a-tid" placeholder="ID игрока">
+            <input type="number" id="a-d" placeholder="+ Dacks">
+            <input type="number" id="a-x" placeholder="+ XP">
+            <select id="a-it"></select>
+            <select id="a-bad">
+                <option value="keep">Галочка: Не менять</option>
+                <option value="">Убрать</option>
+                <option value="b-dev">🟡 Разработчик</option>
+            </select>
+            <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv()">ПРИМЕНИТЬ</button>
+            <button class="nav-btn" style="width:100%; background:#000; color:#ff3b30; margin-top:10px;" onclick="resetPlayer()">СБРОС ПО ID</button>
+        </div>
+    </div>
+</main>
+
+<div id="m-n" class="modal"><div class="modal-body"><h3>Новый ник</h3><input type="text" id="n-in" maxlength="12"><button class="nav-btn active" style="width:100%;" onclick="svN()">СОХРАНИТЬ</button><button class="nav-btn" style="width:100%; margin-top:5px;" onclick="clM()">ОТМЕНА</button></div></div>
+<div id="m-key" class="modal"><div class="modal-body"><h3>Админ Доступ</h3><input type="password" id="c-in" placeholder="Ключ"><button class="nav-btn active" style="width:100%;" onclick="chC()">ВОЙТИ</button></div></div>
+<div id="m-info" class="modal" onclick="clM()"><div class="modal-body"><h3 id="info-t"></h3><p id="info-d"></p></div></div>
+<div id="m-sh" class="modal"><div class="modal-body"><h3>Витрина</h3><div id="sh-list" style="max-height: 200px; overflow-y: auto;"></div><button class="nav-btn" style="width:100%;" onclick="clM()">ЗАКРЫТЬ</button></div></div>
+<div id="toast" class="toast"></div>
 
 <script>
-const canvas = document.getElementById('arena');
-const ctx = canvas.getContext('2d');
-const goalOverlay = document.getElementById('goal-overlay');
-const goalText = document.getElementById('goal-text');
-
-let isPlaying = true;
-let score = { p1: 0, p2: 0 };
-
-// Физические константы
-const FRICTION = 0.985; // Трение льда
-const MAX_SPEED = 20;
-
-// Объекты
-const puck = { x: 0, y: 0, vx: 0, vy: 0, r: 20 };
-const p1 = { x: 0, y: 0, r: 45, color: '#ff4444', prevX: 0, prevY: 0 };
-const p2 = { x: 0, y: 0, r: 45, color: '#4444ff' };
-
-function init() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    resetPuck();
-    p1.x = 150; p1.y = canvas.height / 2;
-    p2.x = canvas.width - 150; p2.y = canvas.height / 2;
-}
-
-function resetPuck() {
-    puck.x = canvas.width / 2;
-    puck.y = canvas.height / 2;
-    puck.vx = 0;
-    puck.vy = 0;
-}
-
-// Рисование кота в шлеме
-function drawCat(x, y, r, color, isP1) {
-    ctx.save();
-    ctx.translate(x, y);
-    if (!isP1) ctx.scale(-1, 1);
-
-    // Тело/Голова
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
-
-    // Шлем
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(0, -5, r, Math.PI, 0); ctx.fill();
+    const firebaseConfig = { apiKey: "AIzaSyDno2jAXYzNc8EN3pkYbrhwkJ5v4aVBxH8", authDomain: "duksnft.firebaseapp.com", projectId: "duksnft", storageBucket: "duksnft.firebasestorage.app", messagingSenderId: "774746155070", appId: "1:774746155070:web:8e9718290ea579ffd8096f" };
     
-    // Глаза
-    ctx.fillStyle = "#fff";
-    ctx.beginPath(); ctx.arc(-15, 0, 10, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(15, 0, 10, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#000";
-    ctx.beginPath(); ctx.arc(-12, 0, 4, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(18, 0, 4, 0, Math.PI*2); ctx.fill();
+    // Твои настройки предметов
+    const ADMIN_ITEMS = [
+        { n: "Утка", sell: 5000, r: "Exclusive", i: "🦆", glow: "gl-exclusive" },
+        { n: "Золотая утка", sell: 0, r: "Divine", i: "🐥", glow: "gl-divine", unsel: true },
+        { n: "Алмазная утка", sell: 0, r: "Divine", i: "💎", glow: "gl-divine", unsel: true },
+        { n: "Бриллиантовая утка", sell: 0, r: "Divine", i: "✨", glow: "gl-divine", unsel: true }
+    ];
 
-    // Усы
-    ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(25, 5); ctx.lineTo(40, 0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(25, 10); ctx.lineTo(40, 15); ctx.stroke();
+    let pData = { b: 0, inv: [], xp: 0, nick: "Гость", av: "https://via.placeholder.com/100", numericId: 0, eff: "", badge: "", showcase: [null, null] };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(); const db = firebase.firestore();
 
-    ctx.restore();
-}
+    function init() {
+        auth.onAuthStateChanged(u => {
+            if (u) {
+                document.getElementById('l-in').style.display = 'none'; document.getElementById('l-out').style.display = 'block';
+                db.collection("users").doc(u.uid).onSnapshot(doc => {
+                    if (doc.exists) { 
+                        let d = doc.data();
+                        if(!Array.isArray(d.inv)) d.inv = [];
+                        pData = Object.assign(pData, d); 
+                    } else { 
+                        pData.numericId = Math.floor(100000 + Math.random() * 899999);
+                        pData.nick = u.displayName || "Игрок"; 
+                        db.collection("users").doc(u.uid).set(pData);
+                    }
+                    upUI();
+                });
+            } else { upUI(); }
+        });
+        const s = document.getElementById('a-it');
+        s.innerHTML = `<option value="-1">Без выдачи NFT</option>`;
+        ADMIN_ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
+    }
 
-function drawArena() {
-    // Лёд
-    ctx.fillStyle = '#e3f2fd';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function upUI() {
+        document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
+        document.getElementById('h-xp').innerText = pData.xp || 0;
+        document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
+        
+        const bHtml = pData.badge ? `<span class="badge ${pData.badge}" onclick="shB('${pData.badge}')">✓</span>` : "";
+        ['h-nick', 'p-nick'].forEach(id => { const el = document.getElementById(id); if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } });
+        document.getElementById('h-badge').innerHTML = bHtml;
+        document.getElementById('p-badge').innerHTML = bHtml;
+        document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av;
 
-    // Разметка
-    ctx.strokeStyle = 'rgba(33, 150, 243, 0.3)';
-    ctx.lineWidth = 8;
-    ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height); ctx.stroke();
+        // Витрина
+        pData.showcase.forEach((it, i) => {
+            const s = document.getElementById(`sl-${i}`);
+            if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } else { s.innerHTML = "+"; s.className = "slot"; }
+        });
 
-    // Декор (Снежинки/Звезды)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '30px Arial';
-    ctx.fillText('❄', 100, 100); ctx.fillText('★', canvas.width - 150, 120);
-    ctx.fillText('★', 200, canvas.height - 100); ctx.fillText('❄', canvas.width - 250, canvas.height - 200);
-}
-
-function showGoalEffect(winnerColor) {
-    isPlaying = false;
-    goalOverlay.style.background = winnerColor + 'aa';
-    goalText.style.color = winnerColor;
-    goalOverlay.classList.add('show-goal');
-    setTimeout(() => goalText.style.transform = 'scale(1)', 10);
-
-    setTimeout(() => {
-        goalOverlay.classList.remove('show-goal');
-        goalText.style.transform = 'scale(0)';
-        resetPuck();
-        isPlaying = true;
-    }, 1500);
-}
-
-function update() {
-    if (!isPlaying) return;
-
-    // Движение шайбы с трением
-    puck.vx *= FRICTION;
-    puck.vy *= FRICTION;
-    puck.x += puck.vx;
-    puck.y += puck.vy;
-
-    // Отскок от бортов
-    if (puck.y < puck.r || puck.y > canvas.height - puck.r) puck.vy *= -1;
-
-    // Логика бота (Противник)
-    let botTargetY = puck.y;
-    p2.y += (botTargetY - p2.y) * 0.07;
-    p2.x = canvas.width - 100;
-
-    // Столкновения (Передача импульса)
-    [p1, p2].forEach(p => {
-        let dx = puck.x - p.x;
-        let dy = puck.y - p.y;
-        let dist = Math.hypot(dx, dy);
-
-        if (dist < puck.r + p.r) {
-            // Вычисление угла столкновения
-            let angle = Math.atan2(dy, dx);
-            
-            // Если это игрок, добавляем импульс от движения руки
-            if (p === p1) {
-                let mouseVX = p1.x - p1.prevX;
-                let mouseVY = p1.y - p1.prevY;
-                puck.vx = Math.cos(angle) * 10 + mouseVX * 0.5;
-                puck.vy = Math.sin(angle) * 10 + mouseVY * 0.5;
-            } else {
-                puck.vx = Math.cos(angle) * 12;
-                puck.vy = Math.sin(angle) * 12;
-            }
-
-            // Выталкивание шайбы (чтобы не застревала)
-            puck.x = p.x + Math.cos(angle) * (puck.r + p.r);
-            puck.y = p.y + Math.sin(angle) * (puck.r + p.r);
+        // Инвентарь с исправленным свечением
+        const g = document.getElementById('inv-grid');
+        const inv = pData.inv || [];
+        g.innerHTML = "";
+        
+        if(inv.length === 0) { 
+            g.innerHTML = "<div style='grid-column:1/3; opacity:0.3; padding:40px; text-align:center;'>ПУСТО</div>"; 
+        } else {
+            inv.forEach((it, i) => {
+                const glowClass = it.glow || "";
+                g.innerHTML += `
+                <div class="item-card ${glowClass}">
+                    <div style="font-size:38px;">${it.i}</div>
+                    <div style="font-size:12px; font-weight:900;">${it.n}</div>
+                    <button class="bordered-btn" style="width:100%; margin-top:10px;" onclick="sl(${i})" ${it.unsel ? 'disabled style="opacity:0.3"' : ''}>
+                        ${it.unsel ? 'DIVINE' : 'ПРОДАТЬ'}
+                    </button>
+                </div>`;
+            });
         }
-    });
+    }
 
-    // Проверка гола
-    if (puck.x < -puck.r) showGoalEffect('#4444ff');
-    if (puck.x > canvas.width + puck.r) showGoalEffect('#ff4444');
+    // ФИКС БАГА С ДУБЛИКАТАМИ: Теперь проверяем уникальный ID предмета (его индекс в инвентаре)
+    window.opShowcase = (slotIndex) => { 
+        window.tSl = slotIndex; 
+        const l = document.getElementById('sh-list'); 
+        l.innerHTML = ""; 
+        
+        pData.inv.forEach((it, i) => { 
+            // Проверяем, не стоит ли уже этот КОНКРЕТНЫЙ предмет на другом слоте витрины
+            const isAlreadyShown = pData.showcase.some(s => s && s.invIndex === i);
+            
+            if(!isAlreadyShown) {
+                l.innerHTML += `<div onclick="setS(${i})" style="padding:15px; border-bottom:1px solid var(--border); font-weight:bold; cursor:pointer;">${it.i} ${it.n}</div>`; 
+            }
+        }); 
+        
+        if(l.innerHTML === "") l.innerHTML = "<div style='padding:15px; opacity:0.5;'>Нет доступных NFT</div>";
+        document.getElementById('m-sh').style.display = 'flex'; 
+    };
 
-    // Ограничение скорости
-    puck.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, puck.vx));
-    puck.vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, puck.vy));
-}
+    window.setS = (invIdx) => { 
+        const item = {...pData.inv[invIdx]};
+        item.invIndex = invIdx; // Сохраняем метку, чтобы знать какой именно это предмет
+        pData.showcase[window.tSl] = item; 
+        sync(); 
+        clM(); 
+    };
 
-function render() {
-    drawArena();
-    
-    // Шайба
-    ctx.fillStyle = '#111';
-    ctx.beginPath(); ctx.arc(puck.x, puck.y, puck.r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    // Остальные функции без изменений
+    window.shB = (t) => {
+        const info = { 'b-dev':['Разработчик','Создатель DuksNFT.'] };
+        document.getElementById('info-t').innerText = info[t][0];
+        document.getElementById('info-d').innerText = info[t][1];
+        document.getElementById('m-info').style.display = 'flex';
+        event.stopPropagation();
+    };
 
-    drawCat(p1.x, p1.y, p1.r, p1.color, true);
-    drawCat(p2.x, p2.y, p2.r, p2.color, false);
+    async function gv() {
+        const tid = document.getElementById('a-tid').value;
+        let tUid = auth.currentUser?.uid;
+        if(tid) { 
+            const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get();
+            if(!snap.empty) tUid = snap.docs[0].id; else return ms("ID не найден");
+        }
+        const doc = await db.collection("users").doc(tUid).get();
+        let dta = doc.data();
+        let inv = Array.isArray(dta.inv) ? dta.inv : [];
+        const itIdx = document.getElementById('a-it').value;
+        const upd = { b: (dta.b || 0) + parseInt(document.getElementById('a-d').value || 0), xp: (dta.xp || 0) + parseInt(document.getElementById('a-x').value || 0) };
+        if(document.getElementById('a-bad').value !== "keep") upd.badge = document.getElementById('a-bad').value;
+        if(itIdx != -1) { inv.push({...ADMIN_ITEMS[itIdx]}); upd.inv = inv; }
+        await db.collection("users").doc(tUid).update(upd); 
+        ms("Готово!");
+    }
 
-    update();
-    requestAnimationFrame(render);
-}
+    async function resetPlayer() {
+        const tid = document.getElementById('a-tid').value;
+        if(!tid || !confirm("СБРОСИТЬ?")) return;
+        const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get();
+        if(!snap.empty) {
+            await db.collection("users").doc(snap.docs[0].id).update({ b: 0, xp: 0, inv: [], showcase: [null, null], badge: "", eff: "" });
+            ms("СБРОШЕНО");
+        }
+    }
 
-// Управление
-canvas.addEventListener('mousemove', e => {
-    p1.prevX = p1.x;
-    p1.prevY = p1.y;
-    p1.x = e.clientX;
-    p1.y = e.clientY;
-    // Ограничение зоной игрока (половина поля)
-    if (p1.x > canvas.width / 2 - p1.r) p1.x = canvas.width / 2 - p1.r;
-});
+    window.chC = () => { if(document.getElementById('c-in').value === "mnbvcxz1234") { document.getElementById('a-box').style.display='block'; clM(); } else ms("Ошибка"); };
+    window.svN = () => { if(document.getElementById('n-in').value.trim()) { pData.nick = document.getElementById('n-in').value.trim(); sync(); clM(); } };
+    window.sl = (i) => { pData.b += pData.inv[i].sell; pData.inv.splice(i, 1); pData.showcase = [null, null]; sync(); };
+    window.sync = () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); };
+    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+    window.sw = (id, bid) => { 
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); 
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); 
+        if(bid === 'b-s') { window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-key').style.display='flex'; window.ac=0; } } else window.ac = 0; 
+    };
+    window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
+    window.ms = (t) => { const st = document.getElementById('toast'); st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); };
+    window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    window.logout = () => auth.signOut().then(() => location.reload());
+    window.shNick = () => { document.getElementById('m-n').style.display='flex'; };
+    window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
 
-canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    p1.prevX = p1.x;
-    p1.prevY = p1.y;
-    p1.x = touch.clientX;
-    p1.y = touch.clientY;
-    if (p1.x > canvas.width / 2 - p1.r) p1.x = canvas.width / 2 - p1.r;
-}, { passive: false });
-
-init();
-render();
+    init();
 </script>
 </body>
-    </html>
-    
+</html>
