@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Clean Stable</title>
+    <title>DuksNFT - Final Stable</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -31,7 +31,7 @@
             100% { box-shadow: 0 0 10px red; border-color: red; } 
         }
 
-        .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; }
+        .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
         nav { display: flex; gap: 5px; margin: 10px 16px; background: rgba(128,128,128,0.1); padding: 5px; border-radius: 15px; }
@@ -44,7 +44,7 @@
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .item-card { background: var(--card); border-radius: 18px; padding: 15px; text-align: center; border: 1px solid var(--border); box-sizing: border-box; }
         
-        .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
         .slot.filled { border-style: solid; background: var(--card); }
         
         .badge { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: white; margin-left: 5px; font-weight: bold; cursor: pointer; vertical-align: middle; }
@@ -53,7 +53,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-body { background: var(--card); padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; border: 1px solid var(--border); }
         
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; box-sizing: border-box; }
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 13px; }
         .bordered-btn { border: 2px solid var(--accent); background: transparent; color: var(--text); font-weight: bold; padding: 8px 15px; border-radius: 12px; cursor: pointer; font-size: 11px; }
     </style>
@@ -89,14 +89,14 @@
 
 <main>
     <div id="profile" class="screen active">
-        <div style="background:var(--card); border-radius:20px; padding:20px; display:flex; align-items:center; justify-content:space-between; border:1px solid var(--border);">
-            <div style="text-align:center; flex:1;">
+        <div style="background:var(--card); border-radius:20px; padding:20px; display:flex; flex-direction:column; gap:20px; border:1px solid var(--border);">
+            <div style="text-align:center;">
                 <div class="avatar-box" style="width:80px; height:80px; margin:0 auto 10px;" onclick="document.getElementById('f-in').click()"><img id="p-av" src=""></div>
                 <input type="file" id="f-in" hidden onchange="uAv(event)">
+                <div style="font-weight:900; font-size:18px; margin-bottom:10px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
                 <button class="bordered-btn" onclick="shNick()">ИЗМЕНИТЬ НИК</button>
-                <div style="font-weight:900; font-size:18px; margin-top:10px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
             </div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; justify-content:center; gap:15px;">
                 <div class="slot" id="sl-0" onclick="opShowcase(0)">+</div>
                 <div class="slot" id="sl-1" onclick="opShowcase(1)">+</div>
             </div>
@@ -117,27 +117,26 @@
             <input type="number" id="a-x" placeholder="+ XP">
             <select id="a-it"></select>
             <select id="a-eff">
-                <option value="keep">Цвет ника: Не менять</option>
+                <option value="keep">Ник: Не менять</option>
                 <option value="">Обычный</option>
                 <option value="c-red">Красный</option>
                 <option value="n-rgb">Радужный</option>
             </select>
             <select id="a-bad">
-                <option value="keep">Галочка: Не менять</option>
+                <option value="keep">Badge: Не менять</option>
                 <option value="">Убрать все</option>
-                <option value="b-dev">🟡 Разработчик</option>
-                <option value="b-yt">🔴 Ютубер</option>
-                <option value="b-top">🔵 Топ игрок</option>
+                <option value="b-dev">🟡 Dev</option>
+                <option value="b-yt">🔴 YouTube</option>
+                <option value="b-top">🔵 Top</option>
             </select>
             <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv()">ПРИМЕНИТЬ</button>
-            <button class="nav-btn" style="width:100%; background:#000; color:#ff3b30; margin-top:10px; font-size:10px;" onclick="resetPlayer()">СБРОСИТЬ ПРОГРЕСС ПО ID</button>
+            <button class="nav-btn" style="width:100%; background:#000; color:#ff3b30; margin-top:10px; font-size:10px;" onclick="resetPlayer()">RESET ID DATA</button>
         </div>
     </div>
 </main>
 
-<div id="m-n" class="modal"><div class="modal-body"><h3>Новый ник</h3><input type="text" id="n-in" maxlength="12"><button class="nav-btn active" style="width:100%;" onclick="svN()">СОХРАНИТЬ</button><button class="nav-btn" style="width:100%; margin-top:5px;" onclick="clM()">ОТМЕНА</button></div></div>
-<div id="m-key" class="modal"><div class="modal-body"><h3>Админ Доступ</h3><input type="password" id="c-in" placeholder="Ключ"><button class="nav-btn active" style="width:100%;" onclick="chC()">ВОЙТИ</button></div></div>
-<div id="m-info" class="modal" onclick="clM()"><div class="modal-body"><h3 id="info-t"></h3><p id="info-d" style="opacity:0.8;"></p></div></div>
+<div id="m-n" class="modal"><div class="modal-body"><h3>Ник</h3><input type="text" id="n-in" maxlength="12"><button class="nav-btn active" style="width:100%;" onclick="svN()">СОХРАНИТЬ</button><button class="nav-btn" style="width:100%; margin-top:5px;" onclick="clM()">ОТМЕНА</button></div></div>
+<div id="m-key" class="modal"><div class="modal-body"><h3>Admin</h3><input type="password" id="c-in" placeholder="Ключ"><button class="nav-btn active" style="width:100%;" onclick="chC()">ВОЙТИ</button></div></div>
 <div id="m-sh" class="modal"><div class="modal-body"><h3>Витрина</h3><div id="sh-list" style="max-height: 200px; overflow-y: auto; margin:10px 0;"></div><button class="nav-btn" style="width:100%;" onclick="clM()">ЗАКРЫТЬ</button></div></div>
 <div id="toast" class="toast"></div>
 
@@ -158,7 +157,8 @@
     async function init() {
         auth.onAuthStateChanged(async (u) => {
             if (u) {
-                document.getElementById('l-in').style.display = 'none'; document.getElementById('l-out').style.display = 'block';
+                document.getElementById('l-in').style.display = 'none'; 
+                document.getElementById('l-out').style.display = 'block';
                 const userDoc = db.collection("users").doc(u.uid);
                 
                 userDoc.onSnapshot(async (doc) => {
@@ -166,24 +166,24 @@
                         let d = doc.data();
                         if(!Array.isArray(d.inv)) d.inv = [];
                         
-                        // ID 100000002 ТОЛЬКО ДЛЯ ТЕБЯ
+                        // ID 100000002 ТОЛЬКО ДЛЯ ТВОЕЙ ПОЧТЫ
                         if(u.email === "duksnft@gmail.com" && d.numericId !== 100000002) {
                             d.numericId = 100000002;
                             await userDoc.update({ numericId: 100000002 });
                         }
-                        
                         pData = Object.assign(pData, d); 
                     } else { 
-                        let finalId = 100000003;
+                        // Система авто-ID (исправленная загрузка)
+                        let nextId = 100000003;
                         if(u.email === "duksnft@gmail.com") {
-                            finalId = 100000002;
+                            nextId = 100000002;
                         } else {
-                            const snapshot = await db.collection("users").orderBy("numericId", "desc").limit(1).get();
-                            if (!snapshot.empty) {
-                                finalId = snapshot.docs[0].data().numericId + 1;
-                            }
+                            const snap = await db.collection("users").get();
+                            let max = 100000002;
+                            snap.forEach(s => { if(s.data().numericId > max) max = s.data().numericId; });
+                            nextId = max + 1;
                         }
-                        pData.numericId = finalId;
+                        pData.numericId = nextId;
                         pData.nick = u.displayName || "Игрок"; 
                         await userDoc.set(pData);
                     }
@@ -201,7 +201,7 @@
         document.getElementById('h-xp').innerText = pData.xp || 0;
         document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
         
-        const bHtml = pData.badge ? `<span class="badge ${pData.badge}" onclick="shB('${pData.badge}')">✓</span>` : "";
+        const bHtml = pData.badge ? `<span class="badge ${pData.badge}">✓</span>` : "";
         ['h-nick', 'p-nick'].forEach(id => { const el = document.getElementById(id); if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } });
         document.getElementById('h-badge').innerHTML = bHtml;
         document.getElementById('p-badge').innerHTML = bHtml;
@@ -215,12 +215,12 @@
         const g = document.getElementById('inv-grid');
         g.innerHTML = "";
         if((pData.inv || []).length === 0) { 
-            g.innerHTML = "<div style='grid-column:1/3; opacity:0.3; padding:40px; text-align:center;'>ИНВЕНТАРЬ ПУСТ</div>"; 
+            g.innerHTML = "<div style='grid-column:1/3; opacity:0.3; padding:40px; text-align:center;'>ПУСТО</div>"; 
         } else {
             pData.inv.forEach((it, i) => {
                 g.innerHTML += `<div class="item-card ${it.glow || ''}">
                     <div style="font-size:38px;">${it.i}</div>
-                    <div style="font-size:12px; font-weight:900;">${it.n}</div>
+                    <div style="font-size:12px; font-weight:bold;">${it.n}</div>
                     <button class="bordered-btn" style="width:100%; margin-top:10px;" onclick="sl(${i})" ${it.unsel ? 'disabled style="opacity:0.3"' : ''}>
                         ${it.unsel ? it.r : 'ПРОДАТЬ'}
                     </button>
@@ -229,21 +229,20 @@
         }
     }
 
-    window.opShowcase = (slotIndex) => { 
-        window.tSl = slotIndex; const l = document.getElementById('sh-list'); l.innerHTML = ""; 
+    window.opShowcase = (slot) => { 
+        window.tSl = slot; const l = document.getElementById('sh-list'); l.innerHTML = ""; 
         pData.inv.forEach((it, i) => { 
             if(!pData.showcase.some(s => s && s.invIndex === i)) {
                 l.innerHTML += `<div onclick="setS(${i})" style="padding:15px; border-bottom:1px solid var(--border); font-weight:bold;">${it.i} ${it.n}</div>`; 
             }
         }); 
-        if(l.innerHTML === "") l.innerHTML = "Нет доступных NFT";
+        if(l.innerHTML === "") l.innerHTML = "Нет NFT";
         document.getElementById('m-sh').style.display = 'flex'; 
     };
 
     window.setS = (idx) => { const item = {...pData.inv[idx]}; item.invIndex = idx; pData.showcase[window.tSl] = item; sync(); clM(); };
     window.sl = (i) => { pData.b += pData.inv[i].sell; pData.inv.splice(i, 1); pData.showcase = [null, null]; sync(); };
     window.sync = () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); };
-    
     window.chC = () => { if(document.getElementById('c-in').value === "mnbvcxz1234") { document.getElementById('a-box').style.display='block'; clM(); } else ms("Ключ неверен"); };
     window.svN = () => { if(document.getElementById('n-in').value.trim()) { pData.nick = document.getElementById('n-in').value.trim(); sync(); clM(); } };
     window.tTh = () => { const n = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
@@ -252,5 +251,14 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); 
         if(bid === 'b-s') { window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-key').style.display='flex'; window.ac=0; } } else window.ac = 0; 
     };
-    window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.
+    window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
+    window.ms = (t) => { const st = document.getElementById('toast'); st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); };
+    window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    window.logout = () => auth.signOut().then(() => location.reload());
+    window.shNick = () => { document.getElementById('m-n').style.display='flex'; };
+    window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
+
+    async function gv() {
+        const tidInput = document.getElementById('a-tid').value;
+        let tUid = auth.currentUser
     
