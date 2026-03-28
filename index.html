@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Final Stable</title>
+    <title>DuksNFT - Ultra Stable</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -157,40 +157,44 @@
     async function init() {
         auth.onAuthStateChanged(async (u) => {
             if (u) {
-                document.getElementById('l-in').style.display = 'none'; 
-                document.getElementById('l-out').style.display = 'block';
+                document.getElementById('l-in').style.display = 'none'; document.getElementById('l-out').style.display = 'block';
                 const userDoc = db.collection("users").doc(u.uid);
                 
-                userDoc.onSnapshot(async (doc) => {
-                    if (doc.exists) { 
-                        let d = doc.data();
-                        if(!Array.isArray(d.inv)) d.inv = [];
-                        
-                        // ID 100000002 ТОЛЬКО ДЛЯ ТВОЕЙ ПОЧТЫ
+                try {
+                    const snap = await userDoc.get();
+                    if (snap.exists) {
+                        let d = snap.data();
+                        // Твой уникальный ID
                         if(u.email === "duksnft@gmail.com" && d.numericId !== 100000002) {
                             d.numericId = 100000002;
                             await userDoc.update({ numericId: 100000002 });
                         }
-                        pData = Object.assign(pData, d); 
-                    } else { 
-                        // Система авто-ID (исправленная загрузка)
-                        let nextId = 100000003;
+                        pData = Object.assign(pData, d);
+                    } else {
+                        // Регистрация нового
+                        let finalId = 100000003;
                         if(u.email === "duksnft@gmail.com") {
-                            nextId = 100000002;
+                            finalId = 100000002;
                         } else {
-                            const snap = await db.collection("users").get();
+                            const allUsers = await db.collection("users").get();
                             let max = 100000002;
-                            snap.forEach(s => { if(s.data().numericId > max) max = s.data().numericId; });
-                            nextId = max + 1;
+                            allUsers.forEach(doc => { if(doc.data().numericId > max) max = doc.data().numericId; });
+                            finalId = max + 1;
                         }
-                        pData.numericId = nextId;
-                        pData.nick = u.displayName || "Игрок"; 
+                        pData.numericId = finalId;
+                        pData.nick = u.displayName || "Игрок";
                         await userDoc.set(pData);
                     }
-                    upUI();
-                });
-            } else { upUI(); }
+                    // Подписываемся на обновления
+                    userDoc.onSnapshot(doc => { if(doc.exists) { pData = doc.data(); upUI(); } });
+                } catch(e) { 
+                    console.error("Firebase Error:", e); 
+                    ms("Ошибка загрузки! Проверь Rules в консоли."); 
+                }
+            }
+            upUI();
         });
+        
         const s = document.getElementById('a-it');
         s.innerHTML = `<option value="-1">Без выдачи NFT</option>`;
         ADMIN_ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
@@ -212,8 +216,7 @@
             if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } else { s.innerHTML = "+"; s.className = "slot"; }
         });
 
-        const g = document.getElementById('inv-grid');
-        g.innerHTML = "";
+        const g = document.getElementById('inv-grid'); g.innerHTML = "";
         if((pData.inv || []).length === 0) { 
             g.innerHTML = "<div style='grid-column:1/3; opacity:0.3; padding:40px; text-align:center;'>ПУСТО</div>"; 
         } else {
@@ -243,7 +246,7 @@
     window.setS = (idx) => { const item = {...pData.inv[idx]}; item.invIndex = idx; pData.showcase[window.tSl] = item; sync(); clM(); };
     window.sl = (i) => { pData.b += pData.inv[i].sell; pData.inv.splice(i, 1); pData.showcase = [null, null]; sync(); };
     window.sync = () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); };
-    window.chC = () => { if(document.getElementById('c-in').value === "mnbvcxz1234") { document.getElementById('a-box').style.display='block'; clM(); } else ms("Ключ неверен"); };
+    window.chC = () => { if(document.getElementById('c-in').value === "mnbvcxz1234") { document.getElementById('a-box').style.display='block'; clM(); } else ms("Неверно"); };
     window.svN = () => { if(document.getElementById('n-in').value.trim()) { pData.nick = document.getElementById('n-in').value.trim(); sync(); clM(); } };
     window.tTh = () => { const n = document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
     window.sw = (id, bid) => { 
@@ -260,5 +263,33 @@
 
     async function gv() {
         const tidInput = document.getElementById('a-tid').value;
-        let tUid = auth.currentUser
-    
+        let tUid = auth.currentUser?.uid;
+        if(tidInput) { 
+            const snap = await db.collection("users").where("numericId", "==", parseInt(tidInput)).get();
+            if(!snap.empty) tUid = snap.docs[0].id; else return ms("ID не найден");
+        }
+        const doc = await db.collection("users").doc(tUid).get();
+        let dta = doc.data();
+        let upd = { b: (dta.b || 0) + parseInt(document.getElementById('a-d').value || 0), xp: (dta.xp || 0) + parseInt(document.getElementById('a-x').value || 0) };
+        if(document.getElementById('a-eff').value !== "keep") upd.eff = document.getElementById('a-eff').value;
+        if(document.getElementById('a-bad').value !== "keep") upd.badge = document.getElementById('a-bad').value;
+        const itIdx = document.getElementById('a-it').value;
+        if(itIdx != -1) { let inv = Array.isArray(dta.inv) ? dta.inv : []; inv.push({...ADMIN_ITEMS[itIdx]}); upd.inv = inv; }
+        await db.collection("users").doc(tUid).update(upd); 
+        ms("Готово!");
+    }
+
+    async function resetPlayer() {
+        const tidInput = document.getElementById('a-tid').value;
+        if(!tidInput || !confirm("RESET?")) return;
+        const snap = await db.collection("users").where("numericId", "==", parseInt(tidInput)).get();
+        if(!snap.empty) {
+            await db.collection("users").doc(snap.docs[0].id).update({ b: 0, xp: 0, inv: [], showcase: [null, null], badge: "", eff: "" });
+            ms("Done");
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
