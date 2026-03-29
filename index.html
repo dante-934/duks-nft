@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Fixed</title>
+    <title>DuksNFT - Final Fix</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -43,7 +43,6 @@
 <body>
 
 <script>
-    // Применяем сохраненную тему сразу при загрузке
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 </script>
@@ -53,7 +52,7 @@
         <div style="display:flex; align-items:center; gap:10px;">
             <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src=""></div>
             <div>
-                <div style="font-weight:900; font-size:15px;"><span id="h-nick">...</span><span id="h-badge"></span></div>
+                <div style="font-weight:900; font-size:15px;"><span id="h-nick">Вход...</span><span id="h-badge"></span></div>
                 <div id="h-id" style="font-size:10px; color:var(--accent); font-weight:bold;">ID: ...</div>
             </div>
         </div>
@@ -75,7 +74,7 @@
         <div style="background:var(--card); padding:20px; border-radius:20px; text-align:center; border:1px solid var(--border);">
             <div class="avatar-box" style="width:80px; height:80px; margin:0 auto 10px;" onclick="document.getElementById('f-in').click()"><img id="p-av" src=""></div>
             <input type="file" id="f-in" hidden onchange="uAv(event)">
-            <div style="font-weight:900; font-size:20px; margin-bottom:10px;"><span id="p-nick">...</span><span id="p-badge"></span></div>
+            <div style="font-weight:900; font-size:20px; margin-bottom:10px;"><span id="p-nick">Игрок</span><span id="p-badge"></span></div>
             <button onclick="shNick()" style="border:2px solid var(--accent); background:none; color:var(--text); padding:5px 15px; border-radius:10px; font-weight:bold; cursor:pointer; font-size:11px;">ИЗМЕНИТЬ НИК</button>
             <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
                 <div class="slot" id="sl-0" onclick="opShowcase(0)">+</div>
@@ -114,23 +113,15 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(); const db = firebase.firestore();
 
-    const ADMIN_ITEMS = [
-        { n: "Утка", r: "Exclusive", i: "🦆", glow: "gl-exclusive", sell: 5000 },
-        { n: "Золотая утка", r: "Divine", i: "🐥", glow: "gl-divine", unsel: true, sell: 0 },
-        { n: "Алмазная утка", r: "Divine", i: "💎", glow: "gl-divine", unsel: true, sell: 0 }
-    ];
+    const ADMIN_ITEMS = [{ n: "Утка", r: "Exclusive", i: "🦆", glow: "gl-exclusive", sell: 5000 }, { n: "Золотая утка", r: "Divine", i: "🐥", glow: "gl-divine", unsel: true, sell: 0 }, { n: "Алмазная утка", r: "Divine", i: "💎", glow: "gl-divine", unsel: true, sell: 0 }];
     let pData = { b: 0, inv: [], nick: "Игрок", av: "https://via.placeholder.com/100", numericId: 0, eff: "", badge: "", showcase: [null, null] };
     window.curIdx = -1; window.ac = 0;
 
     function upUI() {
-        if(!pData) return;
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
         document.getElementById('h-id').innerText = `ID: ${pData.numericId || '...'}`;
         const bHtml = pData.badge ? `<span class="badge ${pData.badge}">✓</span>` : "";
-        ['h-nick', 'p-nick'].forEach(id => { 
-            const el = document.getElementById(id); 
-            if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } 
-        });
+        ['h-nick', 'p-nick'].forEach(id => { const el = document.getElementById(id); if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } });
         ['h-badge', 'p-badge'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = bHtml; });
         document.getElementById('h-av').src = pData.av || "https://via.placeholder.com/100";
         document.getElementById('p-av').src = pData.av || "https://via.placeholder.com/100";
@@ -151,50 +142,50 @@
         }
     }
 
+    // ТАЙМАУТ ДЛЯ ПРЕДОТВРАЩЕНИЯ БЕСКОНЕЧНОЙ ЗАГРУЗКИ
+    setTimeout(() => { if(pData.numericId === 0) { upUI(); document.getElementById('h-nick').innerText = "Нажми логин"; }}, 5000);
+
     auth.onAuthStateChanged(async (u) => {
         if (u) {
             document.getElementById('l-in').style.display='none'; document.getElementById('l-out').style.display='block';
-            const userDoc = db.collection("users").doc(u.uid);
-            const snap = await userDoc.get();
-            if (snap.exists) { 
-                pData = Object.assign(pData, snap.data()); 
-            } else { 
-                pData.numericId = Math.floor(Math.random()*900000)+100000;
-                pData.nick = u.displayName || "Игрок";
-                pData.av = u.photoURL || "";
-                await userDoc.set(pData); 
-            }
-            userDoc.onSnapshot(doc => { if(doc.exists) { pData = doc.data(); upUI(); } });
-            
-            db.collection("marketplace").onSnapshot(snap => {
-                const mg = document.getElementById('market-grid'); if(!mg) return; mg.innerHTML = "";
-                snap.forEach(doc => {
-                    const lot = doc.data(); const isMine = lot.sellerId === pData.numericId;
-                    mg.innerHTML += `<div class="item-card ${lot.item.glow || ''}"><div style="font-size:32px;">${lot.item.i}</div><div class="item-name">${lot.item.n}</div><div style="font-weight:bold; font-size:11px; color:var(--accent);">${lot.price} D</div><button onclick="${isMine ? `cancelListing('${doc.id}')` : `buyLot('${doc.id}')`}" style="width:100%; margin-top:5px; background:${isMine?'#8e8e93':'#007aff'}; color:white; border:none; border-radius:5px; padding:6px; font-size:10px; cursor:pointer;">${isMine?'СНЯТЬ':'КУПИТЬ'}</button></div>`;
+            try {
+                const userDoc = db.collection("users").doc(u.uid);
+                const snap = await userDoc.get();
+                if (snap.exists) { 
+                    pData = Object.assign(pData, snap.data()); 
+                } else { 
+                    pData.numericId = Math.floor(Math.random()*900000)+100000;
+                    pData.nick = u.displayName || "Игрок";
+                    pData.av = u.photoURL || "";
+                    await userDoc.set(pData); 
+                }
+                userDoc.onSnapshot(doc => { if(doc.exists) { pData = doc.data(); upUI(); } });
+                
+                db.collection("marketplace").onSnapshot(snap => {
+                    const mg = document.getElementById('market-grid'); if(!mg) return; mg.innerHTML = "";
+                    snap.forEach(doc => {
+                        const lot = doc.data(); const isMine = lot.sellerId === pData.numericId;
+                        mg.innerHTML += `<div class="item-card ${lot.item.glow || ''}"><div style="font-size:32px;">${lot.item.i}</div><div class="item-name">${lot.item.n}</div><div style="font-weight:bold; font-size:11px; color:var(--accent);">${lot.price} D</div><button onclick="${isMine ? `cancelListing('${doc.id}')` : `buyLot('${doc.id}')`}" style="width:100%; margin-top:5px; background:${isMine?'#8e8e93':'#007aff'}; color:white; border:none; border-radius:5px; padding:6px; font-size:10px; cursor:pointer;">${isMine?'СНЯТЬ':'КУПИТЬ'}</button></div>`;
+                    });
                 });
-            });
+            } catch(e) { ms("Ошибка базы: Проверь доступ"); upUI(); }
+        } else {
+            document.getElementById('l-in').style.display='block';
+            document.getElementById('l-out').style.display='none';
+            document.getElementById('h-nick').innerText = "Войдите";
         }
         upUI();
     });
 
     window.sw = (id, bid) => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); if(bid === 'b-s') { window.ac++; if(window.ac >= 5) { document.getElementById('m-key').style.display='flex'; window.ac=0; } } };
-    
-    // ФУНКЦИЯ ТЕМЫ С СОХРАНЕНИЕМ
-    window.tTh = () => { 
-        const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; 
-        document.documentElement.setAttribute('data-theme', n); 
-        localStorage.setItem('theme', n); 
-    };
-
+    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
     window.shNick = () => { document.getElementById('m-n').style.display='flex'; document.getElementById('n-in').value = pData.nick; };
     window.svN = () => { pData.nick = document.getElementById('n-in').value; sync(); clM(); };
     window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
-    window.sync = () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).update(pData); };
+    window.sync = () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).update(pData).catch(() => ms("Ошибка сохранения")); };
     window.ms = (t) => { const st = document.getElementById('toast'); st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); };
-    
     window.opShowcase = (s) => { window.tsl = s; const l = document.getElementById('sh-list'); l.innerHTML = ""; (pData.inv || []).forEach((it, i) => { l.innerHTML += `<div onclick="setS(${i})" style="padding:10px; border-bottom:1px solid #ddd; cursor:pointer;">${it.i} ${it.n}</div>`; }); document.getElementById('m-sh').style.display='flex'; };
     window.setS = (i) => { pData.showcase[window.tsl] = pData.inv[i]; sync(); clM(); };
-
     window.sellToBank = (i) => { const it = pData.inv[i]; if(it.unsel) return; pData.b += it.sell; pData.inv.splice(i, 1); pData.showcase = [null, null]; sync(); ms(`Слито за ${it.sell}`); };
     window.openListing = (i) => { if(pData.inv[i].unsel) return ms("Divine нельзя продать!"); window.curIdx = i; document.getElementById('m-list').style.display='flex'; };
     window.confirmListing = async () => {
@@ -202,18 +193,10 @@
         await db.collection("marketplace").add({ item: pData.inv[window.curIdx], price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
         pData.inv.splice(window.curIdx, 1); pData.showcase = [null, null]; sync(); clM(); ms("Выставлено!");
     };
-
-    // ФУНКЦИЯ СНЯТИЯ С ПРОДАЖИ (ФИКС)
     window.cancelListing = async (id) => {
         const snap = await db.collection("marketplace").doc(id).get();
-        if(snap.exists) {
-            pData.inv.push(snap.data().item);
-            await db.collection("marketplace").doc(id).delete();
-            sync();
-            ms("Снято с продажи!");
-        }
+        if(snap.exists) { pData.inv.push(snap.data().item); await db.collection("marketplace").doc(id).delete(); sync(); ms("Снято!"); }
     };
-
     window.buyLot = async (id) => {
         const snap = await db.collection("marketplace").doc(id).get(); if(!snap.exists) return;
         const lot = snap.data(); if(pData.b < lot.price) return ms("Мало Dacks");
@@ -222,9 +205,8 @@
         if(sDoc.exists) await db.collection("users").doc(lot.sellerUid).update({ b: (sDoc.data().b || 0) + Math.floor(lot.price*0.95) });
         await db.collection("marketplace").doc(id).delete(); sync();
     };
-
     window.chC = () => { if(document.getElementById('c-in').value === "mnbvcxz1234") { document.getElementById('a-box').style.display='block'; clM(); } };
-    window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(() => ms("Используй Chrome!"));
     window.logout = () => auth.signOut().then(() => location.reload());
     window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
 
@@ -243,9 +225,4 @@
     async function rstId() {
         const tid = document.getElementById('a-tid').value; if(!tid) return ms("Введи ID!");
         const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get();
-        if(snap.empty) return ms("ID не найден!");
-        await db.collection("users").doc(snap.docs[0].id).update({ b: 0, inv: [], showcase: [null, null] }); ms(`ID ${tid} сброшен!`);
-    }
-
-    const as = document.getElementById('a-it'); as.innerHTML = `<option value="-1">NFT</option>`;
-    ADMIN_ITEMS.forEach((it, i) => as.innerHTML += `<option val
+        if(snap.empty) return 
