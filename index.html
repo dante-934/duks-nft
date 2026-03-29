@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Bugfix Edition</title>
+    <title>DuksNFT - Final Version</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -20,7 +20,6 @@
         .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: 900; }
         @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
 
-        /* Фикс свечения */
         .gl-exclusive { border: 2px solid; animation: glow-rgb 3s linear infinite; }
         .gl-divine { border: 2px solid #ffffff !important; box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
         @keyframes glow-rgb { 0% { box-shadow: 0 0 10px red; border-color: red; } 33% { box-shadow: 0 0 10px green; border-color: green; } 66% { box-shadow: 0 0 10px blue; border-color: blue; } 100% { box-shadow: 0 0 10px red; border-color: red; } }
@@ -128,7 +127,7 @@
 
     const ADMIN_ITEMS = [{ n: "Утка", r: "Exclusive", i: "🦆", glow: "gl-exclusive", sell: 5000 }, { n: "Золотая утка", r: "Divine", i: "🐥", glow: "gl-divine", unsel: true }, { n: "Алмазная утка", r: "Divine", i: "💎", glow: "gl-divine", unsel: true }];
     let pData = { b: 0, inv: [], xp: 0, nick: "Игрок", av: "https://via.placeholder.com/100", numericId: 0, eff: "", badge: "", showcase: [null, null] };
-    let tempIdx = -1;
+    window.tempIdx = -1;
 
     window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
 
@@ -142,7 +141,6 @@
         document.getElementById('p-badge').innerHTML = bHtml;
         document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av;
         
-        // Фикс свечения витрины
         pData.showcase.forEach((it, i) => { 
             const s = document.getElementById(`sl-${i}`); 
             if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } 
@@ -151,7 +149,6 @@
 
         const g = document.getElementById('inv-grid'); g.innerHTML = "";
         (pData.inv || []).forEach((it, i) => { 
-            // Фикс свечения инвентаря
             g.innerHTML += `<div class="item-card ${it.glow || ''}"><div style="font-size:32px;">${it.i}</div><button onclick="openListing(${i})" style="width:100%; margin-top:5px; font-size:10px; cursor:pointer;">ВЫСТАВИТЬ</button><button onclick="sl(${i})" style="width:100%; color:red; font-size:9px; border:none; background:none; cursor:pointer; ${it.unsel?'display:none':''}">ПРОДАТЬ БАНКУ</button></div>`; 
         });
     }
@@ -180,21 +177,24 @@
     });
 
     window.openListing = (i) => { 
+        if(!pData.inv[i]) return;
         if(pData.inv[i].unsel) return ms("Нельзя продать Divine!"); 
-        tempIdx = i; // Сохраняем индекс дляconfirmListing
-        document.getElementById('m-list').style.display='flex'; 
+        window.tempIdx = i; 
+        document.getElementById('m-list').style.display = 'flex'; 
     };
 
     window.confirmListing = async () => {
-        const pr = parseInt(document.getElementById('l-price').value);
+        const prInput = document.getElementById('l-price');
+        const pr = parseInt(prInput.value);
         if(!pr || pr < 1) return ms("Введите цену!");
-        if(tempIdx === -1) return;
+        if(window.tempIdx === undefined || window.tempIdx === -1) return ms("Ошибка!");
         
-        const itemForSale = pData.inv[tempIdx];
+        const itemForSale = pData.inv[window.tempIdx];
         await db.collection("marketplace").add({ item: itemForSale, price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
-        pData.inv.splice(tempIdx, 1); 
-        pData.showcase = [null, null]; // Сброс витрины при продаже
-        tempIdx = -1;
+        pData.inv.splice(window.tempIdx, 1); 
+        pData.showcase = [null, null];
+        window.tempIdx = -1;
+        prInput.value = "";
         sync(); clM(); ms("Выставлено!");
     };
 
@@ -206,7 +206,7 @@
         pData.b -= lot.price; pData.inv.push(lot.item);
         const sellerDoc = await db.collection("users").doc(lot.sellerUid).get();
         if(sellerDoc.exists) await db.collection("users").doc(lot.sellerUid).update({ b: sellerDoc.data().b + Math.floor(lot.price * 0.95) });
-        await db.collection("marketplace").doc(id).delete(); sync(); ms("Куплено!");
+        await db.collection("marketplace").doc(id).delete(); sync();
     };
 
     window.opShowcase = (s) => { 
@@ -214,7 +214,6 @@
         const l = document.getElementById('sh-list'); 
         l.innerHTML = ""; 
         pData.inv.forEach((it, i) => {
-            // ФИКС: Проверка, нет ли этого NFT уже на витрине (по уникальному uId)
             const isAlreadyOnShowcase = pData.showcase.some(slot => slot && slot.uId === it.uId);
             if(!isAlreadyOnShowcase) {
                 l.innerHTML += `<div onclick="setS(${i})" style="padding:10px; border-bottom:1px solid #ddd; cursor:pointer;">${it.i} ${it.n}</div>`; 
@@ -246,7 +245,6 @@
         const itIdx = document.getElementById('a-it').value; 
         if(itIdx != -1) { 
             let inv = doc.data().inv || []; 
-            // Каждому предмету при выдаче даем уникальный uId для корректной работы витрины
             inv.push({...ADMIN_ITEMS[itIdx], uId: Date.now() + Math.random()}); 
             upd.inv = inv; 
         }
@@ -263,5 +261,5 @@
     ADMIN_ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
 </script>
 </body>
-    </html>
-    
+</html>
+
