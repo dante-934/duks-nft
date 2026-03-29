@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT</title>
+    <title>DuksNFT - Bugfix Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -13,14 +13,14 @@
         :root { --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff; --border: rgba(0,0,0,0.1); }
         [data-theme="dark"] { --bg: #000000; --text: #ffffff; --card: #1c1c1e; --border: rgba(255,255,255,0.2); }
         
-        /* Старый интерфейс: шрифты и отступы */
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; transition: 0.3s; user-select: none; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; transition: 0.3s; user-select: none; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
         
         .c-red { color: #ff3b30 !important; font-weight: bold; }
         .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: 900; }
         @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
 
+        /* Фикс свечения */
         .gl-exclusive { border: 2px solid; animation: glow-rgb 3s linear infinite; }
         .gl-divine { border: 2px solid #ffffff !important; box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
         @keyframes glow-rgb { 0% { box-shadow: 0 0 10px red; border-color: red; } 33% { box-shadow: 0 0 10px green; border-color: green; } 66% { box-shadow: 0 0 10px blue; border-color: blue; } 100% { box-shadow: 0 0 10px red; border-color: red; } }
@@ -28,7 +28,6 @@
         .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Старая навигация */
         nav { display: flex; gap: 4px; margin: 10px 10px; background: rgba(128,128,128,0.1); padding: 4px; border-radius: 12px; }
         .nav-btn { flex: 1; padding: 10px 2px; border: none; border-radius: 8px; background: transparent; color: var(--text); font-weight: 900; font-size: 9px; cursor: pointer; }
         .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -37,7 +36,7 @@
         .screen.active { display: block; }
         
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .item-card { background: var(--card); border-radius: 18px; padding: 12px; text-align: center; border: 1px solid var(--border); }
+        .item-card { background: var(--card); border-radius: 18px; padding: 12px; text-align: center; border: 1px solid var(--border); box-sizing: border-box; }
         
         .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
         .slot.filled { border-style: solid; background: var(--card); }
@@ -56,7 +55,6 @@
 <body>
 
 <script>
-    /* МГНОВЕННОЕ ВОССТАНОВЛЕНИЕ ТЕМЫ ПРИ ЗАГРУЗКЕ */
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 </script>
@@ -119,7 +117,7 @@
 
 <div id="m-n" class="modal"><div class="modal-body"><h3>Ник</h3><input type="text" id="n-in" maxlength="12"><button onclick="svN()" style="width:100%; padding:10px; background:var(--accent); color:white; border:none; border-radius:8px;">OK</button></div></div>
 <div id="m-key" class="modal"><div class="modal-body"><h3>Admin Key</h3><input type="password" id="c-in"><button onclick="chC()" style="width:100%; background:green; color:white; padding:10px; border:none; border-radius:8px;">OK</button></div></div>
-<div id="m-sh" class="modal"><div class="modal-body"><h3>Витрина</h3><div id="sh-list"></div><button onclick="clM()" style="margin-top:10px;">ЗАКРЫТЬ</button></div></div>
+<div id="m-sh" class="modal"><div class="modal-body"><h3>Витрина</h3><div id="sh-list" style="max-height: 250px; overflow-y: auto;"></div><button onclick="clM()" style="margin-top:10px;">ЗАКРЫТЬ</button></div></div>
 <div id="m-list" class="modal"><div class="modal-body"><h3>Маркет</h3><input type="number" id="l-price" placeholder="Цена"><button onclick="confirmListing()" style="width:100%; background:var(--accent); color:white; padding:10px; border:none; border-radius:8px;">ВЫСТАВИТЬ (-5%)</button><button onclick="clM()" style="margin-top:5px;">ОТМЕНА</button></div></div>
 <div id="toast" class="toast"></div>
 
@@ -132,12 +130,7 @@
     let pData = { b: 0, inv: [], xp: 0, nick: "Игрок", av: "https://via.placeholder.com/100", numericId: 0, eff: "", badge: "", showcase: [null, null] };
     let tempIdx = -1;
 
-    /* ЛОГИКА ТЕМЫ С СОХРАНЕНИЕМ */
-    window.tTh = () => { 
-        const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; 
-        document.documentElement.setAttribute('data-theme', n); 
-        localStorage.setItem('theme', n); 
-    };
+    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
 
     function upUI() {
         document.getElementById('h-bal').innerText = (pData.b || 0).toLocaleString();
@@ -148,9 +141,19 @@
         document.getElementById('h-badge').innerHTML = bHtml;
         document.getElementById('p-badge').innerHTML = bHtml;
         document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av;
-        pData.showcase.forEach((it, i) => { const s = document.getElementById(`sl-${i}`); if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } else { s.innerHTML = "+"; s.className = "slot"; } });
+        
+        // Фикс свечения витрины
+        pData.showcase.forEach((it, i) => { 
+            const s = document.getElementById(`sl-${i}`); 
+            if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } 
+            else { s.innerHTML = "+"; s.className = "slot"; } 
+        });
+
         const g = document.getElementById('inv-grid'); g.innerHTML = "";
-        (pData.inv || []).forEach((it, i) => { g.innerHTML += `<div class="item-card ${it.glow || ''}"><div style="font-size:32px;">${it.i}</div><button onclick="openListing(${i})" style="width:100%; margin-top:5px; font-size:10px; cursor:pointer;">ВЫСТАВИТЬ</button><button onclick="sl(${i})" style="width:100%; color:red; font-size:9px; border:none; background:none; cursor:pointer; ${it.unsel?'display:none':''}">ПРОДАТЬ БАНКУ</button></div>`; });
+        (pData.inv || []).forEach((it, i) => { 
+            // Фикс свечения инвентаря
+            g.innerHTML += `<div class="item-card ${it.glow || ''}"><div style="font-size:32px;">${it.i}</div><button onclick="openListing(${i})" style="width:100%; margin-top:5px; font-size:10px; cursor:pointer;">ВЫСТАВИТЬ</button><button onclick="sl(${i})" style="width:100%; color:red; font-size:9px; border:none; background:none; cursor:pointer; ${it.unsel?'display:none':''}">ПРОДАТЬ БАНКУ</button></div>`; 
+        });
     }
 
     function loadMarket() {
@@ -168,32 +171,59 @@
             document.getElementById('l-in').style.display = 'none'; document.getElementById('l-out').style.display = 'block';
             const userDoc = db.collection("users").doc(u.uid);
             const snap = await userDoc.get();
-            if (snap.exists) { pData = Object.assign(pData, snap.data()); } 
-            else { pData.numericId = Math.floor(Math.random() * 900000) + 100000; pData.nick = u.displayName; await userDoc.set(pData); }
+            if (snap.exists) { pData = Object.assign(pData, snap.data()); if(!pData.showcase) pData.showcase = [null, null]; } 
+            else { pData.numericId = Math.floor(Math.random() * 900000) + 100000; pData.nick = u.displayName; pData.showcase = [null, null]; await userDoc.set(pData); }
             userDoc.onSnapshot(doc => { if(doc.exists) { pData = doc.data(); upUI(); } });
             loadMarket();
         }
         upUI();
     });
 
-    window.openListing = (i) => { if(pData.inv[i].unsel) return ms("Нельзя продать Divine!"); tempIdx = i; document.getElementById('m-list').style.display='flex'; };
+    window.openListing = (i) => { 
+        if(pData.inv[i].unsel) return ms("Нельзя продать Divine!"); 
+        tempIdx = i; // Сохраняем индекс дляconfirmListing
+        document.getElementById('m-list').style.display='flex'; 
+    };
+
     window.confirmListing = async () => {
         const pr = parseInt(document.getElementById('l-price').value);
-        if(!pr || pr < 1) return;
-        await db.collection("marketplace").add({ item: pData.inv[tempIdx], price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
-        pData.inv.splice(tempIdx, 1); pData.showcase = [null, null]; sync(); clM();
+        if(!pr || pr < 1) return ms("Введите цену!");
+        if(tempIdx === -1) return;
+        
+        const itemForSale = pData.inv[tempIdx];
+        await db.collection("marketplace").add({ item: itemForSale, price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
+        pData.inv.splice(tempIdx, 1); 
+        pData.showcase = [null, null]; // Сброс витрины при продаже
+        tempIdx = -1;
+        sync(); clM(); ms("Выставлено!");
     };
+
     window.buyLot = async (id) => {
-        const lot = (await db.collection("marketplace").doc(id).get()).data();
+        const lotDoc = await db.collection("marketplace").doc(id).get();
+        if(!lotDoc.exists) return;
+        const lot = lotDoc.data();
         if(pData.b < lot.price) return ms("Мало Dacks");
         pData.b -= lot.price; pData.inv.push(lot.item);
         const sellerDoc = await db.collection("users").doc(lot.sellerUid).get();
         if(sellerDoc.exists) await db.collection("users").doc(lot.sellerUid).update({ b: sellerDoc.data().b + Math.floor(lot.price * 0.95) });
-        await db.collection("marketplace").doc(id).delete(); sync();
+        await db.collection("marketplace").doc(id).delete(); sync(); ms("Куплено!");
     };
 
-    window.opShowcase = (s) => { window.tsl = s; const l = document.getElementById('sh-list'); l.innerHTML = ""; pData.inv.forEach((it, i) => l.innerHTML += `<div onclick="setS(${i})" style="padding:10px; border-bottom:1px solid #ddd; cursor:pointer;">${it.i} ${it.n}</div>`); document.getElementById('m-sh').style.display='flex'; };
-    window.setS = (i) => { pData.showcase[window.tsl] = {...pData.inv[i], uId: Date.now()}; sync(); clM(); };
+    window.opShowcase = (s) => { 
+        window.tsl = s; 
+        const l = document.getElementById('sh-list'); 
+        l.innerHTML = ""; 
+        pData.inv.forEach((it, i) => {
+            // ФИКС: Проверка, нет ли этого NFT уже на витрине (по уникальному uId)
+            const isAlreadyOnShowcase = pData.showcase.some(slot => slot && slot.uId === it.uId);
+            if(!isAlreadyOnShowcase) {
+                l.innerHTML += `<div onclick="setS(${i})" style="padding:10px; border-bottom:1px solid #ddd; cursor:pointer;">${it.i} ${it.n}</div>`; 
+            }
+        }); 
+        document.getElementById('m-sh').style.display='flex'; 
+    };
+
+    window.setS = (i) => { pData.showcase[window.tsl] = pData.inv[i]; sync(); clM(); };
     window.sl = (i) => { pData.b += pData.inv[i].sell; pData.inv.splice(i, 1); sync(); };
     window.sync = () => { if(auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set(pData, {merge:true}); };
     window.sw = (id, bid) => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); if(bid === 'b-s') { window.ac = (window.ac || 0) + 1; if(window.ac >= 5) { document.getElementById('m-key').style.display='flex'; window.ac=0; } } };
@@ -213,7 +243,13 @@
         let upd = { b: (doc.data().b || 0) + parseInt(document.getElementById('a-d').value || 0), xp: (doc.data().xp || 0) + parseInt(document.getElementById('a-x').value || 0) };
         if(document.getElementById('a-eff').value !== "keep") upd.eff = document.getElementById('a-eff').value;
         if(document.getElementById('a-bad').value !== "keep") upd.badge = document.getElementById('a-bad').value;
-        const itIdx = document.getElementById('a-it').value; if(itIdx != -1) { let inv = doc.data().inv || []; inv.push({...ADMIN_ITEMS[itIdx], uId: Date.now()}); upd.inv = inv; }
+        const itIdx = document.getElementById('a-it').value; 
+        if(itIdx != -1) { 
+            let inv = doc.data().inv || []; 
+            // Каждому предмету при выдаче даем уникальный uId для корректной работы витрины
+            inv.push({...ADMIN_ITEMS[itIdx], uId: Date.now() + Math.random()}); 
+            upd.inv = inv; 
+        }
         await db.collection("users").doc(tUid).update(upd); ms("Готово!");
     }
 
@@ -227,4 +263,5 @@
     ADMIN_ITEMS.forEach((it, i) => s.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
 </script>
 </body>
-</html>
+    </html>
+    
