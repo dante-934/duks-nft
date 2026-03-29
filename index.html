@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Full Access</title>
+    <title>DuksNFT - Direct Actions</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -30,21 +30,19 @@
         .nav-btn { flex: 1; padding: 10px 2px; border: none; border-radius: 8px; background: transparent; color: var(--text); font-weight: 900; font-size: 9px; cursor: pointer; }
         .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .screen { display: none; padding: 15px; }
-        .screen.active { display: block; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .item-card { background: var(--card); border-radius: 18px; padding: 12px; text-align: center; border: 1px solid var(--border); display: flex; flex-direction: column; }
         .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
-        .slot.filled { border-style: solid; background: var(--card); }
         .badge { width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; color: white; margin-left: 4px; vertical-align: middle; }
         .b-dev { background: #ffcc00; color: #000; } .b-yt { background: #ff0000; } .b-top { background: #007aff; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-body { background: var(--card); padding: 25px; border-radius: 25px; width: 80%; max-width: 300px; text-align: center; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 12px; }
-        
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 12px; text-align: center; }
         .item-name { font-size: 10px; font-weight: bold; margin-top: 4px; }
         .item-rarity { font-size: 8px; opacity: 0.6; text-transform: uppercase; margin-bottom: 5px; }
+        .screen.active { display: block; }
     </style>
 </head>
 <body>
@@ -104,6 +102,7 @@
             <select id="a-eff"><option value="keep">Ник: Не менять</option><option value="">Обычный</option><option value="c-red">Красный</option><option value="n-rgb">Радужный</option></select>
             <select id="a-bad"><option value="keep">Badge: Не менять</option><option value="">Убрать все</option><option value="b-dev">🟡 Dev</option><option value="b-yt">🔴 YouTube</option><option value="b-top">🔵 Top</option></select>
             <button onclick="gv()" style="width:100%; padding:10px; background:green; color:white; border:none; border-radius:8px; cursor:pointer;">ПРИМЕНИТЬ</button>
+            <button onclick="rstId()" style="width:100%; padding:10px; background:#ff3b30; color:white; border:none; border-radius:8px; cursor:pointer; margin-top:5px;">СБРОС ПО ID</button>
         </div>
     </div>
 </main>
@@ -132,9 +131,7 @@
         ['h-nick', 'p-nick'].forEach(id => { const el = document.getElementById(id); if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } });
         ['h-badge', 'p-badge'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = bHtml; });
         document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av;
-        
         pData.showcase.forEach((it, i) => { const s = document.getElementById(`sl-${i}`); if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } else { s.innerHTML = "+"; s.className = "slot"; } });
-
         const g = document.getElementById('inv-grid'); g.innerHTML = "";
         (pData.inv || []).forEach((it, i) => { 
             g.innerHTML += `<div class="item-card ${it.glow || ''}"><div style="font-size:32px;">${it.i}</div><div class="item-name">${it.n}</div><div class="item-rarity">${it.r}</div><button onclick="openListing(${i})" style="width:100%; background:var(--accent); color:white; border:none; border-radius:5px; padding:4px; font-size:9px; cursor:pointer;">ВЫСТАВИТЬ</button><button onclick="sellToBank(${i})" style="width:100%; background:#ff3b30; color:white; border:none; border-radius:5px; padding:4px; font-size:9px; margin-top:3px; cursor:pointer; ${it.unsel?'display:none':''}">СЛИТЬ (${it.sell})</button></div>`; 
@@ -168,11 +165,22 @@
         if(!pr || pr < 1 || window.curIdx === -1) return; btn.disabled = true;
         try { await db.collection("marketplace").add({ item: pData.inv[window.curIdx], price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid }); pData.inv.splice(window.curIdx, 1); pData.showcase = [null, null]; sync(); clM(); ms("Выставлено!"); } catch(e) { alert(e.message); } btn.disabled = false;
     };
-    window.cancelListing = async (id) => { const lot = (await db.collection("marketplace").doc(id).get()).data(); pData.inv.push(lot.item); await db.collection("marketplace").doc(id).delete(); sync(); ms("Снято!"); };
-    window.sellToBank = (i) => { const it = pData.inv[i]; if(confirm(`Слить ${it.n} за ${it.sell}?`)) { pData.b += it.sell; pData.inv.splice(i, 1); pData.showcase = [null, null]; sync(); ms("Продано банку!"); } };
+    window.cancelListing = async (id) => { const lotSnap = await db.collection("marketplace").doc(id).get(); pData.inv.push(lotSnap.data().item); await db.collection("marketplace").doc(id).delete(); sync(); ms("Снято!"); };
+    
+    // МГНОВЕННЫЙ СЛИВ БЕЗ ПОДТВЕРЖДЕНИЯ
+    window.sellToBank = (i) => { 
+        const it = pData.inv[i]; 
+        if(it.unsel) return;
+        pData.b += it.sell; 
+        pData.inv.splice(i, 1); 
+        pData.showcase = [null, null]; 
+        sync(); 
+        ms(`Слито: +${it.sell} Dacks`); 
+    };
+
     window.buyLot = async (id) => {
-        const lot = (await db.collection("marketplace").doc(id).get()).data();
-        if(pData.b < lot.price) return ms("Мало Dacks");
+        const lotSnap = await db.collection("marketplace").doc(id).get(); if(!lotSnap.exists) return;
+        const lot = lotSnap.data(); if(pData.b < lot.price) return ms("Мало Dacks");
         pData.b -= lot.price; pData.inv.push(lot.item);
         const sDoc = await db.collection("users").doc(lot.sellerUid).get();
         if(sDoc.exists) await db.collection("users").doc(lot.sellerUid).update({ b: (sDoc.data().b || 0) + Math.floor(lot.price*0.95) });
@@ -186,27 +194,5 @@
     window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
     window.ms = (t) => { const st = document.getElementById('toast'); st.innerText = t; st.style.display = 'block'; setTimeout(() => st.style.display = 'none', 2000); };
     window.chC = () => { if(document.getElementById('c-in').value === "mnbvcxz1234") { document.getElementById('a-box').style.display='block'; clM(); } };
-    window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    window.logout = () => auth.signOut().then(() => location.reload());
-    window.uAv = (e) => { const r = new FileReader(); r.onloadend = () => { pData.av = r.result; sync(); }; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); };
-
-    async function gv() {
-        const tid = document.getElementById('a-tid').value; 
-        let tUid = auth.currentUser?.uid;
-        if(tid) { 
-            const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get(); 
-            if(!snap.empty) tUid = snap.docs[0].id; else return ms("ID не найден!");
-        }
-        const doc = await db.collection("users").doc(tUid).get();
-        let upd = { b: (doc.data().b || 0) + parseInt(document.getElementById('a-d').value || 0) };
-        if(document.getElementById('a-eff').value !== "keep") upd.eff = document.getElementById('a-eff').value;
-        if(document.getElementById('a-bad').value !== "keep") upd.badge = document.getElementById('a-bad').value;
-        const itIdx = document.getElementById('a-it').value; 
-        if(itIdx != -1) { let inv = doc.data().inv || []; inv.push({...ADMIN_ITEMS[itIdx], uId: Date.now()+Math.random()}); upd.inv = inv; }
-        await db.collection("users").doc(tUid).update(upd); ms("OK!");
-    }
-    const as = document.getElementById('a-it'); as.innerHTML = `<option value="-1">NFT</option>`;
-    ADMIN_ITEMS.forEach((it, i) => as.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
-</script>
-</body>
-</html>
+    window.login = () => auth.signInWithPopup(new firebase
+    
