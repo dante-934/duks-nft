@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Fixed</title>
+    <title>DuksNFT - Update</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -32,7 +32,7 @@
         .screen { display: none; padding: 15px; }
         .screen.active { display: block; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .item-card { background: var(--card); border-radius: 18px; padding: 12px; text-align: center; border: 1px solid var(--border); }
+        .item-card { background: var(--card); border-radius: 18px; padding: 12px; text-align: center; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
         .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
         .slot.filled { border-style: solid; background: var(--card); }
         .badge { width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; color: white; margin-left: 4px; vertical-align: middle; }
@@ -42,6 +42,9 @@
         .modal-body { background: var(--card); padding: 25px; border-radius: 25px; width: 80%; max-width: 300px; text-align: center; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 12px; }
+        
+        .item-name { font-size: 10px; font-weight: bold; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-rarity { font-size: 8px; opacity: 0.6; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -114,7 +117,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(); const db = firebase.firestore();
 
-    const ADMIN_ITEMS = [{ n: "Утка", r: "Exclusive", i: "🦆", glow: "gl-exclusive", sell: 5000 }, { n: "Золотая утка", r: "Divine", i: "🐥", glow: "gl-divine", unsel: true }, { n: "Алмазная утка", r: "Divine", i: "💎", glow: "gl-divine", unsel: true }];
+    const ADMIN_ITEMS = [{ n: "Утка", r: "Exclusive", i: "🦆", glow: "gl-exclusive", sell: 5000 }, { n: "Золотая утка", r: "Divine", i: "🐥", glow: "gl-divine", unsel: true, sell: 0 }, { n: "Алмазная утка", r: "Divine", i: "💎", glow: "gl-divine", unsel: true, sell: 0 }];
     let pData = { b: 0, inv: [], nick: "Игрок", av: "https://via.placeholder.com/100", numericId: 0, eff: "", badge: "", showcase: [null, null] };
     window.curIdx = -1; window.ac = 0;
 
@@ -130,16 +133,18 @@
         ['h-nick', 'p-nick'].forEach(id => { const el = document.getElementById(id); if(el) { el.innerText = pData.nick; el.className = pData.eff || ""; } });
         document.getElementById('h-badge').innerHTML = pData.badge ? `<span class="badge ${pData.badge}">✓</span>` : "";
         document.getElementById('h-av').src = pData.av; document.getElementById('p-av').src = pData.av;
-        
-        pData.showcase.forEach((it, i) => { 
-            const s = document.getElementById(`sl-${i}`); 
-            if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } 
-            else { s.innerHTML = "+"; s.className = "slot"; } 
-        });
+        pData.showcase.forEach((it, i) => { const s = document.getElementById(`sl-${i}`); if(it) { s.innerHTML = it.i; s.className = `slot filled ${it.glow || ''}`; } else { s.innerHTML = "+"; s.className = "slot"; } });
 
         const g = document.getElementById('inv-grid'); g.innerHTML = "";
         (pData.inv || []).forEach((it, i) => { 
-            g.innerHTML += `<div class="item-card ${it.glow || ''}"><div style="font-size:32px;">${it.i}</div><button onclick="openListing(${i})" style="width:100%; margin-top:5px; font-size:10px; cursor:pointer;">ВЫСТАВИТЬ</button></div>`; 
+            g.innerHTML += `
+            <div class="item-card ${it.glow || ''}">
+                <div style="font-size:32px;">${it.i}</div>
+                <div class="item-name">${it.n}</div>
+                <div class="item-rarity">${it.r}</div>
+                <button onclick="openListing(${i})" style="width:100%; margin-top:5px; font-size:9px; cursor:pointer; background:var(--accent); color:white; border:none; border-radius:5px; padding:4px;">ВЫСТАВИТЬ</button>
+                <button onclick="sellToBank(${i})" style="width:100%; margin-top:3px; font-size:9px; cursor:pointer; background:#ff3b30; color:white; border:none; border-radius:5px; padding:4px; ${it.unsel?'display:none':''}">СЛИТЬ (${it.sell})</button>
+            </div>`; 
         });
     }
 
@@ -155,36 +160,59 @@
                 const mg = document.getElementById('market-grid'); mg.innerHTML = "";
                 snap.forEach(doc => {
                     const lot = doc.data(); const isMine = lot.sellerId === pData.numericId;
-                    mg.innerHTML += `<div class="item-card ${lot.item.glow || ''}"><div style="font-size:32px;">${lot.item.i}</div><div style="font-weight:bold;">${lot.price} D</div><button onclick="${isMine ? '' : `buyLot('${doc.id}')`}" style="width:100%; background:${isMine?'#ccc':'#007aff'}; color:white; border:none; border-radius:5px;" ${isMine?'disabled':''}>${isMine?'МОЙ':'КУПИТЬ'}</button></div>`;
+                    mg.innerHTML += `
+                    <div class="item-card ${lot.item.glow || ''}">
+                        <div style="font-size:32px;">${lot.item.i}</div>
+                        <div class="item-name">${lot.item.n}</div>
+                        <div style="font-weight:bold; font-size:11px; color:var(--accent);">${lot.price} D</div>
+                        <button onclick="${isMine ? `cancelListing('${doc.id}')` : `buyLot('${doc.id}')`}" style="width:100%; margin-top:5px; background:${isMine?'#8e8e93':'#007aff'}; color:white; border:none; border-radius:5px; padding:6px; font-size:10px; cursor:pointer;">${isMine?'СНЯТЬ':'КУПИТЬ'}</button>
+                    </div>`;
                 });
             });
         }
         upUI();
     });
 
-    window.openListing = (i) => {
-        if(pData.inv[i].unsel) return ms("Divine нельзя продать!");
-        window.curIdx = i;
-        document.getElementById('m-list').style.display='flex';
-    };
+    window.openListing = (i) => { if(pData.inv[i].unsel) return ms("Divine нельзя продать!"); window.curIdx = i; document.getElementById('m-list').style.display='flex'; };
 
     window.confirmListing = async () => {
         const btn = document.getElementById('btn-conf');
         const pr = parseInt(document.getElementById('l-price').value);
         if(!pr || pr < 1 || window.curIdx === -1) return;
         btn.disabled = true;
-
         try {
             await db.collection("marketplace").add({ item: pData.inv[window.curIdx], price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
-            pData.inv.splice(window.curIdx, 1);
-            pData.showcase = [null, null];
+            pData.inv.splice(window.curIdx, 1); pData.showcase = [null, null];
             sync(); clM(); ms("Выставлено!");
         } catch(e) { alert(e.message); }
         btn.disabled = false;
     };
 
+    window.cancelListing = async (id) => {
+        try {
+            const lotSnap = await db.collection("marketplace").doc(id).get();
+            if(!lotSnap.exists) return;
+            pData.inv.push(lotSnap.data().item);
+            await db.collection("marketplace").doc(id).delete();
+            sync(); ms("Снято с продажи");
+        } catch(e) { ms("Ошибка удаления"); }
+    };
+
+    window.sellToBank = (i) => {
+        const it = pData.inv[i];
+        if(it.unsel) return;
+        if(confirm(`Слить ${it.n} банку за ${it.sell} Dacks?`)) {
+            pData.b += it.sell;
+            pData.inv.splice(i, 1);
+            pData.showcase = [null, null];
+            sync(); ms("Продано банку!");
+        }
+    };
+
     window.buyLot = async (id) => {
-        const lot = (await db.collection("marketplace").doc(id).get()).data();
+        const lotSnap = await db.collection("marketplace").doc(id).get();
+        if(!lotSnap.exists) return;
+        const lot = lotSnap.data();
         if(pData.b < lot.price) return ms("Мало Dacks");
         pData.b -= lot.price; pData.inv.push(lot.item);
         const sDoc = await db.collection("users").doc(lot.sellerUid).get();
