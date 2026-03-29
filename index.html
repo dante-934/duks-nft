@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Ultra Fix</title>
+    <title>DuksNFT - ZXC Engine Fix</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -15,12 +15,10 @@
         body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; transition: 0.3s; user-select: none; }
         header { padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
         
-        /* Спец-эффекты ника */
         .c-red { color: #ff3b30 !important; font-weight: bold; }
         .n-rgb { background: linear-gradient(45deg, #f00, #0f0, #00f, #f0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgb 3s linear infinite; font-weight: 900; }
         @keyframes rgb { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
 
-        /* Свечение NFT */
         .gl-exclusive { border: 2px solid; animation: glow-rgb 3s linear infinite; }
         .gl-divine { border: 2px solid #ffffff !important; box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
         @keyframes glow-rgb { 0% { box-shadow: 0 0 10px red; border-color: red; } 33% { box-shadow: 0 0 10px green; border-color: green; } 66% { box-shadow: 0 0 10px blue; border-color: blue; } 100% { box-shadow: 0 0 10px red; border-color: red; } }
@@ -54,11 +52,6 @@
     </style>
 </head>
 <body>
-
-<script>
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-</script>
 
 <header>
     <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -114,13 +107,14 @@
             <select id="a-eff"><option value="keep">Ник: Не менять</option><option value="">Обычный</option><option value="c-red">Красный</option><option value="n-rgb">Радужный</option></select>
             <select id="a-bad"><option value="keep">Badge: Не менять</option><option value="">Убрать все</option><option value="b-dev">🟡 Dev</option><option value="b-yt">🔴 YouTube</option><option value="b-top">🔵 Top</option></select>
             <button class="nav-btn active" style="width:100%; background:#28a745; color:white;" onclick="gv()">ПРИМЕНИТЬ</button>
+            <button class="nav-btn" style="width:100%; background:#ff3b30; color:white; margin-top:10px;" onclick="resetAcc()">СБРОСИТЬ АККАУНТ</button>
         </div>
     </div>
 </main>
 
 <div id="m-n" class="modal"><div class="modal-body"><h3>Ник</h3><input type="text" id="n-in" maxlength="12"><button class="nav-btn active" style="width:100%;" onclick="svN()">СОХРАНИТЬ</button><button class="nav-btn" style="width:100%; margin-top:5px;" onclick="clM()">ОТМЕНА</button></div></div>
-<div id="m-key" class="modal"><div class="modal-body"><h3>Admin</h3><input type="password" id="c-in"><button class="nav-btn active" style="width:100%;" onclick="chC()">OK</button></div></div>
-<div id="m-sh" class="modal"><div class="modal-body"><h3>Витрина</h3><div id="sh-list" style="max-height: 250px; overflow-y: auto; margin:10px 0;"></div><button class="nav-btn" onclick="clM()">ЗАКРЫТЬ</button></div></div>
+<div id="m-key" class="modal"><div class="modal-body"><h3>Admin Key</h3><input type="password" id="c-in"><button class="nav-btn active" style="width:100%;" onclick="chC()">OK</button></div></div>
+<div id="m-sh" class="modal"><div class="modal-body"><h3>Витрина</h3><div id="sh-list" style="max-height: 250px; overflow-y: auto;"></div><button class="nav-btn" onclick="clM()">ЗАКРЫТЬ</button></div></div>
 <div id="m-list" class="modal"><div class="modal-body"><h3>Маркет</h3><input type="number" id="l-price" placeholder="Сумма Dacks"><button class="nav-btn active" style="width:100%;" onclick="confirmListing()">ВЫСТАВИТЬ</button><button class="nav-btn" style="margin-top:5px;" onclick="clM()">ОТМЕНА</button></div></div>
 <div id="toast" class="toast"></div>
 
@@ -136,8 +130,12 @@
     ];
 
     let pData = { b: 0, inv: [], xp: 0, nick: "Гость", av: "https://via.placeholder.com/100", numericId: 0, eff: "", badge: "", showcase: [null, null] };
+    let curMarketIndex = -1;
 
     async function start() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
         auth.onAuthStateChanged(async (u) => {
             if (u) {
                 document.getElementById('l-in').style.display = 'none'; document.getElementById('l-out').style.display = 'block';
@@ -191,6 +189,7 @@
     function loadMarket() {
         db.collection("marketplace").onSnapshot(snap => {
             const g = document.getElementById('market-grid'); g.innerHTML = "";
+            if(snap.empty) g.innerHTML = "<p style='grid-column:1/3; opacity:0.3; font-size:10px;'>Лотoв пока нет</p>";
             snap.forEach(doc => {
                 const lot = doc.data(); const isMine = lot.sellerId === pData.numericId;
                 g.innerHTML += `<div class="item-card ${lot.item.glow || ''}">
@@ -204,15 +203,24 @@
     }
 
     window.openListing = (idx) => { 
-        if(pData.inv[idx].unsel) return ms("Divine предметы нельзя продать!");
-        window.curIdx = idx; document.getElementById('m-list').style.display = 'flex'; 
+        if(pData.inv[idx].unsel) { ms("Divine нельзя продать!"); return; }
+        curMarketIndex = idx;
+        document.getElementById('m-list').style.display = 'flex'; 
     };
     
     window.confirmListing = async () => {
         const pr = parseInt(document.getElementById('l-price').value);
-        if(!pr || pr < 1) return ms("Цена?");
-        await db.collection("marketplace").add({ item: pData.inv[window.curIdx], price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
-        pData.inv.splice(window.curIdx, 1); pData.showcase = [null, null]; sync(); clM();
+        if(!pr || pr < 1) { ms("Введите цену"); return; }
+        const item = pData.inv[curMarketIndex];
+        await db.collection("marketplace").add({ 
+            item: item, 
+            price: pr, 
+            sellerId: pData.numericId, 
+            sellerUid: auth.currentUser.uid 
+        });
+        pData.inv.splice(curMarketIndex, 1);
+        pData.showcase = [null, null];
+        sync(); clM(); ms("Выставлено!");
     };
 
     window.buyLot = async (lotId) => {
@@ -224,7 +232,7 @@
         const sellerDoc = await db.collection("users").doc(lot.sellerUid).get();
         if(sellerDoc.exists) await db.collection("users").doc(lot.sellerUid).update({ b: (sellerDoc.data().b || 0) + Math.floor(lot.price * 0.95) });
         await db.collection("marketplace").doc(lotId).delete();
-        sync(); ms("Готово!");
+        sync(); ms("Куплено!");
     };
 
     window.opShowcase = (slot) => { 
@@ -267,8 +275,8 @@
         await db.collection("users").doc(tUid).update(upd); ms("Готово!");
     }
 
-    start();
-</script>
-</body>
-                                                                                                                                                                                                                                                                                                                     </html>
-    
+    async function resetAcc() {
+        const tid = document.getElementById('a-tid').value;
+        let tUid = auth.currentUser?.uid;
+        if(tid) { const snap = await db.collection("users").where("numericId", "==", parseInt(tid)).get(); if(!snap.empty) tUid = snap.docs[0].id; }
+        if(confirm("ТОЧН
