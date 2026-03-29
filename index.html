@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Restored</title>
+    <title>DuksNFT - Fixed</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -41,6 +41,12 @@
     </style>
 </head>
 <body>
+
+<script>
+    // Применяем сохраненную тему сразу при загрузке
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
 
 <header>
     <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -160,7 +166,6 @@
             }
             userDoc.onSnapshot(doc => { if(doc.exists) { pData = doc.data(); upUI(); } });
             
-            // Маркетплейс
             db.collection("marketplace").onSnapshot(snap => {
                 const mg = document.getElementById('market-grid'); if(!mg) return; mg.innerHTML = "";
                 snap.forEach(doc => {
@@ -173,7 +178,14 @@
     });
 
     window.sw = (id, bid) => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById(bid).classList.add('active'); if(bid === 'b-s') { window.ac++; if(window.ac >= 5) { document.getElementById('m-key').style.display='flex'; window.ac=0; } } };
-    window.tTh = () => { const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); localStorage.setItem('theme', n); };
+    
+    // ФУНКЦИЯ ТЕМЫ С СОХРАНЕНИЕМ
+    window.tTh = () => { 
+        const n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; 
+        document.documentElement.setAttribute('data-theme', n); 
+        localStorage.setItem('theme', n); 
+    };
+
     window.shNick = () => { document.getElementById('m-n').style.display='flex'; document.getElementById('n-in').value = pData.nick; };
     window.svN = () => { pData.nick = document.getElementById('n-in').value; sync(); clM(); };
     window.clM = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
@@ -189,6 +201,17 @@
         const pr = parseInt(document.getElementById('l-price').value); if(!pr || pr < 1 || window.curIdx === -1) return;
         await db.collection("marketplace").add({ item: pData.inv[window.curIdx], price: pr, sellerId: pData.numericId, sellerUid: auth.currentUser.uid });
         pData.inv.splice(window.curIdx, 1); pData.showcase = [null, null]; sync(); clM(); ms("Выставлено!");
+    };
+
+    // ФУНКЦИЯ СНЯТИЯ С ПРОДАЖИ (ФИКС)
+    window.cancelListing = async (id) => {
+        const snap = await db.collection("marketplace").doc(id).get();
+        if(snap.exists) {
+            pData.inv.push(snap.data().item);
+            await db.collection("marketplace").doc(id).delete();
+            sync();
+            ms("Снято с продажи!");
+        }
     };
 
     window.buyLot = async (id) => {
@@ -225,7 +248,4 @@
     }
 
     const as = document.getElementById('a-it'); as.innerHTML = `<option value="-1">NFT</option>`;
-    ADMIN_ITEMS.forEach((it, i) => as.innerHTML += `<option value="${i}">${it.i} ${it.n}</option>`);
-</script>
-</body>
-</html>
+    ADMIN_ITEMS.forEach((it, i) => as.innerHTML += `<option val
