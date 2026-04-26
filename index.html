@@ -2,107 +2,264 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DuksNFT - Fixed</title>
-    
-    <script>
-        // 1. ЛОВИМ ОШИБКИ СРАЗУ
-        window.onerror = function(msg, url, lineNo) {
-            alert("🚨 ОШИБКА:\n" + msg + "\nСтрока: " + lineNo);
-            return false;
-        };
-
-        // 2. ФУНКЦИИ ПЕРЕКЛЮЧЕНИЯ (ТЕПЕРЬ ДОСТУПНЫ ВСЕГДА)
-        window.sw = function(id, bid) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(id);
-            if(target) target.classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            const btn = document.getElementById(bid);
-            if(btn) btn.classList.add('active');
-        };
-
-        window.ms = function(t) {
-            const st = document.getElementById('toast');
-            if(st) {
-                st.innerText = t;
-                st.style.display = 'block';
-                setTimeout(() => st.style.display = 'none', 2500);
-            }
-        };
-    </script>
-
-    <script defer src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>JoJo Bizarre Fight: Chapters Edition</title>
     <style>
-        :root { --bg: #f2f2f7; --text: #1c1c1e; --accent: #007aff; --card: #ffffff; --border: rgba(0,0,0,0.1); }
-        [data-theme="dark"] { --bg: #000; --text: #fff; --card: #1c1c1e; --border: rgba(255,255,255,0.2); }
-        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; user-select: none; }
-        header { padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
-        .avatar-box { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); overflow: hidden; background: #333; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
-        nav { display: flex; gap: 4px; margin: 10px; background: rgba(128,128,128,0.1); padding: 4px; border-radius: 12px; }
-        .nav-btn { flex: 1; padding: 10px 2px; border: none; border-radius: 8px; background: transparent; color: var(--text); font-weight: 900; font-size: 9px; cursor: pointer; }
-        .nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .screen { display: none; padding: 15px; }
-        .screen.active { display: block; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .item-card { background: var(--card); border-radius: 18px; padding: 12px; text-align: center; border: 1px solid var(--border); }
-        .slot { width: 55px; height: 55px; border-radius: 15px; border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
-        .xp-bar { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-top: 5px; overflow: hidden; }
-        .xp-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.5s; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-body { background: var(--card); padding: 25px; border-radius: 25px; width: 80%; max-width: 300px; text-align: center; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: white; padding: 12px 20px; border-radius: 15px; display: none; z-index: 3000; font-size: 12px; }
+        :root { --gold: #ffd700; --jojo: #00ff88; --dio: #ff3333; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; touch-action: none; }
+        
+        body { 
+            background: #000; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-family: 'Arial Black', sans-serif; 
+        }
+
+        #game-wrapper { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; display: none; }
+
+        /* МЕНЮ С УЛУЧШЕННОЙ АНИМАЦИЕЙ КНИГИ */
+        #screen-menu { 
+            position: absolute; inset: 0; z-index: 100; display: flex; 
+            background: url('https://img.freepik.com/premium-photo/dark-wooden-wood-background-generative-ai_862489-2509.jpg') center/cover;
+            align-items: center; justify-content: space-around; padding: 20px;
+        }
+
+        .book-container {
+            width: 40vh; height: 55vh;
+            position: relative; transform-style: preserve-3d;
+            transition: transform 1.8s cubic-bezier(0.4, 0, 0.2, 1); /* Анимация дольше */
+            perspective: 1500px;
+        }
+        .book-container.open { transform: rotateY(-180deg) scale(1.15); }
+
+        .page { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 4px; box-shadow: 15px 15px 40px rgba(0,0,0,0.8); }
+        .front { 
+            background: #fdfaf0; border: 4px solid #d4af37; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; 
+        }
+        
+        /* ВНУТРЕННЯЯ СТРАНИЦА С ВЫБОРОМ ГЛАВ */
+        .back { 
+            background: #fff; transform: rotateY(180deg); z-index: 1; 
+            padding: 15px; color: #000; overflow-y: auto; 
+        }
+        .chapter-title { text-align: center; font-size: 14px; border-bottom: 2px solid #000; margin-bottom: 10px; padding-bottom: 5px; }
+        
+        .chapters-scroll { height: 80%; overflow-y: auto; padding-right: 5px; }
+        .chap-item {
+            border: 1px solid #ddd; margin-bottom: 6px; padding: 8px; font-size: 11px;
+            display: flex; justify-content: space-between; transition: 0.2s;
+        }
+        .chap-item.active { border: 2px solid var(--gold); background: #fffef0; cursor: pointer; color: #000; }
+        .chap-item.locked { color: #ccc; }
+
+        .start-btn {
+            background: #ff0000; color: #fff; border: 3px solid #000;
+            padding: 15px 50px; font-size: 24px; font-style: italic;
+            border-radius: 8px; box-shadow: 6px 6px 0px #000; cursor: pointer; z-index: 110;
+        }
+
+        /* ИНТЕРФЕЙС БОЯ */
+        #battle-hud { position: absolute; top: 20px; width: 100%; display: none; justify-content: space-between; padding: 0 40px; z-index: 10; }
+        .hp-cont { width: 30vw; height: 18px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 9px; overflow: hidden; }
+        .hp-fill { height: 100%; width: 100%; transition: 0.2s; }
+
+        #controls { position: absolute; bottom: 30px; width: 100%; display: none; z-index: 10; padding: 0 40px; }
+        #joy { width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; float: left; position: relative; }
+        #stick { width: 36px; height: 36px; background: #fff; border-radius: 50%; position: absolute; top: 24px; left: 24px; opacity: 0.8; }
+        #atk-btn { width: 100px; height: 100px; background: rgba(255,0,0,0.5); border: 3px solid #fff; border-radius: 50%; float: right; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+
+        #end-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div class="avatar-box" onclick="sw('profile', 'b-p')"><img id="h-av" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23555'/><text x='50' y='65' font-size='50' font-family='sans-serif' text-anchor='middle' fill='%23fff'>?</text></svg>"></div>
-            <div>
-                <div style="font-weight:900; font-size:14px;"><span id="h-nick">ИГРОК</span></div>
-                <div style="font-size:10px; opacity:0.7;">Уровень <span id="h-lvl">1</span></div>
-                <div class="xp-bar" style="width:60px;"><div id="h-xp-fill" class="xp-fill"></div></div>
+<div id="game-wrapper">
+    <div id="screen-menu">
+        <div id="book" class="book-container">
+            <div class="page front">
+                <h1 style="color:#b8860b; text-align:center; font-size: 2.5vh;">JOJO<br>BIZARRE<br>FIGHT</h1>
+            </div>
+            <div class="page back">
+                <p class="chapter-title">ВЫБОР ГЛАВЫ</p>
+                <div class="chapters-scroll">
+                    <div class="chap-item active" onclick="showBoss()"><span>1. Phantom Blood</span> <span>▶</span></div>
+                    <div class="chap-item locked"><span>2. Battle Tendency</span> <span>🔒</span></div>
+                    <div class="chap-item locked"><span>3. Stardust Crusaders</span> <span>🔒</span></div>
+                    <div class="chap-item locked"><span>4. Diamond is Unbr.</span> <span>🔒</span></div>
+                    <div class="chap-item locked"><span>5. Golden Wind</span> <span>🔒</span></div>
+                    <div class="chap-item locked"><span>6. Stone Ocean</span> <span>🔒</span></div>
+                    <div class="chap-item locked"><span>7. Steel Ball Run</span> <span>🔒</span></div>
+                </div>
             </div>
         </div>
-        <div style="text-align:right;">
-            <div style="font-weight:900; color:var(--accent); font-size:14px;"><span id="h-bal">0</span> D</div>
+        <button id="btn-start" class="start-btn" onclick="openBook()">СТАРТ</button>
+    </div>
+
+    <div id="screen-boss" class="screen" style="display:none; position:absolute; inset:0; z-index:105; background:#000; align-items:center; justify-content:center;">
+        <div style="border:4px solid var(--dio); padding:25px; text-align:center; background:#111; color:white;">
+            <h2 style="color:var(--dio); font-size:24px;">DIO BRANDO</h2>
+            <p style="font-size:12px; margin:10px 0;">СЛОЖНОСТЬ: НЕВОЗМОЖНО</p>
+            <button class="start-btn" style="font-size:18px; padding:10px 30px;" onclick="startBattle()">В БОЙ</button>
         </div>
     </div>
-</header>
 
-<nav>
-    <button class="nav-btn active" id="b-p" onclick="sw('profile', 'b-p')">ПРОФИЛЬ</button>
-    <button class="nav-btn" id="b-i" onclick="sw('inv', 'b-i')">ИНВЕНТАРЬ</button>
-    <button class="nav-btn" id="b-m" onclick="sw('market', 'b-m')">МАРКЕТ</button>
-    <button class="nav-btn" id="b-s" onclick="sw('settings', 'b-s')">⚙️</button>
-</nav>
-
-<main>
-    <div id="profile" class="screen active">
-        <div style="background:var(--card); padding:20px; border-radius:20px; text-align:center; border:1px solid var(--border);">
-            <div class="avatar-box" style="width:80px; height:80px; margin:0 auto 10px;"><img id="p-av" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23555'/><text x='50' y='65' font-size='50' font-family='sans-serif' text-anchor='middle' fill='%23fff'>?</text></svg>"></div>
-            <div style="font-weight:900; font-size:20px; margin-bottom:5px;" id="p-nick">ИГРОК</div>
-            <button onclick="document.getElementById('m-n').style.display='flex'" style="border:2px solid var(--accent); background:none; color:var(--text); padding:5px 15px; border-radius:10px; font-weight:bold; cursor:pointer; font-size:11px;">СМЕНИТЬ НИК</button>
-        </div>
+    <div id="battle-hud">
+        <div class="hp-cont"><div id="hp-p" class="hp-fill" style="background: var(--jojo);"></div></div>
+        <div class="hp-cont"><div id="hp-e" class="hp-fill" style="background: var(--dio);"></div></div>
     </div>
-    <div id="inv" class="screen"><div class="grid" id="inv-grid"></div></div>
-    <div id="market" class="screen"><div class="grid" id="market-grid"></div></div>
-    <div id="settings" class="screen">
-        <button id="l-in" onclick="login()" style="width:100%; padding:15px; border-radius:12px; background:white; color:black; font-weight:bold; border:1px solid #ddd;">Google Login</button>
-        <button id="l-out" onclick="logout()" style="width:100%; padding:15px; border-radius:12px; background:#ff3b30; color:white; display:none; font-weight:bold; border:none;">ВЫЙТИ</button>
-    </div>
-</main>
 
-<div id="m-n" class="modal"><div class="modal-body"><h3>Ник</h3><input type="text" id="n-in" maxlength="12" style="width:90%; padding:10px; margin-bottom:10px;"><button onclick="svN()" style="width:100%; background:var(--accent); color:white; padding:10px; border:none; border-radius:8px;">OK</button></div></div>
-<div id="toast" class="toast"></div>
+    <div id="controls">
+        <div id="joy"><div id="stick"></div></div>
+        <div id="atk-btn">👊</div>
+    </div>
+
+    <div id="end-screen">
+        <h1 id="res-txt" style="font-size:50px; margin-bottom:20px; color:white;"></h1>
+        <button class="start-btn" onclick="location.reload()">МЕНЮ</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+</div>
 
 <script>
-    // 3. ВСЯ ЛОГИКА Д
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
     
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const res = {
+        bg: 'https://i.pinimg.com/736x/6f/31/fd/6f31fd36272f2240ac1e26bbd0545f35.jpg',
+        p: 'https://i.pinimg.com/736x/8e/98/67/8e9867e24d43c056b5dbffa2f5a3e1dd.jpg',
+        e: 'https://i.pinimg.com/736x/1f/f4/3a/1ff43ae3cffb05a3c30b3cb77d9a192b.jpg'
+    };
+    const imgs = {};
+
+    function openBook() {
+        document.getElementById('book').classList.add('open');
+        document.getElementById('btn-start').style.opacity = '0';
+        setTimeout(() => { document.getElementById('btn-start').style.display = 'none'; }, 1000);
+    }
+
+    function showBoss() {
+        document.getElementById('screen-menu').style.display = 'none';
+        document.getElementById('screen-boss').style.display = 'flex';
+    }
+
+    function startBattle() {
+        document.getElementById('screen-boss').style.display = 'none';
+        document.getElementById('battle-hud').style.display = 'flex';
+        document.getElementById('controls').style.display = 'block';
+        canvas.style.display = 'block';
+        
+        let l = 0;
+        for(let k in res) {
+            imgs[k] = new Image();
+            imgs[k].src = res[k];
+            imgs[k].onload = () => { if(++l === 3) initGame(); };
+        }
+    }
+
+    let world = { active: false, joy: {x:0, y:0} };
+
+    function initGame() {
+        world.p = new Fighter(canvas.width * 0.15, false);
+        world.e = new Fighter(canvas.width * 0.75, true);
+        world.active = true;
+        loop();
+    }
+
+    class Fighter {
+        constructor(x, isE) {
+            this.x = x; this.isE = isE;
+            this.hp = 100; this.vx = 0; this.vy = 0; this.atk = false;
+            this.w = canvas.height * 0.4; this.h = this.w * 1.4;
+            this.y = canvas.height * 0.85 - this.h;
+        }
+        update() {
+            if(!this.isE) {
+                this.vx = world.joy.x * 10;
+                // ИСПРАВЛЕН БАГ ПОЛЕТА: Ограничение высоты прыжка и четкая гравитация
+                if(world.joy.y < -0.6 && this.vy === 0) this.vy = -18;
+            } else {
+                let dist = world.p.x - this.x;
+                if(Math.abs(dist) > this.w) this.vx = dist > 0 ? 3 : -3;
+                else { this.vx = 0; if(Math.random() < 0.02 && !this.atk) this.strike(); }
+            }
+            
+            this.x += this.vx; 
+            this.y += this.vy;
+
+            // Гравитация и фиксация на земле (Защита от "улета")
+            if (this.y + this.h < canvas.height * 0.9) {
+                this.vy += 1.2; // Сила притяжения
+            } else {
+                this.vy = 0;
+                this.y = canvas.height * 0.9 - this.h;
+            }
+
+            // Границы экрана
+            this.x = Math.max(0, Math.min(canvas.width - this.w, this.x));
+        }
+        strike() {
+            this.atk = true;
+            let target = this.isE ? world.p : world.e;
+            if(Math.abs(this.x - target.x) < this.w * 1.1) {
+                target.hp -= 3;
+                document.getElementById(this.isE ? 'hp-p' : 'hp-e').style.width = Math.max(0, target.hp) + '%';
+            }
+            setTimeout(() => this.atk = false, 150);
+        }
+        draw() {
+            ctx.save();
+            if(this.isE) { ctx.translate(this.x + this.w, this.y); ctx.scale(-1, 1); }
+            else { ctx.translate(this.x, this.y); }
+            ctx.drawImage(this.isE ? imgs.e : imgs.p, 0, 0, this.w, this.h);
+            ctx.restore();
+        }
+    }
+
+    const joy = document.getElementById('joy');
+    const stick = document.getElementById('stick');
+    joy.addEventListener('touchmove', (e) => {
+        const r = joy.getBoundingClientRect();
+        const t = e.touches[0];
+        let dx = t.clientX - (r.left + 45), dy = t.clientY - (r.top + 45);
+        let d = Math.min(Math.sqrt(dx*dx+dy*dy), 35);
+        let a = Math.atan2(dy, dx);
+        world.joy.x = Math.cos(a) * d / 35; world.joy.y = Math.sin(a) * d / 35;
+        stick.style.transform = `translate(${world.joy.x*25}px, ${world.joy.y*25}px)`;
+    });
+    joy.addEventListener('touchend', () => { world.joy.x = 0; world.joy.y = 0; stick.style.transform = 'none'; });
+    document.getElementById('atk-btn').addEventListener('touchstart', (e) => {
+        e.preventDefault(); if(world.p && !world.p.atk) world.p.strike();
+    });
+
+    function loop() {
+        if(!world.active) return;
+        ctx.drawImage(imgs.bg, 0, 0, canvas.width, canvas.height);
+        world.p.update(); world.e.update();
+        world.p.draw(); world.e.draw();
+
+        if(world.p.hp <= 0 || world.e.hp <= 0) {
+            world.active = false;
+            document.getElementById('end-screen').style.display = 'flex';
+            document.getElementById('res-txt').innerText = world.p.hp <= 0 ? "ПОРАЖЕНИЕ" : "ПОБЕДА";
+            document.getElementById('res-txt').style.color = world.p.hp <= 0 ? "red" : "gold";
+        } else {
+            requestAnimationFrame(loop);
+        }
+    }
+</script>
+</body>
+</html>
