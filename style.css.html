@@ -1,0 +1,42 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><style>:root {
+    --gold: #d4af37;
+    --dio: #ff3333;
+    /* Топографическая карта на фоне */
+    --map-img: url('https://img0.uchile.ru/u/6f/5d22d0d0eb11ec86e74418d998d363/-/map.webp');
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; -webkit-user-select: none; }
+body { background: #000; height: 100vh; width: 100vw; overflow: hidden; font-family: sans-serif; }
+
+.scene { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; }
+.scene.active { display: flex; }
+
+/* Стили книги */
+#scene-menu { background: #1a0f05; z-index: 100; }
+.table-surface { perspective: 1200px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.book { width: 40vh; height: 55vh; position: relative; transform-style: preserve-3d; transform: rotateX(20deg); transition: 0.8s; }
+.book.open { transform: rotateX(10deg) rotateY(-180deg); }
+.page { position: absolute; inset: 0; backface-visibility: hidden; background: #fdfaf0; border: 2px solid #999; }
+.front { display: flex; align-items: center; justify-content: center; background: #e0d8c0; border: 6px solid var(--gold); }
+.back { transform: rotateY(180deg); padding: 20px; display: flex; flex-direction: column; }
+.btn-start { position: absolute; bottom: 8%; background: var(--gold); padding: 12px 40px; border: none; font-weight: bold; z-index: 110; }
+
+/* Карта и UI боя */
+.map-bg, .battle-bg { position: absolute; inset: 0; background: var(--map-img) center/cover; z-index: 1; }
+.boss-circle { 
+    position: absolute; right: 20%; top: 40%; width: 12vh; height: 12vh; 
+    background: url('https://i.pinimg.com/736x/1f/f4/3a/1ff43ae3cffb05a3c30b3cb77d9a192b.jpg') center/cover;
+    border: 4px solid #fff; border-radius: 50%; box-shadow: 0 0 20px var(--dio); z-index: 10;
+}
+#gameCanvas { position: relative; z-index: 5; background: transparent; width: 100%; height: 100%; }
+.hp-bar { position: absolute; top: 20px; width: 35%; height: 15px; background: #333; border: 2px solid #fff; z-index: 100; }
+#p-hp { left: 5%; } #e-hp { right: 5%; }
+.hp-fill { height: 100%; width: 100%; background: #00ff88; transition: 0.1s; }
+#e-fill { background: var(--dio); }
+
+/* Контроллеры */
+#controls { position: absolute; bottom: 30px; width: 100%; padding: 0 50px; display: flex; justify-content: space-between; z-index: 100; }
+#joy { width: 90px; height: 90px; background: rgba(255,255,255,0.2); border-radius: 50%; position: relative; }
+#stick { width: 35px; height: 35px; background: #fff; border-radius: 50%; position: absolute; top: 27px; left: 27px; }
+#atk-btn { width: 90px; height: 90px; background: rgba(255,0,0,0.4); border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #fff; }
+</style>

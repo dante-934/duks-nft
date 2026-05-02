@@ -1,265 +1,47 @@
-<!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'/><style><!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>JoJo Bizarre Fight: Chapters Edition</title>
-    <style>
-        :root { --gold: #ffd700; --jojo: #00ff88; --dio: #ff3333; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; touch-action: none; }
-        
-        body { 
-            background: #000; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-family: 'Arial Black', sans-serif; 
-        }
-
-        #game-wrapper { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
-        canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; display: none; }
-
-        /* МЕНЮ С УЛУЧШЕННОЙ АНИМАЦИЕЙ КНИГИ */
-        #screen-menu { 
-            position: absolute; inset: 0; z-index: 100; display: flex; 
-            background: url('https://img.freepik.com/premium-photo/dark-wooden-wood-background-generative-ai_862489-2509.jpg') center/cover;
-            align-items: center; justify-content: space-around; padding: 20px;
-        }
-
-        .book-container {
-            width: 40vh; height: 55vh;
-            position: relative; transform-style: preserve-3d;
-            transition: transform 1.8s cubic-bezier(0.4, 0, 0.2, 1); /* Анимация дольше */
-            perspective: 1500px;
-        }
-        .book-container.open { transform: rotateY(-180deg) scale(1.15); }
-
-        .page { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 4px; box-shadow: 15px 15px 40px rgba(0,0,0,0.8); }
-        .front { 
-            background: #fdfaf0; border: 4px solid #d4af37; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; 
-        }
-        
-        /* ВНУТРЕННЯЯ СТРАНИЦА С ВЫБОРОМ ГЛАВ */
-        .back { 
-            background: #fff; transform: rotateY(180deg); z-index: 1; 
-            padding: 15px; color: #000; overflow-y: auto; 
-        }
-        .chapter-title { text-align: center; font-size: 14px; border-bottom: 2px solid #000; margin-bottom: 10px; padding-bottom: 5px; }
-        
-        .chapters-scroll { height: 80%; overflow-y: auto; padding-right: 5px; }
-        .chap-item {
-            border: 1px solid #ddd; margin-bottom: 6px; padding: 8px; font-size: 11px;
-            display: flex; justify-content: space-between; transition: 0.2s;
-        }
-        .chap-item.active { border: 2px solid var(--gold); background: #fffef0; cursor: pointer; color: #000; }
-        .chap-item.locked { color: #ccc; }
-
-        .start-btn {
-            background: #ff0000; color: #fff; border: 3px solid #000;
-            padding: 15px 50px; font-size: 24px; font-style: italic;
-            border-radius: 8px; box-shadow: 6px 6px 0px #000; cursor: pointer; z-index: 110;
-        }
-
-        /* ИНТЕРФЕЙС БОЯ */
-        #battle-hud { position: absolute; top: 20px; width: 100%; display: none; justify-content: space-between; padding: 0 40px; z-index: 10; }
-        .hp-cont { width: 30vw; height: 18px; background: rgba(0,0,0,0.6); border: 2px solid #fff; border-radius: 9px; overflow: hidden; }
-        .hp-fill { height: 100%; width: 100%; transition: 0.2s; }
-
-        #controls { position: absolute; bottom: 30px; width: 100%; display: none; z-index: 10; padding: 0 40px; }
-        #joy { width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; float: left; position: relative; }
-        #stick { width: 36px; height: 36px; background: #fff; border-radius: 50%; position: absolute; top: 24px; left: 24px; opacity: 0.8; }
-        #atk-btn { width: 100px; height: 100px; background: rgba(255,0,0,0.5); border: 3px solid #fff; border-radius: 50%; float: right; display: flex; align-items: center; justify-content: center; font-size: 40px; }
-
-        #end-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-    </style>
+    <link rel="manifest" href="manifest.json">
+    <title>JoJo Bizarre Fight</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div id="game-wrapper">
-    <div id="screen-menu">
-        <div id="book" class="book-container">
-            <div class="page front">
-                <h1 style="color:#b8860b; text-align:center; font-size: 2.5vh;">JOJO<br>BIZARRE<br>FIGHT</h1>
-            </div>
-            <div class="page back">
-                <p class="chapter-title">ВЫБОР ГЛАВЫ</p>
-                <div class="chapters-scroll">
-                    <div class="chap-item active" onclick="showBoss()"><span>1. Phantom Blood</span> <span>▶</span></div>
-                    <div class="chap-item locked"><span>2. Battle Tendency</span> <span>🔒</span></div>
-                    <div class="chap-item locked"><span>3. Stardust Crusaders</span> <span>🔒</span></div>
-                    <div class="chap-item locked"><span>4. Diamond is Unbr.</span> <span>🔒</span></div>
-                    <div class="chap-item locked"><span>5. Golden Wind</span> <span>🔒</span></div>
-                    <div class="chap-item locked"><span>6. Stone Ocean</span> <span>🔒</span></div>
-                    <div class="chap-item locked"><span>7. Steel Ball Run</span> <span>🔒</span></div>
+    <div id="scene-menu" class="scene active">
+        <div class="table-surface">
+            <div id="book" class="book">
+                <div class="page front">
+                    <div class="manga-title">JOJO<br>BIZARRE FIGHT</div>
+                </div>
+                <div class="page back">
+                    <div class="manga-content">
+                        <div class="chap-header">ГЛАВА 1</div>
+                        <p class="chap-desc">Phantom Blood: Начало. Исследуй карту и найди Дио.</p>
+                        <div class="chap-btn" onclick="showMap()">К КАРТЕ ▶</div>
+                    </div>
                 </div>
             </div>
         </div>
-        <button id="btn-start" class="start-btn" onclick="openBook()">СТАРТ</button>
+        <button id="start-btn" class="btn-start" onclick="openBook()">СТАРТ</button>
     </div>
 
-    <div id="screen-boss" class="screen" style="display:none; position:absolute; inset:0; z-index:105; background:#000; align-items:center; justify-content:center;">
-        <div style="border:4px solid var(--dio); padding:25px; text-align:center; background:#111; color:white;">
-            <h2 style="color:var(--dio); font-size:24px;">DIO BRANDO</h2>
-            <p style="font-size:12px; margin:10px 0;">СЛОЖНОСТЬ: НЕВОЗМОЖНО</p>
-            <button class="start-btn" style="font-size:18px; padding:10px 30px;" onclick="startBattle()">В БОЙ</button>
+    <div id="scene-map" class="scene">
+        <div class="map-bg"></div>
+        <div id="dio-node" class="boss-circle" onclick="startFight()"></div>
+    </div>
+
+    <div id="scene-battle" class="scene">
+        <div class="battle-bg"></div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="p-hp" class="hp-bar"><div id="p-fill" class="hp-fill"></div></div>
+        <div id="e-hp" class="hp-bar"><div id="e-fill" class="hp-fill"></div></div>
+        <div id="controls">
+            <div id="joy"><div id="stick"></div></div>
+            <div id="atk-btn">👊</div>
         </div>
     </div>
-
-    <div id="battle-hud">
-        <div class="hp-cont"><div id="hp-p" class="hp-fill" style="background: var(--jojo);"></div></div>
-        <div class="hp-cont"><div id="hp-e" class="hp-fill" style="background: var(--dio);"></div></div>
-    </div>
-
-    <div id="controls">
-        <div id="joy"><div id="stick"></div></div>
-        <div id="atk-btn">👊</div>
-    </div>
-
-    <div id="end-screen">
-        <h1 id="res-txt" style="font-size:50px; margin-bottom:20px; color:white;"></h1>
-        <button class="start-btn" onclick="location.reload()">МЕНЮ</button>
-    </div>
-
-    <canvas id="gameCanvas"></canvas>
-</div>
-
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    const res = {
-        bg: 'https://i.pinimg.com/736x/6f/31/fd/6f31fd36272f2240ac1e26bbd0545f35.jpg',
-        p: 'https://i.pinimg.com/736x/8e/98/67/8e9867e24d43c056b5dbffa2f5a3e1dd.jpg',
-        e: 'https://i.pinimg.com/736x/1f/f4/3a/1ff43ae3cffb05a3c30b3cb77d9a192b.jpg'
-    };
-    const imgs = {};
-
-    function openBook() {
-        document.getElementById('book').classList.add('open');
-        document.getElementById('btn-start').style.opacity = '0';
-        setTimeout(() => { document.getElementById('btn-start').style.display = 'none'; }, 1000);
-    }
-
-    function showBoss() {
-        document.getElementById('screen-menu').style.display = 'none';
-        document.getElementById('screen-boss').style.display = 'flex';
-    }
-
-    function startBattle() {
-        document.getElementById('screen-boss').style.display = 'none';
-        document.getElementById('battle-hud').style.display = 'flex';
-        document.getElementById('controls').style.display = 'block';
-        canvas.style.display = 'block';
-        
-        let l = 0;
-        for(let k in res) {
-            imgs[k] = new Image();
-            imgs[k].src = res[k];
-            imgs[k].onload = () => { if(++l === 3) initGame(); };
-        }
-    }
-
-    let world = { active: false, joy: {x:0, y:0} };
-
-    function initGame() {
-        world.p = new Fighter(canvas.width * 0.15, false);
-        world.e = new Fighter(canvas.width * 0.75, true);
-        world.active = true;
-        loop();
-    }
-
-    class Fighter {
-        constructor(x, isE) {
-            this.x = x; this.isE = isE;
-            this.hp = 100; this.vx = 0; this.vy = 0; this.atk = false;
-            this.w = canvas.height * 0.4; this.h = this.w * 1.4;
-            this.y = canvas.height * 0.85 - this.h;
-        }
-        update() {
-            if(!this.isE) {
-                this.vx = world.joy.x * 10;
-                // ИСПРАВЛЕН БАГ ПОЛЕТА: Ограничение высоты прыжка и четкая гравитация
-                if(world.joy.y < -0.6 && this.vy === 0) this.vy = -18;
-            } else {
-                let dist = world.p.x - this.x;
-                if(Math.abs(dist) > this.w) this.vx = dist > 0 ? 3 : -3;
-                else { this.vx = 0; if(Math.random() < 0.02 && !this.atk) this.strike(); }
-            }
-            
-            this.x += this.vx; 
-            this.y += this.vy;
-
-            // Гравитация и фиксация на земле (Защита от "улета")
-            if (this.y + this.h < canvas.height * 0.9) {
-                this.vy += 1.2; // Сила притяжения
-            } else {
-                this.vy = 0;
-                this.y = canvas.height * 0.9 - this.h;
-            }
-
-            // Границы экрана
-            this.x = Math.max(0, Math.min(canvas.width - this.w, this.x));
-        }
-        strike() {
-            this.atk = true;
-            let target = this.isE ? world.p : world.e;
-            if(Math.abs(this.x - target.x) < this.w * 1.1) {
-                target.hp -= 3;
-                document.getElementById(this.isE ? 'hp-p' : 'hp-e').style.width = Math.max(0, target.hp) + '%';
-            }
-            setTimeout(() => this.atk = false, 150);
-        }
-        draw() {
-            ctx.save();
-            if(this.isE) { ctx.translate(this.x + this.w, this.y); ctx.scale(-1, 1); }
-            else { ctx.translate(this.x, this.y); }
-            ctx.drawImage(this.isE ? imgs.e : imgs.p, 0, 0, this.w, this.h);
-            ctx.restore();
-        }
-    }
-
-    const joy = document.getElementById('joy');
-    const stick = document.getElementById('stick');
-    joy.addEventListener('touchmove', (e) => {
-        const r = joy.getBoundingClientRect();
-        const t = e.touches[0];
-        let dx = t.clientX - (r.left + 45), dy = t.clientY - (r.top + 45);
-        let d = Math.min(Math.sqrt(dx*dx+dy*dy), 35);
-        let a = Math.atan2(dy, dx);
-        world.joy.x = Math.cos(a) * d / 35; world.joy.y = Math.sin(a) * d / 35;
-        stick.style.transform = `translate(${world.joy.x*25}px, ${world.joy.y*25}px)`;
-    });
-    joy.addEventListener('touchend', () => { world.joy.x = 0; world.joy.y = 0; stick.style.transform = 'none'; });
-    document.getElementById('atk-btn').addEventListener('touchstart', (e) => {
-        e.preventDefault(); if(world.p && !world.p.atk) world.p.strike();
-    });
-
-    function loop() {
-        if(!world.active) return;
-        ctx.drawImage(imgs.bg, 0, 0, canvas.width, canvas.height);
-        world.p.update(); world.e.update();
-        world.p.draw(); world.e.draw();
-
-        if(world.p.hp <= 0 || world.e.hp <= 0) {
-            world.active = false;
-            document.getElementById('end-screen').style.display = 'flex';
-            document.getElementById('res-txt').innerText = world.p.hp <= 0 ? "ПОРАЖЕНИЕ" : "ПОБЕДА";
-            document.getElementById('res-txt').style.color = world.p.hp <= 0 ? "red" : "gold";
-        } else {
-            requestAnimationFrame(loop);
-        }
-    }
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
+</style>
