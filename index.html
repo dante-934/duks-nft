@@ -1,0 +1,47 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><style><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <link rel="manifest" href="manifest.json">
+    <title>JoJo Bizarre Fight</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="scene-menu" class="scene active">
+        <div class="table-surface">
+            <div id="book" class="book">
+                <div class="page front">
+                    <div class="manga-title">JOJO<br>BIZARRE FIGHT</div>
+                </div>
+                <div class="page back">
+                    <div class="manga-content">
+                        <div class="chap-header">ГЛАВА 1</div>
+                        <p class="chap-desc">Phantom Blood: Начало. Исследуй карту и найди Дио.</p>
+                        <div class="chap-btn" onclick="showMap()">К КАРТЕ ▶</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="start-btn" class="btn-start" onclick="openBook()">СТАРТ</button>
+    </div>
+
+    <div id="scene-map" class="scene">
+        <div class="map-bg"></div>
+        <div id="dio-node" class="boss-circle" onclick="startFight()"></div>
+    </div>
+
+    <div id="scene-battle" class="scene">
+        <div class="battle-bg"></div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="p-hp" class="hp-bar"><div id="p-fill" class="hp-fill"></div></div>
+        <div id="e-hp" class="hp-bar"><div id="e-fill" class="hp-fill"></div></div>
+        <div id="controls">
+            <div id="joy"><div id="stick"></div></div>
+            <div id="atk-btn">👊</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+</style>

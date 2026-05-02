@@ -1,0 +1,17 @@
+{
+  "name": "JoJo Bizarre Fight",
+  "short_name": "JoJo Fight",
+  "description": "Мобильный файтинг во вселенной JoJo",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#d4af37",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
