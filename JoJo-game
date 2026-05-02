@@ -1,1 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>JoJo Bizarre Fight - Full Game</title>
+    
+    <style>
+        :root {
+            --gold: #d4af37;
+            --dio-red: #ff3333;
+            /* Твой фон */
+            --map-img: url('menu3.webp');
+        }
 
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            touch-action: none; 
+            -webkit-user-select: none; 
+        }
+
+        body { 
+            background: #000; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+
+        .scene { 
+            position: absolute; 
+            inset: 0; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        .scene.active { display: flex; }
+
+        /* МЕНЮ И КНИГА */
+        #scene-menu { background: #1a0f05; z-index: 100; }
+        .table-surface { 
+            perspective: 1200px; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: radial-gradient(circle, #3d2b1f 0%, #1a0f05 100%);
+        }
+        .book { 
+            width: 40vh; 
+            height: 55vh; 
+            position: relative; 
+            transform-style: preserve-3d; 
+            transform: rotateX(20deg); 
+            transition: 0.8s; 
+        }
+        .book.open { transform: rotateX(10deg) rotateY(-180deg); }
+        .page { 
+            position: absolute; 
+            inset: 0; 
+            backface-visibility: hidden; 
+            background: #fdfaf0; 
+            border: 2px solid #999; 
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .front { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), var(--map-img) center/cover; 
+            border: 6px solid var(--gold); 
+        }
+        .manga-title { 
+            font-size: 3.5vh; 
+            font-weight: bold; 
+            color: white; 
+            text-align: center; 
+            text-shadow: 2px 2px 5px #000; 
+            border: 3px solid white; 
+            padding: 10px; 
+        }
+
+        .back { 
+            transform: rotateY(180deg); 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            background: #fffdf5;
+        }
+        .chap-header { font-size: 3vh; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #000; }
+        .chap-btn { 
+            background: #000; 
+            color: #fff; 
+            padding: 12px 25px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 20px; 
+        }
+
+        .btn-start { 
+            position: absolute; 
+            bottom: 8%; 
+            background: var(--gold); 
+            color: black; 
+            padding: 15px 50px; 
+            border: 3px solid black; 
+            font-weight: bold; 
+            z-index: 110; 
+            cursor: pointer; 
+        }
+
+        /* КАРТА */
+        .map-bg, .battle-bg { position: absolute; inset: 0; background: var(--map-img) center/cover; z-index: 1; }
+        .boss-circle { 
+            position: absolute; 
+            right: 20%; 
+            top: 40%; 
+            width: 12vh; 
+            height: 12vh; 
+            background: url('dio part1.jpeg') center/cover;
+            border: 4px solid #fff; 
+            border-radius: 50%; 
+            box-shadow: 0 0 20px var(--dio-red); 
+            z-index: 10; 
+            cursor: pointer;
+        }
+
+        /* БОЙ */
+        #gameCanvas { position: relative; z-index: 5; background: transparent; width: 100%; height: 100%; }
+        .hp-bar { position: absolute; top: 20px; width: 35%; height: 18px; background: #333; border: 2px solid #fff; z-index: 100; border-radius: 5px; overflow: hidden; }
+        #p-hp { left: 5%; } #e-hp { right: 5%; }
+        .hp-fill { height: 100%; width: 100%; background: #00ff88; transition: 0.2s; }
+        #e-fill { background: var(--dio-red); }
+
+        /* УПРАВЛЕНИЕ */
+        #controls { position: absolute; bottom: 30px; width: 100%; padding: 0 50px; display: flex; justify-content: space-between; z-index: 100; }
+        #joy { width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; position: relative; border: 2px solid #fff; }
+        #stick { width: 40px; height: 40px; background: #fff; border-radius: 50%; position: absolute; top: 30px; left: 30px; }
+        #atk-btn { 
+            width: 100px; 
+            height: 100px; 
+            background: rgba(255,0,0,0.5); 
+            border-radius: 50%; 
+            border: 3px solid #fff; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 50px; 
+            color: #fff; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scene-menu" class="scene active">
+        <div class="table-surface">
+            <div id="book" class="book">
+                <div class="page front">
+                    <div class="manga-title">JOJO<br>BIZARRE FIGHT</div>
+                </div>
+                <div class="page back">
+                    <div class="manga-content">
+                        <div class="chap-header">ГЛАВА 1</div>
+                        <p class="chap-desc">Phantom Blood: Начало.<br>Найди логово Дио на карте.</p>
+                        <button class="chap-btn" onclick="showMap()">К КАРТЕ ▶</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="start-btn" class="btn-start" onclick="openBook()">СТАРТ</button>
+    </div>
+
+    <div id="scene-map" class="scene">
+        <div class="map-bg"></div>
+        <div class="boss-circle" onclick="startFight()"></div>
+    </div>
+
+    <div id="scene-battle" class="scene">
+        <div class="battle-bg"></div>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="p-hp" class="hp-bar"><div id="p-fill" class="hp-fill"></div></div>
+        <div id="e-hp" class="hp-bar"><div id="e-fill" class="hp-fill"></div></div>
+        
+        <div id="controls">
+            <div id="joy"><div id="stick"></div></div>
+            <div id="atk-btn">👊</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gameRunning = false;
+        let p, e, world = { joy: {x:0, y:0} };
+
+        // Логика переключения сцен
+        function openBook() { 
+            document.getElementById('book').classList.add('open'); 
+            document.getElementById('start-btn').style.display = 'none';
+        }
+        function showMap() {
+            document.getElementById('scene-menu').classList.remove('active');
+            document.getElementById('scene-map').classList.add('active');
+        }
+        function startFight() {
+            document.getElementById('scene-map').classList.remove('active');
+            document.getElementById('scene-battle').classList.add('active');
+            initGame();
+        }
+
+        // Загрузка персонажей
+        const imgs = {
+            p: 'jonathan part1.0.jpg',
+            e: 'dio part1.jpeg'
+        };
+        const loaded = {};
+
+        function initGame() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let count = 0;
+            for(let k in imgs) {
+                loaded[k] = new Image();
+                loaded[k].src = imgs[k];
+                loaded[k].onload = () => { 
+                    if(++count === 2) { 
+                        gameRunning = true; 
+                        loop(); 
+                    } 
+                };
+                loaded[k].onerror = () => {
+                    console.error("Ошибка загрузки картинки: " + imgs[k]);
+                };
+            }
+            // Начальные позиции
+            p = { x: 100, y: 0, hp: 100, w: 180, h: 280, vy: 0 };
+            e = { x: canvas.width - 300, y: 0, hp: 100, w: 180, h: 280 };
+        }
+
+        function doAttack() {
+            if(!gameRunning) return;
+            // Проверка дистанции для удара
+            if(Math.abs(p.x - e.x) < 250) {
+                e.hp -= 5;
+                document.getElementById('e-fill').style.width = Math.max(0, e.hp) + '%';
+                if(e.hp <= 0) {
+                    alert("ДИО ПОБЕЖДЕН!");
+                    location.reload();
+                }
+            }
+        }
+
+        function loop() {
+            if(!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Физика Джонатана
+            p.x += world.joy.x * 12;
+            if(world.joy.y < -0.5 && p.y === 0) p.vy = -22; // Прыжок
+            p.y += p.vy;
+            if(p.y < 0) p.vy += 1.3; else { p.y = 0; p.vy = 0; }
+            
+            // Ограничение экрана
+            p.x = Math.max(0, Math.min(p.x, canvas.width - p.w));
+
+            const ground = canvas.height * 0.9;
+
+            // Рисуем персонажей
+            if(loaded.p) ctx.drawImage(loaded.p, p.x, ground - p.h + p.y, p.w, p.h);
+            
+            ctx.save();
+            ctx.translate(e.x + e.w, ground - e.h);
+            ctx.scale(-1, 1);
+            if(loaded.e) ctx.drawImage(loaded.e, 0, 0, e.w, e.h);
+            ctx.restore();
+
+            requestAnimationFrame(loop);
+        }
+
+        // Управление джойстиком
+        const joy = document.getElementById('joy'), stick = document.getElementById('stick');
+        const updateJoy = (ev) => {
+            ev.preventDefault();
+            const r = joy.getBoundingClientRect();
+            const t = ev.touches ? ev.touches[0] : ev;
+            let dx = t.clientX - (r.left + 50), dy = t.clientY - (r.top + 50);
+            let d = Math.min(Math.sqrt(dx*dx+dy*dy), 40);
+            let a = Math.atan2(dy, dx);
+            world.joy.x = Math.cos(a) * d / 40;
+            world.joy.y = Math.sin(a) * d / 40;
+            stick.style.transform = `translate(${world.joy.x*35}px, ${world.joy.y*35}px)`;
+        };
+
+        joy.addEventListener('touchstart', updateJoy);
+        joy.addEventListener('touchmove', updateJoy);
+        joy.addEventListener('touchend', () => { 
+            world.joy = {x:0, y:0}; 
+            stick.style.transform = 'none'; 
+        });
+
+        // Кнопка атаки
+        document.getElementById('atk-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            doAttack();
+        });
+        document.getElementById('atk-btn').addEventListener('mousedown', doAttack);
+    </script>
+</body>
+</html>
